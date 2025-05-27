@@ -36,4 +36,5 @@ define('START_TIME', hrtime(true));
 // load path config constant file
 require __DIR__ . '/../config/Path.php';
 
-
+// load bootstrap file and away we go
+require_once SYSTEMPATH . 'Bootstrap.php';
