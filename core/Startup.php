@@ -52,9 +52,27 @@ class Startup
             $routing     = new Routing();
             $routeResult = $routing->parse($_SERVER['REQUEST_URI']);
 
+            // check if controller exist
+            if (!class_exists($routeResult['data']['controller']))
+            {
+                $message = (AETHER_ENV === 'development') ? "Controller <b>{$routeResult['data']['controller']}</b> is not found." : 'Page not found.';
+                throw new PageNotFoundException($message);
+            }
+
+            // initiate controller class
+            $controller = new $routeResult['data']['controller']();
+            $method     = $routeResult['data']['method'];
+
+            // check if method exist
+            if (!method_exists($controller, $method))
+            {
+                $message = (AETHER_ENV === 'development') ? "Method <b>{$method}()</b> inside Controller <b>{$routeResult['data']['controller']}</b> is not found." : 'Page not found.';
+                throw new PageNotFoundException($message);
+            }
+
             // initiate controller
-            // throw new SystemException('Data tidak ditemukan', 400);
-            // throw new PageNotFoundException('Halaman Tidak Ditemukan');
+            $response = empty($routeResult['param']) ? $controller->$method() : $controller->$method(...$routeResult['param']);
+            dd($response);
 
         } catch(Exception $e) {
 

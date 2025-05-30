@@ -6,8 +6,8 @@
  * @class Aether\Route
 **/
 
-use Config\App;
 use Config\Routes;
+use Aether\Exception\PageNotFoundException;
 use Aether\Interface\RoutesInterface;
 
 class Routing implements RoutesInterface
@@ -230,7 +230,7 @@ class Routing implements RoutesInterface
         // move the stashed rule, controller, and controller method
         // into stashed route which then moved into route collection
         $this->stashedRoute['rule']       = $rule;
-        $this->stashedRoute['controller'] = $controller;
+        $this->stashedRoute['controller'] = '\\' . $controller;
         $this->stashedRoute['method']     = $controllerMethod;
 
         // check methods and stash it
@@ -351,8 +351,8 @@ class Routing implements RoutesInterface
         // if there is no route matched
         if ($routeMatchedKey === false)
         {
-            // show error 404
-            die('error 404');
+            $message = (AETHER_ENV === 'development') ? 'Route is not found in route configuration.' : 'Page not found.';
+            throw new PageNotFoundException($message);
         }
         
         // return with array
