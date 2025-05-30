@@ -76,6 +76,54 @@ if (!function_exists('getDotEnv'))
     }
 }
 
+if (!function_exists('helper'))
+{
+    /** 
+     * Load a helper file that contain usable functions
+     * 
+     * @param string $name
+     * 
+     * @return void
+     * 
+    **/
+    function helper(string $name): void
+    {
+        // check file
+        $fileName = "{$name}Helper.php";
+
+        // load in app first then in system/core path
+        if (file_exists(APPPATH . "Helper/{$fileName}"))
+        {
+            include_once APPPATH . "Helper/{$fileName}";
+        }
+
+        if (file_exists(SYSTEMPATH . "Helper/{$fileName}"))
+        {
+            include_once SYSTEMPATH . "Helper/{$fileName}";
+        }
+    }
+}
+
+if (!function_exists('redirect'))
+{
+    /** 
+     * Load a helper file that contain usable functions
+     * 
+     * @param string $url
+     * @param bool $withInputData
+     * @param array $flashData
+     * 
+     * @return void
+     * 
+    **/
+    function redirect(string $url, bool $withInputData = false, array $flashData = []): void
+    {
+        // redirect and stop php script
+        header("Location: {$url}");
+        exit(0);
+    }
+}
+
 if (!function_exists('sanitizeURI'))
 {
     /** 
@@ -94,3 +142,4 @@ if (!function_exists('sanitizeURI'))
         return $check;
     }
 }
+

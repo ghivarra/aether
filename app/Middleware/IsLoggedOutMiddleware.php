@@ -3,6 +3,7 @@
 use Aether\Middleware;
 use Aether\Interface\RequestInterface;
 use Aether\Interface\ResponseInterface;
+use Aether\Response;
 
 /** 
  * IsLoggedOutMiddleware
@@ -25,7 +26,13 @@ class IsLoggedOutMiddleware extends Middleware
     **/
     public function before(RequestInterface $request)
     {
-        
+        $response = new Response();
+
+        return $response->setStatusCode(401)->setJSON([
+            'status'  => 'error',
+            'message' => 'Gagal menampilkan data',
+            'data'    => []
+        ]);
     }
 
     //====================================================================================

@@ -6,7 +6,7 @@
  * @class Config\Routes
 **/
 
-use Aether\Interface\RoutesInterface;
+use Aether\Interface\RoutingInterface;
 use App\Controller\TestController;
 
 class Routes
@@ -19,11 +19,11 @@ class Routes
      * use (:segment) if you wanted to match only segmented URI
      * use (:any) if you wanted to match the rest of URI
      * 
-     * @param RoutesInterface $route
+     * @param RoutingInterface $route
      * 
      * @return void
     **/
-    public function run(RoutesInterface $route): void
+    public function run(RoutingInterface $route): void
     {
         $route->get('page/news/(:segment)/(:any)', TestController::class, 'index')
               ->as('page.news')

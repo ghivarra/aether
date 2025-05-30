@@ -2,7 +2,7 @@
 
 use Config\Routes;
 use Aether\Exception\PageNotFoundException;
-use Aether\Interface\RoutesInterface;
+use Aether\Interface\RoutingInterface;
 
 /** 
  * Routing Class
@@ -10,7 +10,7 @@ use Aether\Interface\RoutesInterface;
  * @class Aether\Route
 **/
 
-class Routing implements RoutesInterface
+class Routing implements RoutingInterface
 {
     /** 
      * List of allowed methods on the framework
@@ -145,10 +145,10 @@ class Routing implements RoutesInterface
      * @param string $controller
      * @param string $controllerMethod
      * 
-     * @return RoutesInterface
+     * @return RoutingInterface
      * 
     **/
-    public function all(string $rule, string $controller, string $controllerMethod): RoutesInterface
+    public function all(string $rule, string $controller, string $controllerMethod): RoutingInterface
     {
         return $this->match('all', $rule, $controller, $controllerMethod);
     }
@@ -160,10 +160,10 @@ class Routing implements RoutesInterface
      * 
      * @param string $alias
      * 
-     * @return RoutesInterface
+     * @return RoutingInterface
      * 
     **/
-    public function as(string $alias): RoutesInterface
+    public function as(string $alias): RoutingInterface
     {
         $this->stashedRoute['name'] = $alias;
 
@@ -180,10 +180,10 @@ class Routing implements RoutesInterface
      * @param string $controller
      * @param string $controllerMethod
      * 
-     * @return RoutesInterface
+     * @return RoutingInterface
      * 
     **/
-    public function delete(string $rule, string $controller, string $controllerMethod): RoutesInterface
+    public function delete(string $rule, string $controller, string $controllerMethod): RoutingInterface
     {
         return $this->match('delete', $rule, $controller, $controllerMethod);
     }
@@ -295,8 +295,65 @@ class Routing implements RoutesInterface
         
         // return with array
         return [
+            'uri'   => $requestURIFull,
             'data'  => self::$routeCollection[$usedMethod][$routeMatchedKey],
             'param' => $this->routeVariables,
+        ];
+    }
+
+    //==========================================================================================
+
+    /** 
+     * Find the matched route based on the alias of supplied route
+     * 
+     * @param string $alias
+     * 
+     * @return array
+     * 
+    **/
+    public function findByAlias(string $alias, array $params = []): array
+    {
+        // early return if not exist
+        if (!isset(self::$routeCollection['name'][$alias]))
+        {
+            return [];
+        }
+
+        // create route variable
+        $route = self::$routeCollection['name'][$alias];
+
+        // create full URI using params
+        // if not empty
+        if (!empty($params))
+        {
+            $uriSegments = explode('/', $route['rule']);
+
+            foreach ($uriSegments as $n => $segment):
+
+                if ($segment === $this->segmentVariable)
+                {
+                    $uriSegments[$n] = $params[0];
+                    array_shift($params);
+
+                } elseif ($segment === $this->anyVariable) {
+
+                    $uriSegments[$n] = implode('/', $params);
+
+                }
+
+            endforeach;
+
+        } else {
+
+            $uriSegments = explode('/', $route['rule']);
+
+        }
+
+        // return with array
+        return [
+            'uri'   => implode('/', $uriSegments),
+            'data'  => $route,
+            'param' => $params,
         ];
     }
 
@@ -309,10 +366,10 @@ class Routing implements RoutesInterface
      * @param string $controller
      * @param string $controllerMethod
      * 
-     * @return RoutesInterface
+     * @return RoutingInterface
      * 
     **/
-    public function get(string $rule, string $controller, string $controllerMethod): RoutesInterface
+    public function get(string $rule, string $controller, string $controllerMethod): RoutingInterface
     {
         return $this->match('get', $rule, $controller, $controllerMethod);
     }
@@ -339,10 +396,10 @@ class Routing implements RoutesInterface
      * @param string $controller
      * @param string $controllerMethod
      * 
-     * @return RoutesInterface
+     * @return RoutingInterface
      * 
     **/
-    public function head(string $rule, string $controller, string $controllerMethod): RoutesInterface
+    public function head(string $rule, string $controller, string $controllerMethod): RoutingInterface
     {
         return $this->match('head', $rule, $controller, $controllerMethod);
     }
@@ -357,10 +414,10 @@ class Routing implements RoutesInterface
      * @param string $controller
      * @param string $controllerMethod
      * 
-     * @return RoutesInterface
+     * @return RoutingInterface
      * 
     **/
-    public function match(array|string $httpMethod, string $rule, string $controller, string $controllerMethod): RoutesInterface
+    public function match(array|string $httpMethod, string $rule, string $controller, string $controllerMethod): RoutingInterface
     {
         // check if there are any stashed route
         // and store it
@@ -437,10 +494,10 @@ class Routing implements RoutesInterface
      * @param string $middlewares
      * @param string $executionTime 'before' | 'after'
      * 
-     * @return RoutesInterface
+     * @return RoutingInterface
      * 
     **/
-    public function middlewares(string|array $middlewares, string $executionTime = 'before'): RoutesInterface
+    public function middlewares(string|array $middlewares, string $executionTime = 'before'): RoutingInterface
     {
         if (is_array($middlewares))
         {
@@ -469,10 +526,10 @@ class Routing implements RoutesInterface
      * @param string $controller
      * @param string $controllerMethod
      * 
-     * @return RoutesInterface
+     * @return RoutingInterface
      * 
     **/
-    public function options(string $rule, string $controller, string $controllerMethod): RoutesInterface
+    public function options(string $rule, string $controller, string $controllerMethod): RoutingInterface
     {
         return $this->match('options', $rule, $controller, $controllerMethod);
     }
@@ -486,10 +543,10 @@ class Routing implements RoutesInterface
      * @param string $controller
      * @param string $controllerMethod
      * 
-     * @return RoutesInterface
+     * @return RoutingInterface
      * 
     **/
-    public function patch(string $rule, string $controller, string $controllerMethod): RoutesInterface
+    public function patch(string $rule, string $controller, string $controllerMethod): RoutingInterface
     {
         return $this->match('patch', $rule, $controller, $controllerMethod);
     }
@@ -503,10 +560,10 @@ class Routing implements RoutesInterface
      * @param string $controller
      * @param string $controllerMethod
      * 
-     * @return RoutesInterface
+     * @return RoutingInterface
      * 
     **/
-    public function post(string $rule, string $controller, string $controllerMethod): RoutesInterface
+    public function post(string $rule, string $controller, string $controllerMethod): RoutingInterface
     {
         return $this->match('post', $rule, $controller, $controllerMethod);
     }
@@ -520,10 +577,10 @@ class Routing implements RoutesInterface
      * @param string $controller
      * @param string $controllerMethod
      * 
-     * @return RoutesInterface
+     * @return RoutingInterface
      * 
     **/
-    public function put(string $rule, string $controller, string $controllerMethod): RoutesInterface
+    public function put(string $rule, string $controller, string $controllerMethod): RoutingInterface
     {
         return $this->match('put', $rule, $controller, $controllerMethod);
     }

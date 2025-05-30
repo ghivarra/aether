@@ -1,6 +1,7 @@
 <?php namespace Aether;
 
 use Aether\Interface\ResponseInterface;
+use Aether\Routing;
 
 /** 
  * Response
@@ -31,7 +32,9 @@ class Response implements ResponseInterface
      * 
      * @var array $this->headers
     **/
-    public array $headers = [];
+    public array $headers = [
+        ['key' => 'Cache-Control', 'value' => 'no-store, max-age=0, no-cache'],
+    ];
 
     /** 
      * Data to be echoed on the response
@@ -67,7 +70,7 @@ class Response implements ResponseInterface
      * 
      * @var string $this->redirectURL
     **/
-    public string $redirectURL = '';
+    public string $redirectURL = '/';
 
     /** 
      * If input data is sent to the redirected view
@@ -96,6 +99,11 @@ class Response implements ResponseInterface
     **/
     public function json(mixed $data): ResponseInterface
     {
+        // input as data as json
+        $this->contentType = 'application/json';
+        $this->viewData = json_encode($data);
+
+        // return
         return $this;
     }
 
@@ -108,6 +116,12 @@ class Response implements ResponseInterface
     **/
     public function redirect(): ResponseInterface
     {
+        // set redirect as true
+        // and set default redirect URL
+        $this->redirected = true;
+        $this->redirectURL = base_url();
+
+        // return
         return $this;
     }
 
@@ -120,8 +134,18 @@ class Response implements ResponseInterface
      * 
      * @return ResponseInterface
     **/
-    public function route(string $routeName): ResponseInterface
+    public function route(string $routeName, array $params = []): ResponseInterface
     {
+        // initiate routing
+        $routing = new Routing();
+
+        // set redirect
+        $route = $routing->findByAlias($routeName, $params);
+
+        // set url
+        $this->redirectURL = base_url($route['uri']);
+
+        // return
         return $this;
     }
 
@@ -136,6 +160,10 @@ class Response implements ResponseInterface
     **/
     public function setCharset(string $charset): ResponseInterface
     {
+        // set charset
+        $this->charset = $charset;
+
+        // return
         return $this;
     }
 
@@ -150,6 +178,10 @@ class Response implements ResponseInterface
     **/
     public function setContentType(string $contentType): ResponseInterface
     {
+        // set content type
+        $this->contentType = $contentType;
+
+        // return
         return $this;
     }
 
@@ -165,20 +197,13 @@ class Response implements ResponseInterface
     **/
     public function setHeader(string $key, int|string $value): ResponseInterface
     {
-        return $this;
-    }
+        // push header
+        array_push($this->headers, [
+            'key'   => $key,
+            'value' => $value,
+        ]);
 
-    //==================================================================================================
-
-    /** 
-     * Set HTTP Response Status Code
-     * 
-     * @param int $code
-     * 
-     * @return ResponseInterface
-    **/
-    public function setStatusCode(int $code): ResponseInterface
-    {
+        // return
         return $this;
     }
 
@@ -199,6 +224,24 @@ class Response implements ResponseInterface
     //==================================================================================================
 
     /** 
+     * Set HTTP Response Status Code
+     * 
+     * @param int $code
+     * 
+     * @return ResponseInterface
+    **/
+    public function setStatusCode(int $code): ResponseInterface
+    {
+        // set status code
+        $this->statusCode = $code;
+
+        // return
+        return $this;
+    }
+
+    //==================================================================================================
+
+    /** 
      * Set redirect based on URL if the $url parameter
      * is a valid URL or baseURL(param) if it is not
      * 
@@ -208,6 +251,16 @@ class Response implements ResponseInterface
     **/
     public function to(string $url): ResponseInterface
     {
+        // check if not valid url, then mutate using baseURL
+        if (!filter_var($url, FILTER_VALIDATE_URL))
+        {
+            $url = base_url($url);
+        }
+
+        // set redirected url
+        $this->redirectURL = $url;
+
+        // return
         return $this;
     }
 
