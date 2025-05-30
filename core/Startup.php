@@ -27,7 +27,7 @@ class Startup
         $routing     = new Routing();
         $routeResult = $routing->parse($_SERVER['REQUEST_URI']);
 
-        dd($routeResult);
+        dd($routing->getAllRoutes());
     }
 
     //====================================================================================

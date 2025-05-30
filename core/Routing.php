@@ -13,6 +13,17 @@ use Aether\Interface\RoutesInterface;
 class Routing implements RoutesInterface
 {
     /** 
+     * List of allowed methods on the framework
+     * 
+     * @var array $this->allowedMethods
+    **/
+    protected array $allowedMethods = [
+        'get', 'head', 'post', 'put', 'patch', 'options', 'delete'
+    ];
+
+    //==========================================================================================
+
+    /** 
      * Any variable so it is consistent across then controller
      * 
      * @var string $this->anyVariable
@@ -37,12 +48,12 @@ class Routing implements RoutesInterface
     **/
     protected static array $routeCollection = [
         'get'     => [],
-        'options' => [],
         'head'    => [],
         'post'    => [],
         'put'     => [],
-        'delete'  => [],
         'patch'   => [],
+        'options' => [],
+        'delete'  => [],
         'name'    => [],
     ];
 
@@ -81,12 +92,81 @@ class Routing implements RoutesInterface
 
     //==========================================================================================
 
+    protected function save(): void
+    {
+        // push all stashed items into route collection based on methods
+        foreach ($this->stashedMethods as $method):
+
+            $method = strtolower($method);
+
+            if (isset(self::$routeCollection[$method]))
+            {
+                array_push(self::$routeCollection[$method], $this->stashedRoute);
+            }
+
+        endforeach;
+
+        // push into route collection based by name
+        if (!empty($this->stashedRoute['name']))
+        {
+            self::$routeCollection['name'][$this->stashedRoute['name']] = $this->stashedRoute;
+        }
+
+        // make default again
+        $this->stashedRoute = [
+            'name'        => '',
+            'rule'        => '',
+            'controller'  => '',
+            'method'      => '',
+            'middlewares' => [],
+        ];
+
+        $this->stashedMethods = [];
+    }
+
+    //==========================================================================================
+
+    public function all(string $rule, string $controller, string $controllerMethod): RoutesInterface
+    {
+        return $this->match('all', $rule, $controller, $controllerMethod);
+    }
+
+    //==========================================================================================
+
     public function as(string $alias): RoutesInterface
     {
         $this->stashedRoute['name'] = $alias;
 
         // return instance
         return $this;
+    }
+
+    //==========================================================================================
+
+    public function delete(string $rule, string $controller, string $controllerMethod): RoutesInterface
+    {
+        return $this->match('delete', $rule, $controller, $controllerMethod);
+    }
+
+    //==========================================================================================
+
+    public function get(string $rule, string $controller, string $controllerMethod): RoutesInterface
+    {
+        return $this->match('get', $rule, $controller, $controllerMethod);
+    }
+
+    //==========================================================================================
+
+    public function getAllRoutes(): array
+    {
+        return self::$routeCollection;
+    }
+
+    //==========================================================================================
+
+    public function head(string $rule, string $controller, string $controllerMethod): RoutesInterface
+    {
+        return $this->match('head', $rule, $controller, $controllerMethod);
     }
 
     //==========================================================================================
@@ -98,6 +178,37 @@ class Routing implements RoutesInterface
         if (!empty($this->stashedMethods))
         {
             $this->save();
+        }
+
+        // sanitize http method
+        if (is_array($httpMethod))
+        {
+            foreach ($httpMethod as $n => $method):
+
+                if (!in_array(strtolower($method), $this->allowedMethods))
+                {
+                    unset($httpMethod[$n]);
+                }
+
+            endforeach;
+
+        } else {
+
+            if (strtolower($httpMethod === 'all'))
+            {
+                // input all available method
+                $httpMethod = $this->allowedMethods;
+
+            } else {
+
+                if (!in_array($httpMethod, $this->allowedMethods))
+                {
+                    // don't process this routes
+                    // as the http method is invalid or not allowed
+                    return $this;
+                }
+            }
+
         }
 
         // replace (:any) with ?ANY?
@@ -138,6 +249,13 @@ class Routing implements RoutesInterface
 
         // return instance
         return $this;
+    }
+
+    //==========================================================================================
+
+    public function options(string $rule, string $controller, string $controllerMethod): RoutesInterface
+    {
+        return $this->match('options', $rule, $controller, $controllerMethod);
     }
 
     //==========================================================================================
@@ -246,36 +364,23 @@ class Routing implements RoutesInterface
 
     //==========================================================================================
 
-    protected function save(): void
+    public function patch(string $rule, string $controller, string $controllerMethod): RoutesInterface
     {
-        // push all stashed items into route collection based on methods
-        foreach ($this->stashedMethods as $method):
+        return $this->match('patch', $rule, $controller, $controllerMethod);
+    }
 
-            $method = strtolower($method);
+    //==========================================================================================
 
-            if (isset(self::$routeCollection[$method]))
-            {
-                array_push(self::$routeCollection[$method], $this->stashedRoute);
-            }
+    public function post(string $rule, string $controller, string $controllerMethod): RoutesInterface
+    {
+        return $this->match('post', $rule, $controller, $controllerMethod);
+    }
 
-        endforeach;
+    //==========================================================================================
 
-        // push into route collection based by name
-        if (!empty($this->stashedRoute['name']))
-        {
-            self::$routeCollection['name'][$this->stashedRoute['name']] = $this->stashedRoute;
-        }
-
-        // make default again
-        $this->stashedRoute = [
-            'name'        => '',
-            'rule'        => '',
-            'controller'  => '',
-            'method'      => '',
-            'middlewares' => [],
-        ];
-
-        $this->stashedMethods = [];
+    public function put(string $rule, string $controller, string $controllerMethod): RoutesInterface
+    {
+        return $this->match('put', $rule, $controller, $controllerMethod);
     }
 
     //==========================================================================================
