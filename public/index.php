@@ -13,6 +13,12 @@
  * @url https://instagram.com/ghivarra
  *
 **/
+declare(strict_types = 1);
+
+// turn off all errors
+error_reporting(0);
+ini_set('display_errors', 'off');
+ini_set('display_startup_errors', '0');
 
 /** 
  * Checking if PHP Version is compatible or need higher version

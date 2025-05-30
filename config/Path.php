@@ -3,7 +3,7 @@
 /** 
  * Front Controller Path
  * 
- * ~root/public/
+ * <ROOT>/public/
  * 
  * @var string FCPATH
 **/
@@ -12,7 +12,7 @@ define('FCPATH', realpath(__DIR__ . '/../public') . DIRECTORY_SEPARATOR);
 /** 
  * Root Path
  * 
- * ~root/
+ * <ROOT>/
  * 
  * @var string ROOTPATH
 **/
@@ -21,7 +21,7 @@ define('ROOTPATH', realpath(__DIR__ . '/..') . DIRECTORY_SEPARATOR);
 /** 
  * App Path
  * 
- * ~root/app/
+ * <ROOT>/app/
  * 
  * @var string APPPATH
 **/
@@ -30,7 +30,7 @@ define('APPPATH', realpath(__DIR__ . '/../app') . DIRECTORY_SEPARATOR);
 /** 
  * System / Core Path
  * 
- * ~root/core/
+ * <ROOT>/core/
  * 
  * @var string SYSTEMPATH
 **/
@@ -39,7 +39,7 @@ define('SYSTEMPATH', realpath(__DIR__ . '/../core') . DIRECTORY_SEPARATOR);
 /** 
  * Resource Path
  * 
- * ~root/resource/
+ * <ROOT>/resource/
  * 
  * @var string RESOURCEPATH
 **/
@@ -48,16 +48,16 @@ define('RESOURCEPATH', realpath(__DIR__ . '/../resource') . DIRECTORY_SEPARATOR)
 /** 
  * View Path
  * 
- * ~root/resource/views/
+ * <ROOT>/app/View/
  * 
  * @var string RESOURCEPATH
 **/
-define('VIEWPATH', realpath(__DIR__ . '/../resource/views') . DIRECTORY_SEPARATOR);
+define('VIEWPATH', realpath(__DIR__ . '/../app/View') . DIRECTORY_SEPARATOR);
 
 /** 
  * Storage Path
  * 
- * ~root/storage/
+ * <ROOT>/storage/
  * 
  * @var string STORAGEPATH
 **/
