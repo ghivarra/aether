@@ -4,7 +4,7 @@
 
 
 // functions
-if (!function_exists('dd'))
+if (!function_exists('dd') && function_exists('d'))
 {
     /** 
      * Debug all kind of data using Kint
@@ -73,5 +73,24 @@ if (!function_exists('getDotEnv'))
 
         // return data
         return $data;
+    }
+}
+
+if (!function_exists('sanitizeURI'))
+{
+    /** 
+     * Sanitize URI Input
+     * 
+     * @param string $uri
+     * 
+     * @return bool
+     * 
+    **/
+    function sanitizeURI(string $uri): bool
+    {
+        $check = (empty($uri) && (strlen($uri) < 1)) ? false : true;
+
+        // return
+        return $check;
     }
 }

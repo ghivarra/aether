@@ -1,0 +1,282 @@
+<?php namespace Aether;
+
+/** 
+ * Routing Class
+ * 
+ * @class Aether\Route
+**/
+
+use Config\App;
+use Config\Routes;
+use Aether\Interface\RoutesInterface;
+
+class Routing implements RoutesInterface
+{
+    /** 
+     * Any variable so it is consistent across then controller
+     * 
+     * @var string $this->anyVariable
+    **/
+    protected string $anyVariable = '(:any)';
+
+    //==========================================================================================
+
+    /** 
+     * Segment variable so it is consistent across then controller
+     * 
+     * @var string $this->segmentVariable
+    **/
+    protected string $segmentVariable = '(:segment)';
+
+    //==========================================================================================
+
+    /** 
+     * Route collection that will be used on routing
+     * 
+     * @var array $routeCollection
+    **/
+    protected static array $routeCollection = [
+        'get'     => [],
+        'options' => [],
+        'head'    => [],
+        'post'    => [],
+        'put'     => [],
+        'delete'  => [],
+        'patch'   => [],
+        'name'    => [],
+    ];
+
+    //==========================================================================================
+    
+    /** 
+     * Variable that will be inserted into controllers method parameter
+     * 
+     * @var array $this->routeVariable
+    **/
+    protected array $routeVariables = [];
+
+    //==========================================================================================
+
+    /** 
+     * Route storage before being pushed into $routeCollection
+     * 
+     * @var array $this->stashedRoute
+    **/
+    protected array $stashedRoute = [
+        'name'        => '',
+        'rule'        => '',
+        'controller'  => '',
+        'method'      => '',
+        'middlewares' => [],
+    ];
+
+    //==========================================================================================
+
+    /** 
+     * Route method that is being used before being pushed into $routeCollection
+     * 
+     * @var array $this->stashedMethods
+    **/
+    protected array $stashedMethods = [];
+
+    //==========================================================================================
+
+    public function as(string $alias): RoutesInterface
+    {
+        $this->stashedRoute['name'] = $alias;
+
+        // return instance
+        return $this;
+    }
+
+    //==========================================================================================
+
+    public function match(array|string $httpMethod, string $rule, string $controller, string $controllerMethod): RoutesInterface
+    {
+        // check if there are any stashed route
+        // and store it
+        if (!empty($this->stashedMethods))
+        {
+            $this->save();
+        }
+
+        // replace (:any) with ?ANY?
+        $posString = stripos($rule, $this->anyVariable);
+
+        if ($posString !== false)
+        {
+            //$rule = strstr($rule, $anyString, true);
+            $rule = substr($rule, 0, $posString);
+            $rule = $rule . $this->anyVariable;
+        }
+
+        // replace (:segment) with ?SEGMENT?
+        if (stripos($rule, $this->segmentVariable) !== false)
+        {
+            $rule = str_ireplace($this->segmentVariable, $this->segmentVariable, $rule);
+        }
+
+        // move the stashed rule, controller, and controller method
+        // into stashed route which then moved into route collection
+        $this->stashedRoute['rule']       = $rule;
+        $this->stashedRoute['controller'] = $controller;
+        $this->stashedRoute['method']     = $controllerMethod;
+
+        // check methods and stash it
+        $this->stashedMethods = is_array($httpMethod) ? $httpMethod : [ $httpMethod ];
+
+        // return instance
+        return $this;
+    }
+
+    //==========================================================================================
+
+    public function middlewares(string|array $middlewares): RoutesInterface
+    {
+        // store middleware on stashed route
+        $this->stashedRoute['middlewares'] = is_array($middlewares) ? $middlewares : [ $middlewares ];
+
+        // return instance
+        return $this;
+    }
+
+    //==========================================================================================
+
+    public function parse(string $uri): array
+    {
+        // load routes config and run
+        $routeConfig = new Routes();
+        $routeConfig->run($this);
+
+        // save all config
+        $this->save();
+
+        // only parse uri before uri parameters
+        $requestURI = (stripos($uri, '?') === false) ? $uri : strstr($uri, '?', true);
+        $requestURI = explode('/', $uri);
+        $requestURI = array_values(array_filter($requestURI, 'sanitizeURI'));
+
+        // mutate ori and replace using config
+        // disable this feature for now
+        // $uri = preg_replace('/[^'. $appConfig->permittedURIChars .']+/iu', '-', $uri);
+
+        // check routes
+        $usedMethod      = strtolower($_SERVER['REQUEST_METHOD']);
+        $routeMatchedKey = false;
+
+        foreach (self::$routeCollection[$usedMethod] as $i => $route):
+
+            // break into segments
+            $ruleURI = explode('/', $route['rule']);
+            $ruleURI = array_values(array_filter($ruleURI, 'sanitizeURI'));
+
+            // count total segment
+            $totalRuleURI = count($ruleURI);
+
+            // count total request uri
+            $totalRequestURI = count($requestURI);
+
+            // if count request URI lower than
+            // count total rule URI then continue as it won't match
+            if ($totalRequestURI < $totalRuleURI)
+            {
+                continue;
+            }
+
+            // mutate rules (:segment) and (:any)
+            foreach ($ruleURI as $n => $item):
+
+                // mutate segment with the same $n from request URI
+                if ($item === $this->segmentVariable)
+                {
+                    $ruleURI[$n] = $requestURI[$n];
+
+                    // push into route variable
+                    array_push($this->routeVariables, $requestURI[$n]);
+                }
+
+                // mutate any with all of the other $n from request URI
+                if ($item === $this->anyVariable)
+                {
+                    $ruleURI[$n] = $requestURI[$n];
+                    array_push($this->routeVariables, $requestURI[$n]);
+
+                    if ($totalRequestURI > $totalRuleURI)
+                    {
+                        $keysLeft = range(($n + 1), ($totalRequestURI - 1));
+                        
+                        foreach ($keysLeft as $key):
+
+                            array_push($ruleURI, $requestURI[$key]);
+                            array_push($this->routeVariables, $requestURI[$key]);
+
+                        endforeach;
+                    }
+                }
+
+            endforeach;
+
+            // build full URI
+            $ruleURIFull    = implode('/', $ruleURI);
+            $requestURIFull = implode('/', $requestURI);
+
+            // check if matched
+            if ($ruleURIFull === $requestURIFull)
+            {
+                
+                $routeMatchedKey = $i;
+                break;   
+            }
+
+        endforeach;
+
+        // if there is no route matched
+        if ($routeMatchedKey === false)
+        {
+            // show error 404
+            die('error 404');
+        }
+        
+        // return with array
+        return [
+            'data'  => self::$routeCollection[$usedMethod][$routeMatchedKey],
+            'param' => $this->routeVariables,
+        ];
+    }
+
+    //==========================================================================================
+
+    protected function save(): void
+    {
+        // push all stashed items into route collection based on methods
+        foreach ($this->stashedMethods as $method):
+
+            $method = strtolower($method);
+
+            if (isset(self::$routeCollection[$method]))
+            {
+                array_push(self::$routeCollection[$method], $this->stashedRoute);
+            }
+
+        endforeach;
+
+        // push into route collection based by name
+        if (!empty($this->stashedRoute['name']))
+        {
+            self::$routeCollection['name'][$this->stashedRoute['name']] = $this->stashedRoute;
+        }
+
+        // make default again
+        $this->stashedRoute = [
+            'name'        => '',
+            'rule'        => '',
+            'controller'  => '',
+            'method'      => '',
+            'middlewares' => [],
+        ];
+
+        $this->stashedMethods = [];
+    }
+
+    //==========================================================================================
+}
