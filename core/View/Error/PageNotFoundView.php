@@ -14,7 +14,7 @@
             min-height: 100vh;
             min-height: 100dvh;
             background-color: #f4f4f4;
-            padding: 2.5rem;
+            padding: 1.5rem;
             color: #343434;
         }
         #message-wrapper {
