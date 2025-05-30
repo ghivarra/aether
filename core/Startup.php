@@ -70,9 +70,11 @@ class Startup
                 throw new PageNotFoundException($message);
             }
 
+            // run middleware
+            dd($routeResult);
+
             // initiate controller
             $response = empty($routeResult['param']) ? $controller->$method() : $controller->$method(...$routeResult['param']);
-            dd($response);
 
         } catch(Exception $e) {
 

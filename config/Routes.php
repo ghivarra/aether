@@ -27,7 +27,8 @@ class Routes
     {
         $route->get('page/news/(:segment)/(:any)', TestController::class, 'index')
               ->as('page.news')
-              ->middlewares(['isLoggedOut', 'isAdmin']);
+              ->middlewares(['isLoggedOut', 'isAdmin'], 'before')
+              ->middlewares(['isLoggedOut'], 'after');
 
         $route->get('page/news/(:segment)', TestController::class, 'index')
               ->as('page.category');

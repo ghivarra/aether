@@ -1,7 +1,6 @@
 <?php namespace Aether;
 
 use \Throwable;
-use Config\App;
 
 /** 
  * Error Class

@@ -1,14 +1,14 @@
 <?php namespace Aether;
 
+use Config\Routes;
+use Aether\Exception\PageNotFoundException;
+use Aether\Interface\RoutesInterface;
+
 /** 
  * Routing Class
  * 
  * @class Aether\Route
 **/
-
-use Config\Routes;
-use Aether\Exception\PageNotFoundException;
-use Aether\Interface\RoutesInterface;
 
 class Routing implements RoutesInterface
 {
@@ -78,7 +78,10 @@ class Routing implements RoutesInterface
         'rule'        => '',
         'controller'  => '',
         'method'      => '',
-        'middlewares' => [],
+        'middlewares' => [
+            'before' => [],
+            'after'  => [],
+        ],
     ];
 
     //==========================================================================================
@@ -118,7 +121,10 @@ class Routing implements RoutesInterface
             'rule'        => '',
             'controller'  => '',
             'method'      => '',
-            'middlewares' => [],
+            'middlewares' => [
+                'before' => [],
+                'after'  => [],
+            ],
         ];
 
         $this->stashedMethods = [];
@@ -242,10 +248,21 @@ class Routing implements RoutesInterface
 
     //==========================================================================================
 
-    public function middlewares(string|array $middlewares): RoutesInterface
+    public function middlewares(string|array $middlewares, string $executionTime = 'before'): RoutesInterface
     {
-        // store middleware on stashed route
-        $this->stashedRoute['middlewares'] = is_array($middlewares) ? $middlewares : [ $middlewares ];
+        if (is_array($middlewares))
+        {
+            foreach ($middlewares as $middleware):
+
+                array_push($this->stashedRoute['middlewares'][$executionTime], $middleware);
+
+            endforeach;
+
+        } else {
+
+            array_push($this->stashedRoute['middlewares'][$executionTime], $middlewares);
+
+        }
 
         // return instance
         return $this;

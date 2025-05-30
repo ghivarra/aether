@@ -1,12 +1,12 @@
 <?php namespace App\Controller;
 
+use App\Controller\BaseController;
+
 /** 
  * Test Controller
  * 
  * @class App\Controller\TestController
 **/
-
-use App\Controller\BaseController;
 
 class TestController extends BaseController
 {

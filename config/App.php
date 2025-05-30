@@ -1,5 +1,7 @@
 <?php namespace Config;
 
+use Aether\Config\BaseApp;
+
 /** 
  * App Configurations
  * 
@@ -7,8 +9,6 @@
  * 
  * You can ignore this config if you wanted to use dotenv file
 **/
-
-use Aether\Config\BaseApp;
 
 class App extends BaseApp
 {
