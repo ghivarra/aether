@@ -50,7 +50,7 @@ class Startup
 
             // route request
             $routing     = new Routing();
-            $routeResult = $routing->parse($_SERVER['REQUEST_URI']);
+            $routeResult = $routing->find($_SERVER['REQUEST_URI']);
 
             // check if controller exist
             if (!class_exists($routeResult['data']['controller']))
@@ -70,7 +70,8 @@ class Startup
                 throw new PageNotFoundException($message);
             }
 
-            // run middleware
+            // run private middleware from route first
+            
             dd($routeResult);
 
             // initiate controller
