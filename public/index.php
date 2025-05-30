@@ -24,7 +24,7 @@ ini_set('display_startup_errors', '0');
  * Checking if PHP Version is compatible or need higher version
  * @var string $minPhpVersion
 **/
-$minPhpVersion = '8.1';
+$minPhpVersion = '8.3';
 
 if (version_compare(PHP_VERSION, $minPhpVersion, '<'))
 {
