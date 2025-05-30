@@ -28,7 +28,7 @@ class IsLoggedOutMiddleware extends Middleware
     {
         $response = new Response();
 
-        return $response->setStatusCode(401)->setJSON([
+        return $response->setStatusCode(200)->setJSON([
             'status'  => 'error',
             'message' => 'Gagal menampilkan data',
             'data'    => []
