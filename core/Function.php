@@ -1,7 +1,9 @@
 <?php
 
 // used library
-
+use Aether\Interface\ResponseInterface;
+use Aether\Exception\SystemException;
+use Aether\View\Template;
 
 // functions
 if (!function_exists('dd') && function_exists('d'))
@@ -143,3 +145,56 @@ if (!function_exists('sanitizeURI'))
     }
 }
 
+if (!function_exists('view'))
+{
+    /** 
+     * Send output from viewing template
+     * 
+     * @param string $filename
+     * 
+     * @return string
+     * 
+    **/
+    function view(string $filePath, array $data = []): string
+    {
+        $fullPath = VIEWPATH . $filePath . '.php';
+
+        if (!file_exists($fullPath))
+        {
+            if (AETHER_ENV === 'development')
+            {
+                $message = 'Templating view is not found. <b>Supplied Path: ' . $fullPath . '</b>';
+
+            } else {
+
+                $message = 'View not found.';
+            }
+                
+            throw new SystemException($message, 404);
+        }
+
+        // get or store data
+        if (empty($data))
+        {
+            if (!empty(Template::$templateData))
+            {
+                $data = Template::$templateData;
+            }
+
+        } else {
+
+            // store and get merged data
+            Template::setTemplateData($data);
+            $data = Template::$templateData;
+        }
+
+        // extract data
+        extract($data);
+
+        // require file
+        require $fullPath;
+
+        // return output buffering
+        return ob_get_clean();
+    }
+}

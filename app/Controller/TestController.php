@@ -16,7 +16,14 @@ class TestController extends BaseController
         $data = [
             'key1' => $this->request->get('key1'),
             'key2' => $this->request->get('key2'),
+            'text' => [
+                'home'   => 'Hello World!',
+                'footer' => 'This is footer',
+            ]
         ];
+
+        // home
+        return view('HomeView', $data);
 
         // return
         return $this->response->setJSON($data);

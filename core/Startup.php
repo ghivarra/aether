@@ -97,15 +97,15 @@ class Startup
         // initiate controller class
         $controller = new $controllerClass();
 
-        // load controller features
-        $controller->__loadController();
-
         // check if method exist
         if (!method_exists($controller, $method))
         {
             $message = (AETHER_ENV === 'development') ? "Method <b>{$method}()</b> inside Controller <b>{$controllerClass}</b> is not found." : 'Page not found.';
             throw new PageNotFoundException($message);
         }
+
+        // load controller features
+        $controller->__loadController();
 
         // check middlewares & run middleware before controller method
         if (isset($controller->middlewares) && !empty($controller->middlewares))
@@ -122,6 +122,10 @@ class Startup
 
             endforeach;
         }
+
+        // buffer output just before controller
+        // is initialized
+        ob_start();
 
         // init controller
         $response = empty($params) ? $controller->$method() : $controller->$method(...$params);

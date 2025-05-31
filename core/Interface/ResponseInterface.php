@@ -8,16 +8,16 @@
 
 interface ResponseInterface
 {
-    public string $contentType { get; set; }
-    public string $charset { get; set; }
-    public array $headers { get; set; }
-    public string $viewData { get; set; }
-    public int $statusCode { get; set; }
-    public bool $redirected { get; set; }
-    public string $redirectParameter { get; set; }
-    public string $redirectURL { get; set; }
-    public bool $withInputData { get; set; }
-    public array $flashData { get; set; }
+    public string $contentType { get; }
+    public string $charset { get; }
+    public array $headers { get; }
+    public string $viewData { get; }
+    public int $statusCode { get; }
+    public bool $redirected { get; }
+    public string $redirectParameter { get; }
+    public string $redirectURL { get; }
+    public bool $withInputData { get; }
+    public array $flashData { get; }
 
     public function json(mixed $data): ResponseInterface;
     public function setCharset(string $charset): ResponseInterface;

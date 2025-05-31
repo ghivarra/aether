@@ -197,11 +197,29 @@ class Response implements ResponseInterface
     **/
     public function setHeader(string $key, int|string $value): ResponseInterface
     {
-        // push header
-        array_push($this->headers, [
-            'key'   => $key,
-            'value' => $value,
-        ]);
+        // check if header exist
+        $headerKeys = array_column($this->headers, 'key');
+
+        // check if found in array
+        if (in_array($key, $headerKeys))
+        {
+            // find key
+            $i = array_search($key, $headerKeys);
+
+            // replace
+            $this->headers[$i] = [
+                'key'   => $key,
+                'value' => $value,
+            ];
+
+        } else {
+
+            // push header
+            array_push($this->headers, [
+                'key'   => $key,
+                'value' => $value,
+            ]);
+        }
 
         // return
         return $this;
