@@ -209,7 +209,7 @@ class Routing implements RoutingInterface
 
         // only parse uri before uri parameters
         $requestURI = (stripos($uri, '?') === false) ? $uri : strstr($uri, '?', true);
-        $requestURI = explode('/', $uri);
+        $requestURI = explode('/', $requestURI);
         $requestURI = array_values(array_filter($requestURI, 'sanitizeURI'));
 
         // mutate ori and replace using config
