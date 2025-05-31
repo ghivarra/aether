@@ -295,7 +295,7 @@ class Routing implements RoutingInterface
         
         // return with array
         return [
-            'uri'   => $requestURIFull,
+            'uri'   => ($requestURIFull === '') ? '/' : $requestURIFull,
             'data'  => self::$routeCollection[$usedMethod][$routeMatchedKey],
             'param' => $this->routeVariables,
         ];

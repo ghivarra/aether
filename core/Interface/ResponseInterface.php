@@ -25,6 +25,7 @@ interface ResponseInterface
     public function setHeader(string $key, int|string $value): ResponseInterface;
     public function setJSON(mixed $data): ResponseInterface;
     public function setStatusCode(int $code): ResponseInterface;
+    public function setViewData(string $data): ResponseInterface;
     public function redirect(): ResponseInterface;
     public function route(string $routeName, array $params = []): ResponseInterface;
     public function to(string $url): ResponseInterface;

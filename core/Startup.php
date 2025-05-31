@@ -5,9 +5,9 @@ use Config\Middlewares;
 use Dotenv\Dotenv;
 use Aether\Error;
 use Aether\Request;
+use Aether\Response;
 use Aether\Routing;
 use Aether\Exception\PageNotFoundException;
-use Aether\Exception\SystemException;
 use Aether\Interface\ResponseInterface;
 use \Exception;
 
@@ -58,8 +58,6 @@ class Startup
             $routing = new Routing();
             $route   = $routing->find($_SERVER['REQUEST_URI']);
 
-            
-
             // mutate middlewares
             $routeBeforeMiddleware = $route['data']['middlewares']['before'];
             $routeAfterMiddleware  = $route['data']['middlewares']['after'];
@@ -67,32 +65,15 @@ class Startup
             // run before controller middleware
             $this->runMiddleware('before', $routeBeforeMiddleware);
 
-            // check if controller exist
-            if (!class_exists($route['data']['controller']))
-            {
-                $message = (AETHER_ENV === 'development') ? "Controller <b>{$route['data']['controller']}</b> is not found." : 'Page not found.';
-                throw new PageNotFoundException($message);
-            }
+            // run controller
+            $response = $this->runController($route['data']['controller'], $route['data']['method'], $route['param']);
 
-            // initiate controller class
-            $controller = new $route['data']['controller']();
-            $method     = $route['data']['method'];
+            // run after controller middleware
+            $this->runMiddleware('after', $routeAfterMiddleware, $response);
 
-            // check if method exist
-            if (!method_exists($controller, $method))
-            {
-                $message = (AETHER_ENV === 'development') ? "Method <b>{$method}()</b> inside Controller <b>{$route['data']['controller']}</b> is not found." : 'Page not found.';
-                throw new PageNotFoundException($message);
-            }
-
-            // initiate controller
-            $response = empty($route['param']) ? $controller->$method() : $controller->$method(...$route['param']);
-
-            // check and run after middleware first
-            if (!empty($routeAfterMiddleware))
-            {
-                dd($routeAfterMiddleware);
-            }
+            // if there are no return response from the middleware 
+            // then run response
+            $this->runResponse($response);
 
         } catch(Exception $e) {
 
@@ -104,7 +85,54 @@ class Startup
 
     //====================================================================================
 
-    public function runMiddleware(string $executedTime, string|array $suppliedMiddlewares)
+    public function runController(string $controllerClass, string $method, array $params = []): ResponseInterface
+    {
+        // check if controller exist
+        if (!class_exists($controllerClass))
+        {
+            $message = (AETHER_ENV === 'development') ? "Controller <b>{$controllerClass}</b> is not found." : 'Page not found.';
+            throw new PageNotFoundException($message);
+        }
+
+        // initiate controller class
+        $controller = new $controllerClass();
+
+        // check if method exist
+        if (!method_exists($controller, $method))
+        {
+            $message = (AETHER_ENV === 'development') ? "Method <b>{$method}()</b> inside Controller <b>{$controllerClass}</b> is not found." : 'Page not found.';
+            throw new PageNotFoundException($message);
+        }
+
+        // init controller
+        $response = empty($params) ? $controller->$method() : $controller->$method(...$params);
+
+        // check type
+        if ($response instanceof ResponseInterface)
+        {
+            return $response;
+        }
+
+        // if not then initiate response
+        // and set view data using the correct $response type
+        $newResponse = new Response();
+
+        if (is_string($response))
+        {
+            $newResponse->setViewData($response);
+
+        } elseif (!empty($string)) {
+
+            $newResponse->setViewData(strval($response));
+        }
+
+        // initiate and return controller
+        return $newResponse;
+    }
+
+    //====================================================================================
+
+    public function runMiddleware(string $executedTime, string|array $suppliedMiddlewares, ResponseInterface|null $response = null)
     {
         // load middlewares config & request
         $middleware = new Middlewares();
@@ -134,15 +162,31 @@ class Startup
         // execute all
         foreach ($middlewareClasses as $class):
 
-            $initClass = new $class();
-            $instance  = $initClass->before($request);
-
-            // check if return a response
-            // early response mode activated
-            if ($instance instanceof ResponseInterface)
+            if ($executedTime === 'before')
             {
-                return $this->runResponse($instance);
-                break;
+                $initClass = new $class();
+                $instance  = $initClass->before($request);
+    
+                // check if return a response
+                // early response mode activated
+                if ($instance instanceof ResponseInterface)
+                {
+                    return $this->runResponse($instance);
+                    break;
+                }
+
+            } elseif ($executedTime === 'after') {
+
+                $initClass = new $class();
+                $instance  = $initClass->after($request, $response);
+    
+                // check if return a response
+                // early response mode activated
+                if ($instance instanceof ResponseInterface)
+                {
+                    return $this->runResponse($instance);
+                    break;
+                }
             }
 
         endforeach;

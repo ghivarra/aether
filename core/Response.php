@@ -242,6 +242,24 @@ class Response implements ResponseInterface
     //==================================================================================================
 
     /** 
+     * Set View data by supplying the string based data
+     * 
+     * @param string $data
+     * 
+     * @return ResponseInterface
+    **/
+    public function setViewData(string $data): ResponseInterface
+    {
+        // set view data
+        $this->viewData = $data;
+
+        // return
+        return $this;
+    }
+
+    //==================================================================================================
+
+    /** 
      * Set redirect based on URL if the $url parameter
      * is a valid URL or baseURL(param) if it is not
      * 
