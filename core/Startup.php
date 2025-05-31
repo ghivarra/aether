@@ -104,12 +104,34 @@ class Startup
             throw new PageNotFoundException($message);
         }
 
+        // check middlewares & run middleware before controller method
+        if (isset($controller->middlewares) && !empty($controller->middlewares))
+        {
+            $this->runMiddleware('before', $controller->middlewares);
+        }
+
+        // load helpers
+        if (isset($controller->helpers) && !empty($controller->helpers))
+        {
+            foreach ($controller->helpers as $helperName):
+
+                helper($helperName);
+
+            endforeach;
+        }
+
         // init controller
         $response = empty($params) ? $controller->$method() : $controller->$method(...$params);
 
         // check type
         if ($response instanceof ResponseInterface)
         {
+            // check middlewares & run middleware after controller method
+            if (isset($controller->middlewares) && !empty($controller->middlewares))
+            {
+                $this->runMiddleware('after', $controller->middlewares, $response);
+            }
+
             return $response;
         }
 
@@ -126,13 +148,19 @@ class Startup
             $newResponse->setViewData(strval($response));
         }
 
+        // check middlewares & run middleware after controller method
+        if (isset($controller->middlewares) && !empty($controller->middlewares))
+        {
+            $this->runMiddleware('after', $controller->middlewares, $newResponse);
+        }
+
         // initiate and return controller
         return $newResponse;
     }
 
     //====================================================================================
 
-    public function runMiddleware(string $executedTime, string|array $suppliedMiddlewares, ResponseInterface|null $response = null)
+    public function runMiddleware(string $executedTime, array $suppliedMiddlewares, ResponseInterface|null $response = null)
     {
         // load middlewares config & request
         $middleware = new Middlewares();
