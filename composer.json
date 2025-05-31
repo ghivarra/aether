@@ -22,6 +22,7 @@
     },
     "require": {
         "vlucas/phpdotenv": "^5.6@dev",
-        "laminas/laminas-escaper": "2.18.x-dev"
+        "laminas/laminas-escaper": "2.18.x-dev",
+        "predis/predis": "dev-main"
     }
 }
