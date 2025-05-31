@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dab6eed5b09d4990032b5a3c91d32a4d",
+    "content-hash": "6bd55c6edd215c4e8c3287114a750509",
     "packages": [
         {
             "name": "graham-campbell/result-type",
@@ -68,6 +68,68 @@
                 }
             ],
             "time": "2025-03-02T21:31:24+00:00"
+        },
+        {
+            "name": "laminas/laminas-escaper",
+            "version": "2.18.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laminas/laminas-escaper.git",
+                "reference": "2a09e68d034b05eeb4a57a6da7669aca7fba171b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laminas/laminas-escaper/zipball/2a09e68d034b05eeb4a57a6da7669aca7fba171b",
+                "reference": "2a09e68d034b05eeb4a57a6da7669aca7fba171b",
+                "shasum": ""
+            },
+            "require": {
+                "ext-ctype": "*",
+                "ext-mbstring": "*",
+                "php": "~8.1.0 || ~8.2.0 || ~8.3.0 || ~8.4.0"
+            },
+            "conflict": {
+                "zendframework/zend-escaper": "*"
+            },
+            "require-dev": {
+                "infection/infection": "^0.29.8",
+                "laminas/laminas-coding-standard": "~3.1.0",
+                "phpunit/phpunit": "^10.5.46",
+                "psalm/plugin-phpunit": "^0.19.5",
+                "vimeo/psalm": "^6.10.3"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Laminas\\Escaper\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "description": "Securely and safely escape HTML, HTML attributes, JavaScript, CSS, and URLs",
+            "homepage": "https://laminas.dev",
+            "keywords": [
+                "escaper",
+                "laminas"
+            ],
+            "support": {
+                "chat": "https://laminas.dev/chat",
+                "docs": "https://docs.laminas.dev/laminas-escaper/",
+                "forum": "https://discourse.laminas.dev",
+                "issues": "https://github.com/laminas/laminas-escaper/issues",
+                "rss": "https://github.com/laminas/laminas-escaper/releases.atom",
+                "source": "https://github.com/laminas/laminas-escaper"
+            },
+            "funding": [
+                {
+                    "url": "https://funding.communitybridge.org/projects/laminas-project",
+                    "type": "community_bridge"
+                }
+            ],
+            "time": "2025-05-26T01:50:24+00:00"
         },
         {
             "name": "phpoption/phpoption",
@@ -543,6 +605,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
+        "vlucas/phpdotenv": 20,
         "kint-php/kint": 20
     },
     "prefer-stable": false,
