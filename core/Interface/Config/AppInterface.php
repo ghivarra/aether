@@ -1,5 +1,11 @@
 <?php namespace Aether\Interface\Config;
 
+/** 
+ * App Config Interface
+ * 
+ * @class Aether\Interface\MiddlewareConfigInterface
+**/
+
 interface AppInterface
 {
     public string $env { get; set; }

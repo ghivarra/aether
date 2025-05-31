@@ -1,6 +1,6 @@
 <?php namespace Config;
 
-use Aether\Interface\MiddlewareConfigInterface;
+use Aether\Interface\Config\MiddlewareInterface;
 use App\Middleware\GlobalMiddleware;
 use App\Middleware\IsLoggedOutMiddleware;
 use App\Middleware\IsAdminMiddleware;
@@ -14,7 +14,7 @@ use App\Middleware\IsAdminMiddleware;
  * @class Config\Middleware
 **/
 
-class Middlewares implements MiddlewareConfigInterface
+class Middlewares implements MiddlewareInterface
 {
     /** 
      * A collection of middleware aliases to make it easy
