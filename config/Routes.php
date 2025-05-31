@@ -33,7 +33,7 @@ class Routes
         $route->get('page/news/(:segment)', TestController::class, 'index')
               ->as('page.category');
 
-        $route->get('/', TestController::class, 'index')->as('home');
+        $route->match(['options', 'post', 'get'], '/', TestController::class, 'index')->as('home');
     }
 
     //==========================================================================================

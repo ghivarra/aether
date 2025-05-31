@@ -97,6 +97,9 @@ class Startup
         // initiate controller class
         $controller = new $controllerClass();
 
+        // load controller features
+        $controller->__loadController();
+
         // check if method exist
         if (!method_exists($controller, $method))
         {

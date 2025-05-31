@@ -1,12 +1,14 @@
 <?php namespace App\Controller;
 
+use Aether\Controller;
+
 /** 
  * Base Controller
  * 
  * @class App\Controller\BaseController
 **/
 
-class BaseController
+class BaseController extends Controller
 {
     /** 
      * The collection of helpers that should be loaded from this base
@@ -21,7 +23,7 @@ class BaseController
      * 
      * @var array $middlewares
     **/
-    public array $middlewares = [];
+    public array $middlewares = ['isLoggedOut'];
 
     /** 
      * The constructor that you can run to dynamically mutate the

@@ -1,6 +1,7 @@
 <?php namespace App\Controller;
 
 use App\Controller\BaseController;
+use Aether\Interface\ResponseInterface;
 
 /** 
  * Test Controller
@@ -10,9 +11,15 @@ use App\Controller\BaseController;
 
 class TestController extends BaseController
 {
-    public function index(): string
+    public function index(): string | ResponseInterface
     {
-        return 'hello world!';
+        $data = [
+            'key1' => $this->request->get('key1'),
+            'key2' => $this->request->get('key2'),
+        ];
+
+        // return
+        return $this->response->setJSON($data);
     }
 
     //==========================================================================================
