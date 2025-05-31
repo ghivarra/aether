@@ -409,7 +409,7 @@ class Routing implements RoutingInterface
     /** 
      * Save the inputted route into based on the selected HTTP method
      * 
-     * @param string $httpMethod
+     * @param 'get'|'head'|'post'|'put'|'patch'|'options'|'delete' $httpMethod
      * @param string $rule
      * @param string $controller
      * @param string $controllerMethod

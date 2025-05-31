@@ -16,6 +16,7 @@ class TestController extends BaseController
         $data = [
             'key1' => $this->request->get('key1'),
             'key2' => $this->request->get('key2'),
+            'url'  => 'https://waduh.com/aku-juga-hero?id=1&wkwk=lol',
             'text' => [
                 'home'   => 'Hello World!',
                 'footer' => 'This is footer',

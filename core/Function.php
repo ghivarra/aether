@@ -1,9 +1,9 @@
 <?php
 
 // used library
-use Aether\Interface\ResponseInterface;
 use Aether\Exception\SystemException;
 use Aether\View\Template;
+use Laminas\Escaper\Escaper;
 
 // functions
 if (!function_exists('dd') && function_exists('d'))
@@ -20,6 +20,70 @@ if (!function_exists('dd') && function_exists('d'))
     {
         d($data);
         exit(0);
+    }
+}
+
+if (!function_exists('esc'))
+{
+    /** 
+     * Escaping any string so it can be safely
+     * echo'ed into the template using Laminas Escaper
+     * 
+     * @param string|array $data
+     * @param 'html'|'htmlAttribute'|'js'|'css'|'url' $escapeType
+     * @param string $encoding
+     * 
+     * @return string|array
+     * 
+    **/
+    function esc(string|array $data, string $escapeType = 'html', string $encoding = 'utf-8'): string|array
+    {
+        // initiate laminas escaper
+        $escaper = new Escaper($encoding);
+
+        // switch
+        switch ($escapeType) {
+            case 'html':
+                $method = 'escapeHtml';
+                break;
+
+            case 'htmlAttribute':
+                $method = 'escapeHtmlAttr';
+                break;
+
+            case 'js':
+                $method = 'escapeJs';
+                break;
+
+            case 'css':
+                $method = 'escapeCss';
+                break;
+
+            case 'url':
+                $method = 'escapeUrl';
+                break;
+            
+            default:
+                $method = 'escapeHtml';
+                break;
+        }
+
+        // check data type
+        if (is_array($data))
+        {
+            foreach ($data as $key => $value):
+
+                $data[$key] = is_array($value) ? esc($value, $escapeType, $encoding) : $escaper->$method($value);
+
+            endforeach;
+
+        } else {
+
+            return $escaper->$method($data);
+        }
+
+        // return
+        return $data;
     }
 }
 
