@@ -1,4 +1,8 @@
-<?php namespace App\Middleware;
+<?php 
+
+declare(strict_types = 1);
+
+namespace App\Middleware;
 
 use Aether\Middleware;
 use Aether\Interface\RequestInterface;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 // load vendor autoload.php
 require_once ROOTPATH . 'vendor/autoload.php';
 

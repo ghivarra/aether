@@ -1,4 +1,8 @@
-<?php namespace Config;
+<?php 
+
+declare(strict_types = 1);
+
+namespace Config;
 
 /** 
  * Routes Configurations

@@ -13,7 +13,6 @@
  * @url https://instagram.com/ghivarra
  *
 **/
-declare(strict_types = 1);
 
 // turn off all errors
 error_reporting(0);

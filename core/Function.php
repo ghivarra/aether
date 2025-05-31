@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 // used library
 use Aether\Exception\SystemException;
 use Aether\View\Template;

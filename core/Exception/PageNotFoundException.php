@@ -1,4 +1,8 @@
-<?php namespace Aether\Exception;
+<?php 
+
+declare(strict_types = 1);
+
+namespace Aether\Exception;
 
 use \Exception;
 

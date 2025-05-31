@@ -1,4 +1,8 @@
-<?php namespace Aether;
+<?php 
+
+declare(strict_types = 1);
+
+namespace Aether;
 
 use Config\Routes;
 use Aether\Exception\PageNotFoundException;
@@ -440,7 +444,7 @@ class Routing implements RoutingInterface
 
         } else {
 
-            if (strtolower($httpMethod === 'all'))
+            if (strtolower($httpMethod) === 'all')
             {
                 // input all available method
                 $httpMethod = $this->allowedMethods;

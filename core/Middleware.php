@@ -1,4 +1,8 @@
-<?php namespace Aether;
+<?php 
+
+declare(strict_types = 1);
+
+namespace Aether;
 
 use Aether\Interface\MiddlewareInterface;
 use Aether\Interface\ResponseInterface;

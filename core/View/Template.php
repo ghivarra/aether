@@ -1,4 +1,8 @@
-<?php namespace Aether\View;
+<?php 
+
+declare(strict_types = 1);
+
+namespace Aether\View;
 
 use Aether\Interface\TemplateInterface;
 
