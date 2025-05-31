@@ -1,5 +1,7 @@
 <?php namespace Aether\Config;
 
+use Aether\Interface\Config\AppInterface;
+
 /** 
  * Base App Configurations
  * 
@@ -8,7 +10,7 @@
  * You can ignore this config if you wanted to use dotenv file
 **/
 
-class BaseApp
+class BaseApp implements AppInterface
 {
     public function __construct()
     {
