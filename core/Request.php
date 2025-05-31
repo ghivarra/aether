@@ -95,7 +95,7 @@ class Request implements RequestInterface
 
     //===========================================================================================
 
-    public function json(string $key, mixed $default = null): mixed
+    public function json(mixed $default = null): mixed
     {
         // get input data
         $input = file_get_contents('php://input');
