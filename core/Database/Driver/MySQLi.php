@@ -6,6 +6,8 @@ namespace Aether\Database\Driver;
 
 use \mysqli as SQL;
 use \mysqli_driver as SQLDriver;
+use \mysqli_result as SQLResult;
+use \mysqli_sql_exception as SQLException;
 use Aether\Exception\SystemException;
 use Aether\Database\Builder\MySQLiBuilder;
 
@@ -22,6 +24,7 @@ class MySQLi
     protected SQLDriver|null $connectionDriver = null;
     protected array $config = [];
     protected string $fallbackMessage = 'Failed to connect to database';
+    protected SQLResult|null $result = null;
 
     //===========================================================================================
 
@@ -32,7 +35,7 @@ class MySQLi
         // set error report
         if ($config['DBDebug'])
         {
-            $this->connectionDriver->report_mode = MYSQLI_REPORT_ALL;
+            $this->connectionDriver->report_mode = MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT;
 
         } else {
 
@@ -49,6 +52,8 @@ class MySQLi
             
             throw new SystemException($message, 400);
         }
+
+        
 
         // set charset
         $mysqli->set_charset($config['charset']);
@@ -83,16 +88,32 @@ class MySQLi
 
     //===========================================================================================
 
-    public function getResultArray(): array | null
+    public function getResultArray(): array
     {
-        return null;
+        if (is_null($this->result))
+        {
+            $message = (AETHER_ENV === 'development') ? "Cannot run getResultArray() because query is not yet executed." : 'Failed to fetch data from database.';
+
+            throw new SystemException($message, 400);
+        }
+
+        // result
+        return $this->result->fetch_all(MYSQLI_ASSOC);
     }
 
     //===========================================================================================
 
     public function getRowArray(): array | null
     {
-        return null;
+        if (is_null($this->result))
+        {
+            $message = (AETHER_ENV === 'development') ? "Cannot run getRowArray() because query is not yet executed." : 'Failed to fetch data from database.';
+
+            throw new SystemException($message, 400);
+        }
+
+        // return only one
+        return $this->result->fetch_array(MYSQLI_ASSOC);
     }
 
     //===========================================================================================
@@ -160,6 +181,26 @@ class MySQLi
         if (!$transaction)
         {
             $message = (AETHER_ENV === 'development') ? "Cannot rollback transaction, rollback transaction failed." : $this->fallbackMessage;
+
+            throw new SystemException($message, 400);
+        }
+
+        // return instance
+        return $this;
+    }
+
+    //===========================================================================================
+
+    public function query(string $query, array $params = [])
+    {
+        // execute
+        try {
+
+            $this->result = $this->connection->execute_query($query, $params);
+
+        } catch (SQLException $e) {
+
+            $message = (AETHER_ENV === 'development') ? "Cannot fetch data. Reason: {$e->getMessage()}." : 'Failed to fetch data from database.';
 
             throw new SystemException($message, 400);
         }

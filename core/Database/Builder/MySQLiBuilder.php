@@ -6,10 +6,13 @@ namespace Aether\Database\Builder;
 
 use Aether\Database\Builder;
 use Aether\Database\BaseBuilderTrait;
+use Aether\Database\Driver\MySQLi;
 
 class MySQLiBuilder extends Builder
 {
     use BaseBuilderTrait;
+
+    protected MySQLi|null $db = null;
 
     //=================================================================================================
 
@@ -230,7 +233,58 @@ class MySQLiBuilder extends Builder
     public function countAll() {}
     public function countAllResults() {}
 
-    public function get() {}
+    //=================================================================================================
+
+    protected function compileGet(): array
+    {
+        // select string
+        $selectString = ($this->distinct) ? "SELECT DISTINCT" : "SELECT";
+        
+        // column collection
+        // and string
+        $this->selectCollection = empty($this->selectCollection) ? [ "`{$this->from}`.*" ] : $this->selectCollection;
+        $columnString = implode(',', $this->selectCollection);
+
+        // from string
+        $fromString = "FROM {$this->from}";
+
+        // update result
+        $this->resultQuery = "{$selectString} {$columnString} {$fromString}";
+
+        // return result query
+        return [
+            'query'  => $this->resultQuery,
+            'params' => array_merge($this->selectCollection),
+        ];
+    }
+
+    //==================================================================================================
+
+    public function get(): MySQLi
+    {
+        // select string
+        $selectString = ($this->distinct) ? "SELECT DISTINCT" : "SELECT";
+        
+        // column collection
+        // and string
+        $this->selectCollection = empty($this->selectCollection) ? [ "`{$this->from}`.*" ] : $this->selectCollection;
+        $columnString = implode(',', $this->selectCollection);
+
+        // from string
+        $fromString = "FROM {$this->from}";
+
+        // update result
+        $this->preparedQuery = [
+            'query'  => "{$selectString} {$columnString} {$fromString}",
+            'params' => []
+        ];
+
+        // return
+        return $this->db->query($this->preparedQuery['query'], $this->preparedQuery['params']);
+    }
+
+    //=================================================================================================
+
     public function getCompiled() {}
 
     public function resetQuery() {}

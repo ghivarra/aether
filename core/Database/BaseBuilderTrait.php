@@ -24,15 +24,7 @@ trait BaseBuilderTrait
     public array $setCollection = [];
     public string $resultQuery = '';
     public array $preparedQuery = [];
-    public mixed $db = null;
     public string $prefix = '';
-
-    //==================================================================================================
-
-    public function compile(): void
-    {
-        
-    }
 
     //==================================================================================================
 

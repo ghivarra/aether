@@ -26,7 +26,11 @@ class TestController extends BaseController
 
         $db      = Database::connect();
         $builder = $db->table('user')
-                      ->select(['user.id', 'name', 'status']);
+                      ->select(['user.id', 'name', 'status'])
+                      //->selectSum('age', 'sum_age')
+                      ->distinct()
+                      ->get()
+                      ->getRowArray();
 
         dd($builder);
 
