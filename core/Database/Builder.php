@@ -24,7 +24,13 @@ abstract class Builder
     abstract public function distinct();
     
     abstract public function from(string $tableName, mixed $db, string $DBPrefix);
-    abstract public function join();
+
+    abstract public function join(string $table, string $condition, string $joinType = '', bool $raw = false);
+
+    abstract public function innerJoin(string $table, string $condition, bool $raw = false);
+    abstract public function outerJoin(string $table, string $condition, bool $raw = false);
+    abstract public function leftJoin(string $table, string $condition, bool $raw = false);
+    abstract public function rightJoin(string $table, string $condition, bool $raw = false);
 
     abstract public function where();
     abstract public function whereNot();
@@ -87,7 +93,7 @@ abstract class Builder
     abstract public function countAllResults();
 
     abstract public function get();
-    abstract public function getCompiled();
+    abstract public function getCompiledSelect();
 
     abstract public function resetQuery();
 

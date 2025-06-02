@@ -7,17 +7,26 @@ namespace Aether\Database\Builder;
 use Aether\Database\Builder;
 use Aether\Database\BaseBuilderTrait;
 use Aether\Database\Driver\MySQLi;
+use Aether\Exception\SystemException;
 
 class MySQLiBuilder extends Builder
 {
     use BaseBuilderTrait;
 
     protected MySQLi|null $db = null;
+    protected array $allowedJoinType = [
+        'inner' => 'INNER',
+        'left'  => 'LEFT',
+        'right' => 'RIGHT',
+    ];
 
     //=================================================================================================
 
     protected function sanitizeColumn(string $column): string
     {
+        // remove backticks
+        $column = str_replace('`', '', $column);
+
         // escape column
         $column = $this->db->escape($column);
 
@@ -26,9 +35,9 @@ class MySQLiBuilder extends Builder
         {
             if (str_contains($column, '.'))
             {
-                if ($this->from !== substr($column, 0, strlen($this->from)))
+                if ($this->prefix !== substr($column, 0, strlen($this->prefix)))
                 {
-                    $column = "`{$this->from}" . str_replace('.', '`.', $column);
+                    $column = "`{$this->prefix}" . str_replace('.', '`.', $column);
 
                 } else {
 
@@ -43,6 +52,23 @@ class MySQLiBuilder extends Builder
 
         // return
         return $column;
+    }
+
+    //=================================================================================================
+
+    protected function sanitizeTable(string $table): string
+    {
+        // trim table
+        $table = empty($table) ? '' : ltrim($table);
+
+        // add prefixes if not set
+        if ($this->prefix !== substr($table, 0, strlen($this->prefix)))
+        {
+            $table = $this->prefix . $table;
+        }
+
+        // return
+        return $table;
     }
 
     //=================================================================================================
@@ -163,7 +189,7 @@ class MySQLiBuilder extends Builder
         $this->prefix = $DBPrefix;
 
         // set table
-        $this->from = "{$DBPrefix}{$tableName}";
+        $this->from = $this->sanitizeTable($tableName);
         
         // return instance
         return $this;
@@ -171,7 +197,65 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function join() {}
+    public function join(string $table, string $condition, string $joinType = '', bool $raw = false): MySQLiBuilder
+    {
+        if (!empty($joinType))
+        {
+            if (!in_array(strtolower($joinType), array_keys($this->allowedJoinType)))
+            {
+                $joinType = esc($joinType);
+                throw new SystemException("{$joinType} is not allowed", 400);
+            }
+        }
+
+        // sanitize data
+        $data = [
+            'type'      => empty($joinType) ? null : strtolower($joinType),
+            'table'     => ($raw) ? $table : $this->sanitizeTable($table),
+            'condition' => ($raw) ? $condition : $this->addPrefix($condition),
+        ];
+
+        // push data
+        array_push($this->joinCollection, $data);
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function innerJoin(string $table, string $condition, bool $raw = false): MySQLiBuilder
+    {
+        // return instance
+        return $this->join($table, $condition, 'inner', $raw);
+    }
+
+    //=================================================================================================
+
+    public function OuterJoin(string $table, string $condition, bool $raw = false): MySQLiBuilder
+    {
+        // return instance
+        return $this->join($table, $condition, 'outer', $raw);
+    }
+
+    //=================================================================================================
+
+    public function leftJoin(string $table, string $condition, bool $raw = false): MySQLiBuilder
+    {
+        // return instance
+        return $this->join($table, $condition, 'left', $raw);
+    }
+
+    //=================================================================================================
+
+    public function rightJoin(string $table, string $condition, bool $raw = false): MySQLiBuilder
+    {
+        // return instance
+        return $this->join($table, $condition, 'right', $raw);
+    }
+
+    //=================================================================================================
+
 
     public function where() {}
     public function whereNot() {}
@@ -235,31 +319,6 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    protected function compileGet(): array
-    {
-        // select string
-        $selectString = ($this->distinct) ? "SELECT DISTINCT" : "SELECT";
-        
-        // column collection
-        // and string
-        $this->selectCollection = empty($this->selectCollection) ? [ "`{$this->from}`.*" ] : $this->selectCollection;
-        $columnString = implode(',', $this->selectCollection);
-
-        // from string
-        $fromString = "FROM {$this->from}";
-
-        // update result
-        $this->resultQuery = "{$selectString} {$columnString} {$fromString}";
-
-        // return result query
-        return [
-            'query'  => $this->resultQuery,
-            'params' => array_merge($this->selectCollection),
-        ];
-    }
-
-    //==================================================================================================
-
     public function get(): MySQLi
     {
         // select string
@@ -273,6 +332,21 @@ class MySQLiBuilder extends Builder
         // from string
         $fromString = "FROM {$this->from}";
 
+        // join string
+        if (!empty($this->joinCollection))
+        {
+            $joinString = [];
+
+            foreach ($this->joinCollection as $join):
+
+                $joinText  = is_null($join['type']) ? 'JOIN' : "{$this->allowedJoinType[$join['type']]} JOIN";
+                array_push($joinString, "{$joinText} {$join['table']} ON {$join['condition']}");
+
+            endforeach;
+
+            $fromString .= " " . implode(" ", $joinString);
+        }
+
         // update result
         $this->preparedQuery = [
             'query'  => "{$selectString} {$columnString} {$fromString}",
@@ -280,12 +354,12 @@ class MySQLiBuilder extends Builder
         ];
 
         // return
-        return $this->db->query($this->preparedQuery['query'], $this->preparedQuery['params']);
+        return $this->db->preparedQuery($this->preparedQuery['query'], $this->preparedQuery['params']);
     }
 
     //=================================================================================================
 
-    public function getCompiled() {}
+    public function getCompiledSelect() {}
 
     public function resetQuery() {}
 

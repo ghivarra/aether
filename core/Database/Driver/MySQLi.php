@@ -22,9 +22,9 @@ class MySQLi
     protected MySQLiBuilder|null $builder = null;
     protected SQL|null $connection = null;
     protected SQLDriver|null $connectionDriver = null;
+    protected SQLResult|null $result = null;
     protected array $config = [];
     protected string $fallbackMessage = 'Failed to connect to database';
-    protected SQLResult|null $result = null;
 
     //===========================================================================================
 
@@ -191,12 +191,32 @@ class MySQLi
 
     //===========================================================================================
 
-    public function query(string $query, array $params = [])
+    public function preparedQuery(string $query, array $params = []): MySQLi
     {
         // execute
         try {
 
             $this->result = $this->connection->execute_query($query, $params);
+
+        } catch (SQLException $e) {
+
+            $message = (AETHER_ENV === 'development') ? "Cannot fetch data. Reason: {$e->getMessage()}." : 'Failed to fetch data from database.';
+
+            throw new SystemException($message, 400);
+        }
+
+        // return instance
+        return $this;
+    }
+
+    //===========================================================================================
+
+    public function rawQuery($query): MySQLi
+    {
+        // execute
+        try {
+
+            $this->result = $this->connection->query($query);
 
         } catch (SQLException $e) {
 
