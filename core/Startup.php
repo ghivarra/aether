@@ -13,7 +13,7 @@ use Aether\Response;
 use Aether\Routing;
 use Aether\Exception\PageNotFoundException;
 use Aether\Interface\ResponseInterface;
-use \Exception;
+use \Throwable;
 
 /** 
  * Route
@@ -79,7 +79,7 @@ class Startup
             // then run response
             $this->runResponse($response);
 
-        } catch(Exception $e) {
+        } catch(\Throwable $e) {
 
             // initiate error class
             $error = new Error();
