@@ -32,19 +32,19 @@ abstract class Builder
     abstract public function leftJoin(string $table, string $condition, bool $raw = false);
     abstract public function rightJoin(string $table, string $condition, bool $raw = false);
 
-    abstract public function where();
-    abstract public function whereNot();
-    abstract public function whereIn();
-    abstract public function whereNotIn();
-    abstract public function whereNull();
-    abstract public function whereNotNull();
+    abstract public function where(string $column, string $operator, string|int $value, bool $raw = false);
+    abstract public function whereNot(string $column, string $operator, string|int $value, bool $raw = false);
+    abstract public function whereIn(string $column, array $value, bool $raw = false);
+    abstract public function whereNotIn(string $column, array $value, bool $raw = false);
+    abstract public function whereNull(string $column, bool $raw = false);
+    abstract public function whereNotNull(string $column, bool $raw = false);
 
-    abstract public function orWhere();
-    abstract public function orWhereNot();
-    abstract public function orWhereIn();
-    abstract public function orWhereNotIn();
-    abstract public function orWhereNull();
-    abstract public function orWhereNotNull();
+    abstract public function orWhere(string $column, string $operator, string|int $value, bool $raw = false);
+    abstract public function orWhereNot(string $column, string $operator, string|int $value, bool $raw = false);
+    abstract public function orWhereIn(string $column, array $value, bool $raw = false);
+    abstract public function orWhereNotIn(string $column, array $value, bool $raw = false);
+    abstract public function orWhereNull(string $column, bool $raw = false);
+    abstract public function orWhereNotNull(string $column, bool $raw = false);
 
     abstract public function whereLike();
     abstract public function notWhereLike();

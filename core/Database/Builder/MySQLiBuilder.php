@@ -19,6 +19,9 @@ class MySQLiBuilder extends Builder
         'left'  => 'LEFT',
         'right' => 'RIGHT',
     ];
+    protected array $allowedComparisonOperator = [
+        '=', '!=', '>', '<', '<=', '>=', '<>'
+    ];
 
     //=================================================================================================
 
@@ -256,66 +259,376 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
+    protected function beforeWhere(string $column, string $operator, string|int $value, bool $raw = false): array
+    {
+        if (!in_array($operator, $this->allowedComparisonOperator))
+        {
+            if (!empty($joinType))
+            {
+                if (!in_array(strtolower($joinType), array_keys($this->allowedJoinType)))
+                {
+                    $joinType = esc($joinType);
+                    throw new SystemException("{$joinType} as a comparison operator is not allowed", 400);
+                }
+            }
+        }
 
-    public function where() {}
-    public function whereNot() {}
-    public function whereIn() {}
-    public function whereNotIn() {}
-    public function whereNull() {}
-    public function whereNotNull() {}
+        // return
+        return [
+            'column' => ($raw) ? $column : $this->sanitizeColumn($column),
+            'value'  => ($raw) ? $value : $this->db->escape($value),
+        ];
+    }
 
-    public function orWhere() {}
-    public function orWhereNot() {}
-    public function orWhereIn() {}
-    public function orWhereNotIn() {}
-    public function orWhereNull() {}
-    public function orWhereNotNull() {}
+    //=================================================================================================
 
-    public function whereLike() {}
-    public function notWhereLike() {}
-    public function orWhereLike() {}
-    public function orNotWhereLike() {}
+    public function where(string $column, string $operator, string|int $value, bool $raw = false): MySQLiBuilder
+    {
+        // execute before
+        $data = $this->beforeWhere($column, $operator, $value, $raw);
 
-    public function groupStart() {}
-    public function notGroupStart() {}
-    public function orGroupStart() {}
-    public function orNotGroupStart() {}
-    public function groupEnd() {}
+        // push into where collection
+        if (empty($this->whereCollection))
+        {
+            array_push($this->whereCollection, "WHERE {$data['column']} {$operator} ?");
 
-    public function groupBy() {}
+        } else {
 
-    public function having() {}
-    public function havingNot() {}
-    public function havingIn() {}
-    public function havingNotIn() {}
-    public function havingNull() {}
-    public function havingNotNull() {}
+            array_push($this->whereCollection, "AND {$data['column']} {$operator} ?");
+        }
 
-    public function orHaving() {}
-    public function orHavingNot() {}
-    public function orHavingIn() {}
-    public function orHavingNotIn() {}
-    public function orHavingNull() {}
-    public function orHavingNotNull() {}
+        // push value as parameters
+        array_push($this->preparedParams, $value);
 
-    public function havingLike() {}
-    public function NotHavingLike() {}
-    public function orHavingLike() {}
-    public function orNotHavingLike() {}
+        // return instance
+        return $this;
+    }
 
-    public function havingGroupStart() {}
-    public function notHavingGroupStart() {}
-    public function orHavingGroupStart() {}
-    public function orNotHavingGroupStart() {}
-    public function havingGroupEnd() {}
+    //=================================================================================================
     
-    public function orderBy() {}
+    public function whereNot(string $column, string $operator, string|int $value, bool $raw = false): MySQLiBuilder
+    {
+        // execute before
+        $data = $this->beforeWhere($column, $operator, $value, $raw);
 
-    public function offset() {}
-    public function limit() {}
+        // push into where collection
+        if (empty($this->whereCollection))
+        {
+            array_push($this->whereCollection, "WHERE NOT {$data['column']} {$operator} ?");
 
-    public function countAll() {}
-    public function countAllResults() {}
+        } else {
+
+            array_push($this->whereCollection, "AND NOT {$data['column']} {$operator} ?");
+        }
+
+        // push value as parameters
+        array_push($this->preparedParams, $value);
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function whereIn(string $column, array $value, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            
+            foreach ($value as $n => $item):
+
+                $value[$n] = $this->db->escape($item);
+
+            endforeach;
+        }
+
+        // count values
+        $variables = implode(', ', array_fill(0, count($value), '?'));
+
+        // push into where collection
+        if (empty($this->whereCollection))
+        {
+            array_push($this->whereCollection, "WHERE {$column} IN ($variables)");
+
+        } else {
+
+            array_push($this->whereCollection, "AND {$column} IN ($variables)");
+        }
+
+        // push value as parameters
+        foreach ($value as $n => $item):
+
+            array_push($this->preparedParams, $item);
+
+        endforeach;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function whereNotIn(string $column, array $value, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            
+            foreach ($value as $n => $item):
+
+                $value[$n] = $this->db->escape($item);
+
+            endforeach;
+        }
+
+        // count values
+        $variables = implode(', ', array_fill(0, count($value), '?'));
+
+        // push into where collection
+        if (empty($this->whereCollection))
+        {
+            array_push($this->whereCollection, "WHERE {$column} NOT IN ($variables)");
+
+        } else {
+
+            array_push($this->whereCollection, "AND {$column} NOT IN ($variables)");
+        }
+
+        // push value as parameters
+        foreach ($value as $n => $item):
+
+            array_push($this->preparedParams, $item);
+
+        endforeach;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function whereNull(string $column, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+        }
+
+        // push into where collection
+        if (empty($this->whereCollection))
+        {
+            array_push($this->whereCollection, "WHERE {$column} IS NULL");
+
+        } else {
+
+            array_push($this->whereCollection, "AND {$column} IS NULL");
+        }
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function whereNotNull(string $column, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+        }
+
+        // push into where collection
+        if (empty($this->whereCollection))
+        {
+            array_push($this->whereCollection, "WHERE {$column} IS NOT NULL");
+
+        } else {
+
+            array_push($this->whereCollection, "AND {$column} IS NOT NULL");
+        }
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function orWhere(string $column, string $operator, string|int $value, bool $raw = false): MySQLiBuilder
+    {
+        // execute before
+        $data = $this->beforeWhere($column, $operator, $value, $raw);
+
+        // push into where collection
+        array_push($this->whereCollection, "OR {$data['column']} {$operator} ?");
+
+        // push value as parameters
+        array_push($this->preparedParams, $value);
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function orWhereNot(string $column, string $operator, string|int $value, bool $raw = false): MySQLiBuilder
+    {
+        // execute before
+        $data = $this->beforeWhere($column, $operator, $value, $raw);
+
+        // push into where collection
+        array_push($this->whereCollection, "OR NOT {$data['column']} {$operator} ?");
+
+        // push value as parameters
+        array_push($this->preparedParams, $value);
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function orWhereIn(string $column, array $value, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            
+            foreach ($value as $n => $item):
+
+                $value[$n] = $this->db->escape($item);
+
+            endforeach;
+        }
+
+        // count values
+        $variables = implode(', ', array_fill(0, count($value), '?'));
+
+        // push into where collection
+        array_push($this->whereCollection, "OR {$column} IN ($variables)");
+
+        // push value as parameters
+        foreach ($value as $n => $item):
+
+            array_push($this->preparedParams, $item);
+
+        endforeach;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function orWhereNotIn(string $column, array $value, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            
+            foreach ($value as $n => $item):
+
+                $value[$n] = $this->db->escape($item);
+
+            endforeach;
+        }
+
+        // count values
+        $variables = implode(', ', array_fill(0, count($value), '?'));
+
+        // push into where collection
+        array_push($this->whereCollection, "OR NOT {$column} IN ($variables)");
+
+        // push value as parameters
+        foreach ($value as $n => $item):
+
+            array_push($this->preparedParams, $item);
+
+        endforeach;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function orWhereNull(string $column, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+        }
+
+        // push into where collection
+        array_push($this->whereCollection, "OR {$column} IS NULL");
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function orWhereNotNull(string $column, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+        }
+
+        // push into where collection
+        array_push($this->whereCollection, "OR {$column} IS NOT NULL");
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function whereLike(): MySQLiBuilder {}
+    public function notWhereLike(): MySQLiBuilder {}
+    public function orWhereLike(): MySQLiBuilder {}
+    public function orNotWhereLike(): MySQLiBuilder {}
+
+    public function groupStart(): MySQLiBuilder {}
+    public function notGroupStart(): MySQLiBuilder {}
+    public function orGroupStart(): MySQLiBuilder {}
+    public function orNotGroupStart(): MySQLiBuilder {}
+    public function groupEnd(): MySQLiBuilder {}
+
+    public function groupBy(): MySQLiBuilder {}
+
+    public function having(): MySQLiBuilder {}
+    public function havingNot(): MySQLiBuilder {}
+    public function havingIn(): MySQLiBuilder {}
+    public function havingNotIn(): MySQLiBuilder {}
+    public function havingNull(): MySQLiBuilder {}
+    public function havingNotNull(): MySQLiBuilder {}
+
+    public function orHaving():MySQLiBuilder {}
+    public function orHavingNot():MySQLiBuilder {}
+    public function orHavingIn():MySQLiBuilder {}
+    public function orHavingNotIn():MySQLiBuilder {}
+    public function orHavingNull():MySQLiBuilder {}
+    public function orHavingNotNull():MySQLiBuilder {}
+
+    public function havingLike(): MySQLiBuilder {}
+    public function NotHavingLike(): MySQLiBuilder {}
+    public function orHavingLike(): MySQLiBuilder {}
+    public function orNotHavingLike(): MySQLiBuilder {}
+
+    public function havingGroupStart(): MySQLiBuilder {}
+    public function notHavingGroupStart(): MySQLiBuilder {}
+    public function orHavingGroupStart(): MySQLiBuilder {}
+    public function orNotHavingGroupStart(): MySQLiBuilder {}
+    public function havingGroupEnd(): MySQLiBuilder {}
+    
+    public function orderBy(): MySQLiBuilder {}
+
+    public function offset(): MySQLiBuilder {}
+    public function limit(): MySQLiBuilder {}
+
+    public function countAll(): MySQLiBuilder {}
+    public function countAllResults(): MySQLiBuilder {}
 
     //=================================================================================================
 
@@ -347,14 +660,19 @@ class MySQLiBuilder extends Builder
             $fromString .= " " . implode(" ", $joinString);
         }
 
+        // where string
+        $whereString = '';
+        
+        if (!empty($this->whereCollection))
+        {
+            $whereString = implode(" ", $this->whereCollection);
+        }
+
         // update result
-        $this->preparedQuery = [
-            'query'  => "{$selectString} {$columnString} {$fromString}",
-            'params' => []
-        ];
+        $this->preparedQuery = "{$selectString} {$columnString} {$fromString} {$whereString}";
 
         // return
-        return $this->db->preparedQuery($this->preparedQuery['query'], $this->preparedQuery['params']);
+        return $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
     }
 
     //=================================================================================================

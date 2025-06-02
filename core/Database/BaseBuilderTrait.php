@@ -16,6 +16,7 @@ trait BaseBuilderTrait
     public bool $distinct = false;
     public string $from = '';
     public array $joinCollection = [];
+    public array $whereCollection = [];
     public array $groupByCollection = [];
     public array $havingCollection = [];
     public array $orderByCollection = [];
@@ -23,7 +24,8 @@ trait BaseBuilderTrait
     public int|null $offset = null;
     public array $setCollection = [];
     public string $resultQuery = '';
-    public array $preparedQuery = [];
+    public string $preparedQuery = '';
+    public array $preparedParams = [];
     public string $prefix = '';
 
     //==================================================================================================

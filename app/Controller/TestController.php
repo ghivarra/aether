@@ -28,6 +28,10 @@ class TestController extends BaseController
         $builder = $db->table('post')
                       ->select(['post.id', 'post.title', 'post.view', 'post.user_id', 'user.name', 'user.age'])
                       ->join('user', 'user_id = user.id')
+                      ->where('user_id', '=', 0)
+                      ->orWhereNotNull('user_id')
+                      ->whereNotNull('view')
+                      //->get();
                       ->get()
                       ->getResultArray();
 
