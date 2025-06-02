@@ -13,37 +13,47 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function select(array $fields = [], bool $raw = false): MySQLiBuilder
+    protected function sanitizeColumn(string $column): string
     {
-        foreach ($fields as $field):
+        // escape column
+        $column = $this->db->escape($column);
+
+        // get
+        if (!str_contains($column, '`'))
+        {
+            if (str_contains($column, '.'))
+            {
+                if ($this->from !== substr($column, 0, strlen($this->from)))
+                {
+                    $column = "`{$this->from}" . str_replace('.', '`.', $column);
+
+                } else {
+
+                    $column = "`" . str_replace('.', '`.', $column);
+                }
+
+            } else {
+
+                $column = "`{$this->from}`.{$column}";
+            }
+        }
+
+        // return
+        return $column;
+    }
+
+    //=================================================================================================
+
+    public function select(array $columns = [], bool $raw = false): MySQLiBuilder
+    {
+        foreach ($columns as $column):
 
             if (!$raw)
             {
-                // escape field
-                $field = $this->db->escape($field);
-
-                // get
-                if (!str_contains($field, '`'))
-                {
-                    if (str_contains($field, '.'))
-                    {
-                        if ($this->from !== substr($field, 0, strlen($this->from)))
-                        {
-                            $field = "`{$this->from}" . str_replace('.', '`.', $field);
-    
-                        } else {
-    
-                            $field = "`" . str_replace('.', '`.', $field);
-                        }
-
-                    } else {
-
-                        $field = "`{$this->from}`.{$field}";
-                    }
-                }
+                $column = $this->sanitizeColumn($column);
             }
 
-            array_push($this->selectCollection, $field);
+            array_push($this->selectCollection, $column);
 
         endforeach;
 
@@ -53,12 +63,93 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
     
-    public function selectAvg() {}
-    public function selectCount() {}
-    public function selectMax() {}
-    public function selectMin() {}
-    public function selectSum() {}
-    public function distinct() {}
+    public function selectAvg(string $column, string $alias, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            $alias  = $this->db->escape($alias);
+        }
+
+        array_push($this->selectCollection, "AVG({$column}) AS {$alias}");
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function selectCount(string $column, string $alias, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            $alias  = $this->db->escape($alias);
+        }
+
+        array_push($this->selectCollection, "COUNT({$column}) AS {$alias}");
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function selectMax(string $column, string $alias, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            $alias  = $this->db->escape($alias);
+        }
+
+        array_push($this->selectCollection, "MAX({$column}) AS {$alias}");
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function selectMin(string $column, string $alias, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            $alias  = $this->db->escape($alias);
+        }
+
+        array_push($this->selectCollection, "MIN({$column}) AS {$alias}");
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function selectSum(string $column, string $alias, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            $alias  = $this->db->escape($alias);
+        }
+
+        array_push($this->selectCollection, "SUM({$column}) AS {$alias}");
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function distinct(): MySQLiBuilder
+    {
+        $this->distinct = true;
+
+        // return instance
+        return $this;
+    }
 
     //=================================================================================================
 

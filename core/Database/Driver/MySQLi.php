@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Aether\Database\Driver;
 
 use \mysqli as SQL;
+use \mysqli_driver as SQLDriver;
 use Aether\Exception\SystemException;
 use Aether\Database\Builder\MySQLiBuilder;
 
@@ -18,6 +19,7 @@ class MySQLi
 {
     protected MySQLiBuilder|null $builder = null;
     protected SQL|null $connection = null;
+    protected SQLDriver|null $connectionDriver = null;
     protected array $config = [];
     protected string $fallbackMessage = 'Failed to connect to database';
 
@@ -25,6 +27,18 @@ class MySQLi
 
     public function connect(array $config): MySQLi
     {
+        $this->connectionDriver = new SQLDriver();
+
+        // set error report
+        if ($config['DBDebug'])
+        {
+            $this->connectionDriver->report_mode = MYSQLI_REPORT_ALL;
+
+        } else {
+
+            $this->connectionDriver->report_mode = MYSQLI_REPORT_OFF;
+        }
+
         // try connect
         $mysqli = new SQL($config['hostname'], $config['username'], $config['password'], $config['database'], $config['port']);
 

@@ -12,12 +12,15 @@ namespace Aether\Database;
 
 abstract class Builder
 {
-    abstract public function select();
-    abstract public function selectAvg();
-    abstract public function selectCount();
-    abstract public function selectMax();
-    abstract public function selectMin();
-    abstract public function selectSum();
+    // sanitizer
+    abstract protected function sanitizeColumn(string $column);
+
+    abstract public function select(array $column = [], bool $raw = false);
+    abstract public function selectAvg(string $column, string $alias, bool $raw = false);
+    abstract public function selectCount(string $column, string $alias, bool $raw = false);
+    abstract public function selectMax(string $column, string $alias, bool $raw = false);
+    abstract public function selectMin(string $column, string $alias, bool $raw = false);
+    abstract public function selectSum(string $column, string $alias, bool $raw = false);
     abstract public function distinct();
     
     abstract public function from(string $tableName, mixed $db, string $DBPrefix);
