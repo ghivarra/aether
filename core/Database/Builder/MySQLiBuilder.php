@@ -313,7 +313,7 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        array_push($this->preparedParams, $value);
+        array_push($this->whereParams, $value);
 
         // set conjunction true
         // after every Where Collection push
@@ -348,7 +348,7 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        array_push($this->preparedParams, $value);
+        array_push($this->whereParams, $value);
 
         // set conjunction true
         // after every Where Collection push
@@ -388,9 +388,9 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        foreach ($value as $n => $item):
+        foreach ($value as $item):
 
-            array_push($this->preparedParams, $item);
+            array_push($this->whereParams, $item);
 
         endforeach;
 
@@ -432,9 +432,9 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        foreach ($value as $n => $item):
+        foreach ($value as $item):
 
-            array_push($this->preparedParams, $item);
+            array_push($this->whereParams, $item);
 
         endforeach;
 
@@ -532,7 +532,7 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        array_push($this->preparedParams, $value);
+        array_push($this->whereParams, $value);
 
         // set conjunction true
         // after every Where Collection push
@@ -560,7 +560,7 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        array_push($this->preparedParams, $value);
+        array_push($this->whereParams, $value);
 
         // set conjunction true
         // after every Where Collection push
@@ -593,9 +593,9 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        foreach ($value as $n => $item):
+        foreach ($value as $item):
 
-            array_push($this->preparedParams, $item);
+            array_push($this->whereParams, $item);
 
         endforeach;
 
@@ -630,9 +630,9 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        foreach ($value as $n => $item):
+        foreach ($value as $item):
 
-            array_push($this->preparedParams, $item);
+            array_push($this->whereParams, $item);
 
         endforeach;
 
@@ -751,7 +751,7 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        array_push($this->preparedParams, $value);
+        array_push($this->whereParams, $value);
 
         // set conjunction true
         // after every Where Collection push
@@ -791,7 +791,7 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        array_push($this->preparedParams, $value);
+        array_push($this->whereParams, $value);
 
         // set conjunction true
         // after every Where Collection push
@@ -824,7 +824,7 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        array_push($this->preparedParams, $value);
+        array_push($this->whereParams, $value);
 
         // set conjunction true
         // after every Where Collection push
@@ -857,7 +857,7 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        array_push($this->preparedParams, $value);
+        array_push($this->whereParams, $value);
 
         // set conjunction true
         // after every Where Collection push
@@ -1008,7 +1008,7 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        array_push($this->preparedParams, $value);
+        array_push($this->havingParams, $value);
 
         // set conjunction true
         // after every Where Collection push
@@ -1043,7 +1043,7 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        array_push($this->preparedParams, $value);
+        array_push($this->havingParams, $value);
 
         // set conjunction true
         // after every Where Collection push
@@ -1083,9 +1083,9 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        foreach ($value as $n => $item):
+        foreach ($value as $item):
 
-            array_push($this->preparedParams, $item);
+            array_push($this->havingParams, $item);
 
         endforeach;
 
@@ -1127,9 +1127,9 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        foreach ($value as $n => $item):
+        foreach ($value as $item):
 
-            array_push($this->preparedParams, $item);
+            array_push($this->havingParams, $item);
 
         endforeach;
 
@@ -1227,7 +1227,7 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        array_push($this->preparedParams, $value);
+        array_push($this->havingParams, $value);
 
         // set conjunction true
         // after every Where Collection push
@@ -1255,7 +1255,7 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        array_push($this->preparedParams, $value);
+        array_push($this->havingParams, $value);
 
         // set conjunction true
         // after every Where Collection push
@@ -1288,9 +1288,9 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        foreach ($value as $n => $item):
+        foreach ($value as $item):
 
-            array_push($this->preparedParams, $item);
+            array_push($this->havingParams, $item);
 
         endforeach;
 
@@ -1325,9 +1325,9 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        foreach ($value as $n => $item):
+        foreach ($value as $item):
 
-            array_push($this->preparedParams, $item);
+            array_push($this->havingParams, $item);
 
         endforeach;
 
@@ -1423,7 +1423,7 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        array_push($this->preparedParams, $value);
+        array_push($this->havingParams, $value);
 
         // set conjunction true
         // after every Where Collection push
@@ -1463,7 +1463,7 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        array_push($this->preparedParams, $value);
+        array_push($this->havingParams, $value);
 
         // set conjunction true
         // after every Where Collection push
@@ -1496,7 +1496,7 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        array_push($this->preparedParams, $value);
+        array_push($this->havingParams, $value);
 
         // set conjunction true
         // after every Where Collection push
@@ -1529,7 +1529,7 @@ class MySQLiBuilder extends Builder
         }
 
         // push value as parameters
-        array_push($this->preparedParams, $value);
+        array_push($this->havingParams, $value);
 
         // set conjunction true
         // after every Where Collection push
@@ -1664,8 +1664,23 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function build(string $command): void
+    public function buildParams(): void
     {
+        // reset params
+        $this->preparedParams = [];
+
+        // sort and add params
+        $this->preparedParams = array_merge($this->joinParams, $this->whereParams, $this->havingParams);
+    }
+
+    //=================================================================================================
+
+    public function buildQuery(string $command): void
+    {
+        // reset prepared
+        $this->preparedQuery = '';
+
+        // set command
         if ($command === 'select')
         {
             // select string
@@ -1777,7 +1792,7 @@ class MySQLiBuilder extends Builder
     public function countAllResults(): int
     {
         // build
-        $this->build('count');
+        $this->buildQuery('count');
 
         // query
         $query  = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
@@ -1791,8 +1806,11 @@ class MySQLiBuilder extends Builder
 
     public function get(): MySQLi
     {
-        // build
-        $this->build('select');
+        // build query
+        $this->buildQuery('select');
+
+        // build params
+        $this->buildParams();
 
         // dd($this);
 
