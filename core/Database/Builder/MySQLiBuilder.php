@@ -30,19 +30,29 @@ class MySQLiBuilder extends Builder
 
     protected function sanitizeColumn(string $column): string
     {
-        // remove backticks
-        $column = str_replace('`', '', $column);
+        // remove backticks, single-quotes, double-quotes
+        $column = str_replace(['`', '"', '"'], '', $column);
 
         // get
         if (str_contains($column, '.'))
         {
-            if ($this->prefix !== substr($column, 0, strlen($this->prefix)))
+            // explode and sanitize
+            $columnArray    = explode('.', $column);
+            $columnArray[0] = $this->db->escape($columnArray[0]);
+            $columnArray[1] = '`' . $this->db->escape($columnArray[1]) . '`';
+
+            if ($this->prefix !== substr($columnArray[0], 0, strlen($this->prefix)))
             {
-                $column = "`{$this->prefix}" . str_replace('.', '`.', $column);
+                // add prefix
+                $columnArray[0] = "`{$this->prefix}{$columnArray[0]}`";
+
+                // implode
+                $column = implode('.', $columnArray);
 
             } else {
 
-                $column = "`" . str_replace('.', '`.', $column);
+                $columnArray[0] = "`{$columnArray[0]}`";
+                $column         = implode('.', $columnArray);
             }
 
         } else {
@@ -1654,32 +1664,6 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function countAll(): int
-    {
-        $query  = "SELECT COUNT(*) AS total FROM {$this->from}";
-        $result = $this->db->rawQuery($query)->getRowArray();
-
-        // return
-        return intval($result['total']);
-    }
-
-    //=================================================================================================
-
-    public function countAllResults(): int
-    {
-        // build
-        $this->build('count');
-
-        // query
-        $query  = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
-        $result = $query->getRowArray();
-
-        // return
-        return intval($result['total']);
-    }
-
-    //=================================================================================================
-
     public function build(string $command): void
     {
         if ($command === 'select')
@@ -1779,10 +1763,38 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
+    public function countAll(): int
+    {
+        $query  = "SELECT COUNT(*) AS total FROM {$this->from}";
+        $result = $this->db->rawQuery($query)->getRowArray();
+
+        // return
+        return intval($result['total']);
+    }
+
+    //=================================================================================================
+
+    public function countAllResults(): int
+    {
+        // build
+        $this->build('count');
+
+        // query
+        $query  = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
+        $result = $query->getRowArray();
+
+        // return
+        return intval($result['total']);
+    }
+
+    //=================================================================================================
+
     public function get(): MySQLi
     {
         // build
         $this->build('select');
+
+        // dd($this);
 
         // return
         return $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
@@ -1790,9 +1802,19 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
+    protected function putQueryParams(): string
+    {
+        $query = $this->preparedQuery;
+
+        
+        return '';
+    }
+
+    //=================================================================================================
+
     public function getCompiledSelect(): string
     {
-        return '';
+        return $this->putQueryParams();
     }
 
     //=================================================================================================

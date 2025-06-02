@@ -43,7 +43,7 @@ class TestController extends BaseController
 //                      ->getResultArray();
 
         $builder = $db->table('post')
-                      ->select(['post.id', 'post.title'])
+                      ->select(['wkwk_post.id', 'title'])
                       ->innerJoin('user', 'user_id = user.id')
                       ->where('view', '<>', 20)
                       ->whereNotNull('post.title')
