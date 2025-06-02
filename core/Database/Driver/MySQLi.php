@@ -10,6 +10,7 @@ use \mysqli_result as SQLResult;
 use \mysqli_sql_exception as SQLException;
 use Aether\Exception\SystemException;
 use Aether\Database\Builder\MySQLiBuilder;
+use Aether\Database\Driver\DriverInterface;
 
 /** 
  * MySQLi Database Driver
@@ -17,7 +18,7 @@ use Aether\Database\Builder\MySQLiBuilder;
  * @class Aether\Database\Driver\MySQLi
 **/
 
-class MySQLi
+class MySQLi implements DriverInterface
 {
     protected MySQLiBuilder|null $builder = null;
     protected SQL|null $connection = null;

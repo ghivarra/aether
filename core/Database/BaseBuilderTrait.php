@@ -20,9 +20,10 @@ trait BaseBuilderTrait
     public bool $useConjunction = true;
     public array $groupByCollection = [];
     public array $havingCollection = [];
+    public bool $havingUseConjunction = true;
     public array $orderByCollection = [];
-    public int|null $limit = null;
-    public int|null $offset = null;
+    public int|null $limitCount = null;
+    public int|null $offsetCount = null;
     public array $setCollection = [];
     public string $resultQuery = '';
     public string $preparedQuery = '';

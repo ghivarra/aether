@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Aether\Database;
 
+use Aether\Database\Driver\DriverInterface;
+
 /** 
  * Aether Query Builder
  * 
@@ -13,101 +15,102 @@ namespace Aether\Database;
 abstract class Builder
 {
     // sanitizer
-    abstract protected function sanitizeColumn(string $column);
+    abstract protected function sanitizeColumn(string $column): string;
+    abstract protected function sanitizeTable(string $table): string;
 
-    abstract public function select(array $column = [], bool $raw = false);
-    abstract public function selectAvg(string $column, string $alias, bool $raw = false);
-    abstract public function selectCount(string $column, string $alias, bool $raw = false);
-    abstract public function selectMax(string $column, string $alias, bool $raw = false);
-    abstract public function selectMin(string $column, string $alias, bool $raw = false);
-    abstract public function selectSum(string $column, string $alias, bool $raw = false);
-    abstract public function distinct();
+    abstract public function select(array $column = [], bool $raw = false): Builder;
+    abstract public function selectAvg(string $column, string $alias, bool $raw = false): Builder;
+    abstract public function selectCount(string $column, string $alias, bool $raw = false): Builder;
+    abstract public function selectMax(string $column, string $alias, bool $raw = false): Builder;
+    abstract public function selectMin(string $column, string $alias, bool $raw = false): Builder;
+    abstract public function selectSum(string $column, string $alias, bool $raw = false): Builder;
+    abstract public function distinct(): Builder;
     
-    abstract public function from(string $tableName, mixed $db, string $DBPrefix);
+    abstract public function from(string $tableName, mixed $db, string $DBPrefix): Builder;
 
-    abstract public function join(string $table, string $condition, string $joinType = '', bool $raw = false);
+    abstract public function join(string $table, string $condition, string $joinType = '', bool $raw = false): Builder;
 
-    abstract public function innerJoin(string $table, string $condition, bool $raw = false);
-    abstract public function outerJoin(string $table, string $condition, bool $raw = false);
-    abstract public function leftJoin(string $table, string $condition, bool $raw = false);
-    abstract public function rightJoin(string $table, string $condition, bool $raw = false);
+    abstract public function innerJoin(string $table, string $condition, bool $raw = false): Builder;
+    abstract public function outerJoin(string $table, string $condition, bool $raw = false): Builder;
+    abstract public function leftJoin(string $table, string $condition, bool $raw = false): Builder;
+    abstract public function rightJoin(string $table, string $condition, bool $raw = false): Builder;
 
-    abstract public function where(string $column, string $operator, string|int $value, bool $raw = false);
-    abstract public function whereNot(string $column, string $operator, string|int $value, bool $raw = false);
-    abstract public function whereIn(string $column, array $value, bool $raw = false);
-    abstract public function whereNotIn(string $column, array $value, bool $raw = false);
-    abstract public function whereNull(string $column, bool $raw = false);
-    abstract public function whereNotNull(string $column, bool $raw = false);
+    abstract public function where(string $column, string $operator, string|int $value, bool $raw = false): Builder;
+    abstract public function whereNot(string $column, string $operator, string|int $value, bool $raw = false): Builder;
+    abstract public function whereIn(string $column, array $value, bool $raw = false): Builder;
+    abstract public function whereNotIn(string $column, array $value, bool $raw = false): Builder;
+    abstract public function whereNull(string $column, bool $raw = false): Builder;
+    abstract public function whereNotNull(string $column, bool $raw = false): Builder;
 
-    abstract public function orWhere(string $column, string $operator, string|int $value, bool $raw = false);
-    abstract public function orWhereNot(string $column, string $operator, string|int $value, bool $raw = false);
-    abstract public function orWhereIn(string $column, array $value, bool $raw = false);
-    abstract public function orWhereNotIn(string $column, array $value, bool $raw = false);
-    abstract public function orWhereNull(string $column, bool $raw = false);
-    abstract public function orWhereNotNull(string $column, bool $raw = false);
+    abstract public function orWhere(string $column, string $operator, string|int $value, bool $raw = false): Builder;
+    abstract public function orWhereNot(string $column, string $operator, string|int $value, bool $raw = false): Builder;
+    abstract public function orWhereIn(string $column, array $value, bool $raw = false): Builder;
+    abstract public function orWhereNotIn(string $column, array $value, bool $raw = false): Builder;
+    abstract public function orWhereNull(string $column, bool $raw = false): Builder;
+    abstract public function orWhereNotNull(string $column, bool $raw = false): Builder;
 
-    abstract public function whereLike(string $column, string $value, string $method = 'both', bool $raw = false);
-    abstract public function notWhereLike(string $column, string $value, string $method = 'both', bool $raw = false);
-    abstract public function orWhereLike(string $column, string $value, string $method = 'both', bool $raw = false);
-    abstract public function orNotWhereLike(string $column, string $value, string $method = 'both', bool $raw = false);
+    abstract public function whereLike(string $column, string $value, string $method = 'both', bool $raw = false): Builder;
+    abstract public function whereNotLike(string $column, string $value, string $method = 'both', bool $raw = false): Builder;
+    abstract public function orWhereLike(string $column, string $value, string $method = 'both', bool $raw = false): Builder;
+    abstract public function orWhereNotLike(string $column, string $value, string $method = 'both', bool $raw = false): Builder;
 
-    abstract public function groupStart();
-    abstract public function notGroupStart();
-    abstract public function orGroupStart();
-    abstract public function orNotGroupStart();
-    abstract public function groupEnd();
+    abstract public function groupStart(): Builder;
+    abstract public function notGroupStart(): Builder;
+    abstract public function orGroupStart(): Builder;
+    abstract public function orNotGroupStart(): Builder;
+    abstract public function groupEnd(): Builder;
 
-    abstract public function groupBy();
+    abstract public function groupBy(string|array $columns, bool $raw = false): Builder;
 
-    abstract public function having();
-    abstract public function havingNot();
-    abstract public function havingIn();
-    abstract public function havingNotIn();
-    abstract public function havingNull();
-    abstract public function havingNotNull();
+    abstract public function having(string $column, string $operator, string|int $value, bool $raw = false): Builder;
+    abstract public function havingNot(string $column, string $operator, string|int $value, bool $raw = false): Builder;
+    abstract public function havingIn(string $column, array $value, bool $raw = false): Builder;
+    abstract public function havingNotIn(string $column, array $value, bool $raw = false): Builder;
+    abstract public function havingNull(string $column, bool $raw = false): Builder;
+    abstract public function havingNotNull(string $column, bool $raw = false): Builder;
 
-    abstract public function orHaving();
-    abstract public function orHavingNot();
-    abstract public function orHavingIn();
-    abstract public function orHavingNotIn();
-    abstract public function orHavingNull();
-    abstract public function orHavingNotNull();
+    abstract public function orHaving(string $column, string $operator, string $value, bool $raw = false): Builder;
+    abstract public function orHavingNot(string $column, string $operator, string $value, bool $raw = false): Builder;
+    abstract public function orHavingIn(string $column, array $value, bool $raw = false): Builder;
+    abstract public function orHavingNotIn(string $column, array $value, bool $raw = false): Builder;
+    abstract public function orHavingNull(string $column, bool $raw = false): Builder;
+    abstract public function orHavingNotNull(string $column, bool $raw = false): Builder;
 
-    abstract public function havingLike();
-    abstract public function NotHavingLike();
-    abstract public function orHavingLike();
-    abstract public function orNotHavingLike();
+    abstract public function havingLike(string $column, string $value, string $method = 'both', bool $raw = false): Builder;
+    abstract public function havingNotLike(string $column, string $value, string $method = 'both', bool $raw = false): Builder;
+    abstract public function orHavingLike(string $column, string $value, string $method = 'both', bool $raw = false): Builder;
+    abstract public function orHavingNotLike(string $column, string $value, string $method = 'both', bool $raw = false): Builder;
 
-    abstract public function havingGroupStart();
-    abstract public function notHavingGroupStart();
-    abstract public function orHavingGroupStart();
-    abstract public function orNotHavingGroupStart();
-    abstract public function havingGroupEnd();
+    abstract public function havingGroupStart(): Builder;
+    abstract public function havingNotGroupStart(): Builder;
+    abstract public function havingOrGroupStart(): Builder;
+    abstract public function havingOrNotGroupStart(): Builder;
+    abstract public function havingGroupEnd(): Builder;
     
-    abstract public function orderBy();
+    abstract public function orderBy(string $column, string $order = 'ASC', bool $raw = false): Builder;
 
-    abstract public function offset();
-    abstract public function limit();
+    abstract public function offset(int $num): Builder;
+    abstract public function limit(int $num): Builder;
 
-    abstract public function countAll();
-    abstract public function countAllResults();
+    abstract public function countAll(): int;
+    abstract public function countAllResults(): int;
 
-    abstract public function get();
-    abstract public function getCompiledSelect();
+    abstract public function get(): DriverInterface;
+    abstract public function getCompiledSelect(): string;
 
-    abstract public function resetQuery();
+    abstract public function resetQuery(): Builder;
 
-    abstract public function set();
-    abstract public function increment();
-    abstract public function decrement();
+    abstract public function set(): Builder;
+    abstract public function increment(): Builder;
+    abstract public function decrement(): Builder;
 
-    abstract public function insert();
-    abstract public function insertBatch();
-    abstract public function update();
-    abstract public function updateBatch();
-    abstract public function delete();
-    abstract public function replace();
+    abstract public function insert(): bool;
+    abstract public function insertBatch(): bool;
+    abstract public function update(): bool;
+    abstract public function updateBatch(): bool;
+    abstract public function delete(): bool;
+    abstract public function replace(): bool;
 
-    abstract public function truncate();
-    abstract public function emptyTable();
+    abstract public function truncate(): bool;
+    abstract public function emptyTable(): bool;
 }

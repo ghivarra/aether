@@ -22,6 +22,9 @@ class MySQLiBuilder extends Builder
     protected array $allowedComparisonOperator = [
         '=', '!=', '>', '<', '<=', '>=', '<>'
     ];
+    protected array $allowedOrder = [
+        'ASC', 'DESC'
+    ];
 
     //=================================================================================================
 
@@ -46,10 +49,6 @@ class MySQLiBuilder extends Builder
 
                     $column = "`" . str_replace('.', '`.', $column);
                 }
-
-            } else {
-
-                $column = "`{$this->from}`.{$column}";
             }
         }
 
@@ -780,7 +779,7 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function notWhereLike(string $column, string $value, string $method = 'both', bool $raw = false): MySQLiBuilder
+    public function whereNotLike(string $column, string $value, string $method = 'both', bool $raw = false): MySQLiBuilder
     {
         $value = $this->setLikeValue($value, $method);
 
@@ -794,17 +793,17 @@ class MySQLiBuilder extends Builder
         // push into where collection
         if (empty($this->whereCollection))
         {
-            array_push($this->whereCollection, "WHERE NOT {$column} LIKE ? ESCAPE '!'");
+            array_push($this->whereCollection, "WHERE {$column} NOT LIKE ? ESCAPE '!'");
 
         } else {
 
             if ($this->useConjunction)
             {
-                array_push($this->whereCollection, "AND NOT {$column} LIKE ? ESCAPE '!'");
+                array_push($this->whereCollection, "AND {$column} NOT LIKE ? ESCAPE '!'");
 
             } else {
 
-                array_push($this->whereCollection, "NOT {$column} LIKE ? ESCAPE '!'");
+                array_push($this->whereCollection, "{$column} NOT LIKE ? ESCAPE '!'");
             }
         }
 
@@ -855,7 +854,7 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function orNotWhereLike(string $column, string $value, string $method = 'both', bool $raw = false): MySQLiBuilder
+    public function orWhereNotLike(string $column, string $value, string $method = 'both', bool $raw = false): MySQLiBuilder
     {
         $value = $this->setLikeValue($value, $method);
 
@@ -869,11 +868,11 @@ class MySQLiBuilder extends Builder
         // push into where collection
         if ($this->useConjunction)
         {
-            array_push($this->whereCollection, "OR NOT {$column} LIKE ? ESCAPE '!'");
+            array_push($this->whereCollection, "OR {$column} NOT LIKE ? ESCAPE '!'");
 
         } else {
             
-            array_push($this->whereCollection, "{$column} LIKE ? ESCAPE '!'");
+            array_push($this->whereCollection, "{$column} NOT LIKE ? ESCAPE '!'");
         }
 
         // push value as parameters
@@ -973,60 +972,788 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function groupBy(): MySQLiBuilder
+    public function groupBy(string|array $columns, bool $raw = false): MySQLiBuilder
+    {
+        // sanitize & push to collection
+        if (is_array($columns))
+        {
+            foreach ($columns as $column):
+
+                if (!$raw)
+                {
+                    $column = $this->sanitizeColumn($column);
+                }
+
+                array_push($this->groupByCollection, $column);
+
+            endforeach;
+
+        } else {
+
+            if (!$raw)
+            {
+                $column = $this->sanitizeColumn($columns);
+            }
+
+            array_push($this->groupByCollection, $column);
+        }
+        
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function having(string $column, string $operator, string|int $value, bool $raw = false): MySQLiBuilder
+    {
+        // execute before
+        $data = $this->beforeWhere($column, $operator, $value, $raw);
+
+        // push into having collection
+        if (empty($this->havingCollection))
+        {
+            array_push($this->havingCollection, "HAVING {$data['column']} {$operator} ?");
+
+        } else {
+
+            if ($this->havingUseConjunction)
+            {
+                array_push($this->havingCollection, "AND {$data['column']} {$operator} ?");
+
+            } else {
+
+                array_push($this->havingCollection, "{$data['column']} {$operator} ?");
+            }
+        }
+
+        // push value as parameters
+        array_push($this->preparedParams, $value);
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->havingUseConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function havingNot(string $column, string $operator, string|int $value, bool $raw = false): MySQLiBuilder
+    {
+        // execute before
+        $data = $this->beforeWhere($column, $operator, $value, $raw);
+
+        // push into having collection
+        if (empty($this->havingCollection))
+        {
+            array_push($this->havingCollection, "HAVING NOT {$data['column']} {$operator} ?");
+
+        } else {
+
+            if ($this->havingUseConjunction)
+            {
+                array_push($this->havingCollection, "AND NOT {$data['column']} {$operator} ?");
+
+            } else {
+
+                array_push($this->havingCollection, "NOT {$data['column']} {$operator} ?");
+            }
+        }
+
+        // push value as parameters
+        array_push($this->preparedParams, $value);
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->havingUseConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function havingIn(string $column, array $value, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            
+            foreach ($value as $n => $item):
+
+                $value[$n] = $this->db->escape($item);
+
+            endforeach;
+        }
+
+        // count values
+        $variables = implode(', ', array_fill(0, count($value), '?'));
+
+        // push into having collection
+        if (empty($this->havingCollection))
+        {
+            array_push($this->havingCollection, "HAVING {$column} IN ($variables)");
+
+        } else {
+
+            if ($this->havingUseConjunction)
+            {
+                array_push($this->havingCollection, "AND {$column} IN ($variables)");
+
+            } else {
+
+                array_push($this->havingCollection, "{$column} IN ($variables)");
+            }            
+        }
+
+        // push value as parameters
+        foreach ($value as $n => $item):
+
+            array_push($this->preparedParams, $item);
+
+        endforeach;
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->havingUseConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function havingNotIn(string $column, array $value, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            
+            foreach ($value as $n => $item):
+
+                $value[$n] = $this->db->escape($item);
+
+            endforeach;
+        }
+
+        // count values
+        $variables = implode(', ', array_fill(0, count($value), '?'));
+
+        // push into having collection
+        if (empty($this->havingCollection))
+        {
+            array_push($this->havingCollection, "HAVING {$column} NOT IN ($variables)");
+
+        } else {
+
+            if ($this->havingUseConjunction)
+            {
+                array_push($this->havingCollection, "AND {$column} NOT IN ($variables)");
+
+            } else {
+
+                array_push($this->havingCollection, "{$column} NOT IN ($variables)");
+            }            
+        }
+
+        // push value as parameters
+        foreach ($value as $n => $item):
+
+            array_push($this->preparedParams, $item);
+
+        endforeach;
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->havingUseConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function havingNull(string $column, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+        }
+
+        // push into having collection
+        if (empty($this->havingCollection))
+        {
+            array_push($this->havingCollection, "HAVING {$column} IS NULL");
+
+        } else {
+
+            if ($this->havingUseConjunction)
+            {
+                array_push($this->havingCollection, "AND {$column} IS NULL");
+
+            } else {
+
+                array_push($this->havingCollection, "{$column} IS NULL");
+            }   
+        }
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->havingUseConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function havingNotNull(string $column, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+        }
+
+        // push into having collection
+        if (empty($this->havingCollection))
+        {
+            array_push($this->havingCollection, "HAVING {$column} IS NOT NULL");
+
+        } else {
+
+            if ($this->havingUseConjunction)
+            {
+                array_push($this->havingCollection, "AND {$column} IS NOT NULL");
+
+            } else {
+
+                array_push($this->havingCollection, "{$column} IS NOT NULL");
+            }   
+        }
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->havingUseConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function orHaving(string $column, string $operator, string $value, bool $raw = false): MySQLiBuilder
+    {
+        // execute before
+        $data = $this->beforeWhere($column, $operator, $value, $raw);
+
+        // push into having collection
+        if ($this->havingUseConjunction)
+        {
+            array_push($this->havingCollection, "OR {$data['column']} {$operator} ?");
+
+        } else {
+
+            array_push($this->havingCollection, "{$data['column']} {$operator} ?");
+        }
+
+        // push value as parameters
+        array_push($this->preparedParams, $value);
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->havingUseConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function orHavingNot(string $column, string $operator, string $value, bool $raw = false): MySQLiBuilder
+    {
+        // execute before
+        $data = $this->beforeWhere($column, $operator, $value, $raw);
+
+        // push into having collection
+        if ($this->havingUseConjunction)
+        {
+            array_push($this->havingCollection, "OR NOT {$data['column']} {$operator} ?");
+
+        } else {
+
+            array_push($this->havingCollection, "NOT {$data['column']} {$operator} ?");
+        }
+
+        // push value as parameters
+        array_push($this->preparedParams, $value);
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->havingUseConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function orHavingIn(string $column, array $value, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            
+            foreach ($value as $n => $item):
+
+                $value[$n] = $this->db->escape($item);
+
+            endforeach;
+        }
+
+        // count values
+        $variables = implode(', ', array_fill(0, count($value), '?'));
+
+        // push into having collection
+        if ($this->havingUseConjunction)
+        {
+            array_push($this->havingCollection, "OR {$column} IN ($variables)");
+
+        } else {
+
+            array_push($this->havingCollection, "{$column} IN ($variables)");
+        }
+
+        // push value as parameters
+        foreach ($value as $n => $item):
+
+            array_push($this->preparedParams, $item);
+
+        endforeach;
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->havingUseConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function orHavingNotIn(string $column, array $value, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            
+            foreach ($value as $n => $item):
+
+                $value[$n] = $this->db->escape($item);
+
+            endforeach;
+        }
+
+        // count values
+        $variables = implode(', ', array_fill(0, count($value), '?'));
+
+        // push into having collection
+        if ($this->havingUseConjunction)
+        {
+            array_push($this->havingCollection, "OR NOT {$column} IN ($variables)");
+
+        } else {
+
+            array_push($this->havingCollection, "NOT {$column} IN ($variables)");
+        }
+
+        // push value as parameters
+        foreach ($value as $n => $item):
+
+            array_push($this->preparedParams, $item);
+
+        endforeach;
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->havingUseConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function orHavingNull(string $column, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+        }
+
+        // push into having collection
+        if ($this->havingUseConjunction)
+        {
+            array_push($this->havingCollection, "OR {$column} IS NULL");
+
+        } else {
+
+            array_push($this->havingCollection, "{$column} IS NULL");
+        }
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->havingUseConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function orHavingNotNull(string $column, bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+        }
+
+        // push into having collection
+        if ($this->havingUseConjunction)
+        {
+            array_push($this->havingCollection, "OR {$column} IS NOT NULL");
+
+        } else {
+
+            array_push($this->havingCollection, "{$column} IS NOT NULL");
+        }
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->havingUseConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function havingLike(string $column, string $value, string $method = 'both', bool $raw = false): MySQLiBuilder
+    {
+        $value = $this->setLikeValue($value, $method);
+
+        // escape or not
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            $value  = $this->db->escape($value);
+        }
+
+        // push into having collection
+        if (empty($this->havingCollection))
+        {
+            array_push($this->havingCollection, "HAVING {$column} LIKE ? ESCAPE '!'");
+
+        } else {
+
+            if ($this->havingUseConjunction)
+            {
+                array_push($this->havingCollection, "AND {$column} LIKE ? ESCAPE '!'");
+
+            } else {
+
+                array_push($this->havingCollection, "{$column} LIKE ? ESCAPE '!'");
+            }
+        }
+
+        // push value as parameters
+        array_push($this->preparedParams, $value);
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->havingUseConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function havingNotLike(string $column, string $value, string $method = 'both', bool $raw = false): MySQLiBuilder
+    {
+        $value = $this->setLikeValue($value, $method);
+
+        // escape or not
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            $value  = $this->db->escape($value);
+        }
+
+        // push into having collection
+        if (empty($this->havingCollection))
+        {
+            array_push($this->havingCollection, "HAVING {$column} NOT LIKE ? ESCAPE '!'");
+
+        } else {
+
+            if ($this->havingUseConjunction)
+            {
+                array_push($this->havingCollection, "AND {$column} NOT LIKE ? ESCAPE '!'");
+
+            } else {
+
+                array_push($this->havingCollection, "{$column} NOT LIKE ? ESCAPE '!'");
+            }
+        }
+
+        // push value as parameters
+        array_push($this->preparedParams, $value);
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->havingUseConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function orHavingLike(string $column, string $value, string $method = 'both', bool $raw = false): MySQLiBuilder
+    {
+        $value = $this->setLikeValue($value, $method);
+
+        // escape or not
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            $value  = $this->db->escape($value);
+        }
+
+        // push into having collection
+        if ($this->havingUseConjunction)
+        {
+            array_push($this->havingCollection, "OR {$column} LIKE ? ESCAPE '!'");
+
+        } else {
+            
+            array_push($this->havingCollection, "{$column} LIKE ? ESCAPE '!'");
+        }
+
+        // push value as parameters
+        array_push($this->preparedParams, $value);
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->havingUseConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function orHavingNotLike(string $column, string $value, string $method = 'both', bool $raw = false): MySQLiBuilder
+    {
+        $value = $this->setLikeValue($value, $method);
+
+        // escape or not
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            $value  = $this->db->escape($value);
+        }
+
+        // push into having collection
+        if ($this->havingUseConjunction)
+        {
+            array_push($this->havingCollection, "OR {$column} NOT LIKE ? ESCAPE '!'");
+
+        } else {
+            
+            array_push($this->havingCollection, "{$column} NOT LIKE ? ESCAPE '!'");
+        }
+
+        // push value as parameters
+        array_push($this->preparedParams, $value);
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->havingUseConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function havingGroupStart(): MySQLiBuilder
+    {
+        // push
+        if (empty($this->havingCollection))
+        {
+            array_push($this->havingCollection, 'HAVING (');
+
+        } else {
+
+            array_push($this->havingCollection, 'AND (');
+        }
+
+        // don't use conjunction on next
+        $this->havingUseConjunction = false;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function havingNotGroupStart(): MySQLiBuilder
+    {
+        // push
+        if (empty($this->havingCollection))
+        {
+            array_push($this->havingCollection, 'HAVING NOT (');
+
+        } else {
+
+            array_push($this->havingCollection, 'AND NOT (');
+        }
+
+        // don't use conjunction on next
+        $this->havingUseConjunction = false;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function havingOrGroupStart(): MySQLiBuilder
+    {
+        // push
+        array_push($this->havingCollection, 'OR (');
+
+        // don't use conjunction on next
+        $this->havingUseConjunction = false;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function havingOrNotGroupStart(): MySQLiBuilder
+    {
+        // push
+        array_push($this->havingCollection, 'OR NOT (');
+
+        // don't use conjunction on next
+        $this->havingUseConjunction = false;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function havingGroupEnd(): MySQLiBuilder
+    {
+        // push
+        array_push($this->havingCollection, ')');
+
+        // don't use conjunction on next
+        $this->havingUseConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+    
+    public function orderBy(string $column, string $order = 'ASC', bool $raw = false): MySQLiBuilder
+    {
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+        }
+
+        $order = strtoupper($order);
+        $order = in_array($order, $this->allowedOrder) ? $order : 'ASC';
+
+        // store order
+        array_push($this->orderByCollection, "{$column} {$order}");
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function offset(int $num): MySQLiBuilder 
+    {
+        $this->offsetCount = $num;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function limit(int $num): MySQLiBuilder
+    {
+        $this->limitCount = $num;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function countAll(): int
     {
         
     }
 
     //=================================================================================================
 
-    public function having(): MySQLiBuilder {}
-    public function havingNot(): MySQLiBuilder {}
-    public function havingIn(): MySQLiBuilder {}
-    public function havingNotIn(): MySQLiBuilder {}
-    public function havingNull(): MySQLiBuilder {}
-    public function havingNotNull(): MySQLiBuilder {}
+    public function countAllResults(): int
+    {
 
-    public function orHaving():MySQLiBuilder {}
-    public function orHavingNot():MySQLiBuilder {}
-    public function orHavingIn():MySQLiBuilder {}
-    public function orHavingNotIn():MySQLiBuilder {}
-    public function orHavingNull():MySQLiBuilder {}
-    public function orHavingNotNull():MySQLiBuilder {}
-
-    public function havingLike(): MySQLiBuilder {}
-    public function NotHavingLike(): MySQLiBuilder {}
-    public function orHavingLike(): MySQLiBuilder {}
-    public function orNotHavingLike(): MySQLiBuilder {}
-
-    public function havingGroupStart(): MySQLiBuilder {}
-    public function notHavingGroupStart(): MySQLiBuilder {}
-    public function orHavingGroupStart(): MySQLiBuilder {}
-    public function orNotHavingGroupStart(): MySQLiBuilder {}
-    public function havingGroupEnd(): MySQLiBuilder {}
-    
-    public function orderBy(): MySQLiBuilder {}
-
-    public function offset(): MySQLiBuilder {}
-    public function limit(): MySQLiBuilder {}
-
-    public function countAll(): MySQLiBuilder {}
-    public function countAllResults(): MySQLiBuilder {}
+    }
 
     //=================================================================================================
 
-    public function get(): MySQLi
+    public function build(string $command): void
     {
-        // select string
-        $selectString = ($this->distinct) ? "SELECT DISTINCT" : "SELECT";
-        
-        // column collection
-        // and string
-        $this->selectCollection = empty($this->selectCollection) ? [ "`{$this->from}`.*" ] : $this->selectCollection;
-        $columnString = implode(',', $this->selectCollection);
+        if ($command === 'select')
+        {
+            // select string
+            $selectString = ($this->distinct) ? "SELECT DISTINCT" : "SELECT";
+
+            // store into prepared query
+            $this->preparedQuery = $selectString;
+            
+            // column collection
+            // and string
+            $this->selectCollection = empty($this->selectCollection) ? [ "`{$this->from}`.*" ] : $this->selectCollection;
+            $columnString = implode(', ', $this->selectCollection);
+
+            // store into prepared query
+            $this->preparedQuery .= " {$columnString}";
+
+        } elseif ($command === 'count') {
+
+            // store into prepared query
+            $this->preparedQuery = "SELECT COUNT(*) AS total";
+        }
 
         // from string
         $fromString = "FROM {$this->from}";
+
+        // store into prepared query
+        $this->preparedQuery .= " {$fromString}";
 
         // join string
         if (!empty($this->joinCollection))
@@ -1040,21 +1767,69 @@ class MySQLiBuilder extends Builder
 
             endforeach;
 
-            $fromString .= " " . implode(" ", $joinString);
+            // store into prepared query
+            $this->preparedQuery .= " " . implode(" ", $joinString);
         }
 
-        // where string
-        $whereString = '';
-        
+        // where string        
         if (!empty($this->whereCollection))
         {
             $whereString = implode(" ", $this->whereCollection);
+
+            // store into prepared query
+            $this->preparedQuery .= " {$whereString}";
         }
 
-        // update result
-        $this->preparedQuery = "{$selectString} {$columnString} {$fromString} {$whereString}";
+        // group by string
+        if (!empty($this->groupByCollection))
+        {
+            $groupByString = "GROUP BY " . implode(", ", $this->groupByCollection);
 
-        // dd($this);
+            // store into prepared query
+            $this->preparedQuery .= " {$groupByString}";
+        }
+
+        // having string        
+        if (!empty($this->havingCollection))
+        {
+            $havingString = implode(" ", $this->havingCollection);
+
+            // store into prepared query
+            $this->preparedQuery .= " {$havingString}";
+        }
+
+        // order by
+        if (!empty($this->orderByCollection))
+        {
+            $orderByString = 'ORDER BY ' . implode(", ", $this->orderByCollection);
+
+            // store into prepared query
+            $this->preparedQuery .= " {$orderByString}";
+        }
+
+        //  limit
+        if (!is_null($this->limitCount))
+        {
+            // store into prepared query
+            $this->preparedQuery .= " LIMIT {$this->limitCount}";
+        }
+
+        // offset
+        if (!is_null($this->offsetCount))
+        {
+            // store into prepared query
+            $this->preparedQuery .= " OFFSET {$this->offsetCount}";
+        }
+    }
+
+    //=================================================================================================
+
+    public function get(): MySQLi
+    {
+        // build
+        $this->build('select');
+
+        dd($this);
 
         // return
         return $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
