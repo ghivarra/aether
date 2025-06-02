@@ -1,8 +1,8 @@
 <?php namespace Config;
 
-use Aether\Interface\Config\DatabaseInterface;
+use Aether\Config\BaseDatabase;
 
-class Database implements DatabaseInterface
+class Database extends BaseDatabase
 {
     /**
      * Lets you choose which connection group to use if no other is specified.
@@ -17,6 +17,8 @@ class Database implements DatabaseInterface
      * 
      * Don't delete or commenting this default config even if not used
      * 
+     * The opion for supported DBDriver so far is MySQLi and PostgreSQL
+     * 
      * @var array $default
      */
     public array $default = [
@@ -24,8 +26,8 @@ class Database implements DatabaseInterface
         'port'     => 3306,
         'username' => 'ghivarra',
         'password' => '',
-        'database' => '',
-        'DBDriver' => 'MySQL',
+        'database' => 'aether',
+        'DBDriver' => 'MySQLi',
         'DBPrefix' => '',
         'DBDebug'  => (AETHER_ENV === 'development'),
         'charset'  => 'utf8mb4',

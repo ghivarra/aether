@@ -11,7 +11,6 @@ use Aether\Interface\Config\AppInterface;
  * 
  * @class Aether\Config
  * 
- * You can ignore this config if you wanted to use dotenv file
 **/
 
 class BaseApp implements AppInterface

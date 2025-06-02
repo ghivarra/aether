@@ -2,6 +2,7 @@
 
 use App\Controller\BaseController;
 use Aether\Interface\ResponseInterface;
+use Aether\Database;
 
 /** 
  * Test Controller
@@ -22,6 +23,12 @@ class TestController extends BaseController
                 'footer' => 'This is footer',
             ]
         ];
+
+        $db      = Database::connect();
+        $builder = $db->table('user')
+                      ->select(['user.id', 'name', 'status']);
+
+        dd($builder);
 
         // home
         return view('HomeView', $data);

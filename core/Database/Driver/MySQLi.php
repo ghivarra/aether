@@ -4,6 +4,10 @@ declare(strict_types = 1);
 
 namespace Aether\Database\Driver;
 
+use \mysqli as SQL;
+use Aether\Exception\SystemException;
+use Aether\Database\Builder\MySQLiBuilder;
+
 /** 
  * MySQLi Database Driver
  * 
@@ -12,24 +16,143 @@ namespace Aether\Database\Driver;
 
 class MySQLi
 {
-    public function countAll() {}
-    public function countAllResults() {}
-    public function distinct() {}
-    public function from() {}
-    public function get() {}
-    public function join() {}
-    public function or() {}
-    public function resetQuery() {}
-    public function select() {}
-    public function selectAvg() {}
-    public function selectCount() {}
-    public function selectMax() {}
-    public function selectMin() {}
-    public function selectSum() {}
-    public function where() {}
-    public function whereNot() {}
-    public function whereIn() {}
-    public function whereNotIn() {}
-    public function whereNull() {}
-    public function whereNotNull() {}
+    protected MySQLiBuilder|null $builder = null;
+    protected SQL|null $connection = null;
+    protected array $config = [];
+    protected string $fallbackMessage = 'Failed to connect to database';
+
+    //===========================================================================================
+
+    public function connect(array $config): MySQLi
+    {
+        // try connect
+        $mysqli = new SQL($config['hostname'], $config['username'], $config['password'], $config['database'], $config['port']);
+
+        // check if connection failed
+        if ($mysqli->connect_errno)
+        {
+            $message = (AETHER_ENV === 'development') ? "Failed to connect MySQLi Driver: {$mysqli->connect_error}" : $this->fallbackMessage;
+            
+            throw new SystemException($message, 400);
+        }
+
+        // set charset
+        $mysqli->set_charset($config['charset']);
+
+        // set into SQL
+        $this->connection = $mysqli;
+
+        // set config
+        $this->config = $config;
+
+        // return instance
+        return $this;
+    }
+
+    //===========================================================================================
+
+    public function disconnect(): bool
+    {   
+        // disconnect
+        return $this->connection->close();
+    }
+
+    //===========================================================================================
+
+    public function escape(mixed $data): string
+    {
+        $stringData = strval($data);
+
+        // return
+        return $this->connection->real_escape_string($stringData);
+    }
+
+    //===========================================================================================
+
+    public function getResultArray(): array | null
+    {
+        return null;
+    }
+
+    //===========================================================================================
+
+    public function getRowArray(): array | null
+    {
+        return null;
+    }
+
+    //===========================================================================================
+
+    public function table(string $tableName): MySQLiBuilder
+    {
+        // search config
+        if (!isset($this->config['DBDriver']) || is_null($this->connection))
+        {
+            $message = (AETHER_ENV === 'development') ? "You must connect to the database first before setting the table." : $this->fallbackMessage;
+
+            throw new SystemException($message, 400);
+        }
+
+        // find class
+        $this->builder = new MySQLiBuilder();
+
+        // return builder
+        return $this->builder->from($tableName, $this, $this->config['DBPrefix']);
+    }
+
+    //===========================================================================================
+
+    public function transBegin(): MySQLi
+    {
+        // check transaction
+        $transaction = $this->connection->begin_transaction();
+
+        if (!$transaction)
+        {
+            $message = (AETHER_ENV === 'development') ? "The database type does not support transaction, transaction failed." : $this->fallbackMessage;
+
+            throw new SystemException($message, 400);
+        }
+        
+        // return instance
+        return $this;
+    }
+
+    //===========================================================================================
+
+    public function transCommit(): MySQLi
+    {
+        // check transaction
+        $transaction = $this->connection->commit();
+
+        if (!$transaction)
+        {
+            $message = (AETHER_ENV === 'development') ? "Cannot commit transaction, commiting transaction failed." : $this->fallbackMessage;
+
+            throw new SystemException($message, 400);
+        }
+        
+        // return instance
+        return $this;
+    }
+
+    //===========================================================================================
+
+    public function transRollback(): MySQLi
+    {
+        // check transaction
+        $transaction = $this->connection->rollback();
+
+        if (!$transaction)
+        {
+            $message = (AETHER_ENV === 'development') ? "Cannot rollback transaction, rollback transaction failed." : $this->fallbackMessage;
+
+            throw new SystemException($message, 400);
+        }
+
+        // return instance
+        return $this;
+    }
+
+    //===========================================================================================
 }
