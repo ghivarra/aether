@@ -46,10 +46,10 @@ abstract class Builder
     abstract public function orWhereNull(string $column, bool $raw = false);
     abstract public function orWhereNotNull(string $column, bool $raw = false);
 
-    abstract public function whereLike();
-    abstract public function notWhereLike();
-    abstract public function orWhereLike();
-    abstract public function orNotWhereLike();
+    abstract public function whereLike(string $column, string $value, string $method = 'both', bool $raw = false);
+    abstract public function notWhereLike(string $column, string $value, string $method = 'both', bool $raw = false);
+    abstract public function orWhereLike(string $column, string $value, string $method = 'both', bool $raw = false);
+    abstract public function orNotWhereLike(string $column, string $value, string $method = 'both', bool $raw = false);
 
     abstract public function groupStart();
     abstract public function notGroupStart();

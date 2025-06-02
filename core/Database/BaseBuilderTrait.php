@@ -17,6 +17,7 @@ trait BaseBuilderTrait
     public string $from = '';
     public array $joinCollection = [];
     public array $whereCollection = [];
+    public bool $useConjunction = true;
     public array $groupByCollection = [];
     public array $havingCollection = [];
     public array $orderByCollection = [];

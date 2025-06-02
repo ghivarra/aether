@@ -294,11 +294,22 @@ class MySQLiBuilder extends Builder
 
         } else {
 
-            array_push($this->whereCollection, "AND {$data['column']} {$operator} ?");
+            if ($this->useConjunction)
+            {
+                array_push($this->whereCollection, "AND {$data['column']} {$operator} ?");
+
+            } else {
+
+                array_push($this->whereCollection, "{$data['column']} {$operator} ?");
+            }
         }
 
         // push value as parameters
         array_push($this->preparedParams, $value);
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->useConjunction = true;
 
         // return instance
         return $this;
@@ -318,11 +329,22 @@ class MySQLiBuilder extends Builder
 
         } else {
 
-            array_push($this->whereCollection, "AND NOT {$data['column']} {$operator} ?");
+            if ($this->useConjunction)
+            {
+                array_push($this->whereCollection, "AND NOT {$data['column']} {$operator} ?");
+
+            } else {
+
+                array_push($this->whereCollection, "NOT {$data['column']} {$operator} ?");
+            }
         }
 
         // push value as parameters
         array_push($this->preparedParams, $value);
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->useConjunction = true;
 
         // return instance
         return $this;
@@ -353,7 +375,14 @@ class MySQLiBuilder extends Builder
 
         } else {
 
-            array_push($this->whereCollection, "AND {$column} IN ($variables)");
+            if ($this->useConjunction)
+            {
+                array_push($this->whereCollection, "AND {$column} IN ($variables)");
+
+            } else {
+
+                array_push($this->whereCollection, "{$column} IN ($variables)");
+            }            
         }
 
         // push value as parameters
@@ -362,6 +391,10 @@ class MySQLiBuilder extends Builder
             array_push($this->preparedParams, $item);
 
         endforeach;
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->useConjunction = true;
 
         // return instance
         return $this;
@@ -392,7 +425,14 @@ class MySQLiBuilder extends Builder
 
         } else {
 
-            array_push($this->whereCollection, "AND {$column} NOT IN ($variables)");
+            if ($this->useConjunction)
+            {
+                array_push($this->whereCollection, "AND {$column} NOT IN ($variables)");
+
+            } else {
+
+                array_push($this->whereCollection, "{$column} NOT IN ($variables)");
+            }   
         }
 
         // push value as parameters
@@ -401,6 +441,10 @@ class MySQLiBuilder extends Builder
             array_push($this->preparedParams, $item);
 
         endforeach;
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->useConjunction = true;
 
         // return instance
         return $this;
@@ -422,8 +466,19 @@ class MySQLiBuilder extends Builder
 
         } else {
 
-            array_push($this->whereCollection, "AND {$column} IS NULL");
+            if ($this->useConjunction)
+            {
+                array_push($this->whereCollection, "AND {$column} IS NULL");
+
+            } else {
+
+                array_push($this->whereCollection, "{$column} IS NULL");
+            }   
         }
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->useConjunction = true;
 
         // return instance
         return $this;
@@ -445,8 +500,19 @@ class MySQLiBuilder extends Builder
 
         } else {
 
-            array_push($this->whereCollection, "AND {$column} IS NOT NULL");
+            if ($this->useConjunction)
+            {
+                array_push($this->whereCollection, "AND {$column} IS NOT NULL");
+
+            } else {
+
+                array_push($this->whereCollection, "{$column} IS NOT NULL");
+            } 
         }
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->useConjunction = true;
 
         // return instance
         return $this;
@@ -460,10 +526,21 @@ class MySQLiBuilder extends Builder
         $data = $this->beforeWhere($column, $operator, $value, $raw);
 
         // push into where collection
-        array_push($this->whereCollection, "OR {$data['column']} {$operator} ?");
+        if ($this->useConjunction)
+        {
+            array_push($this->whereCollection, "OR {$data['column']} {$operator} ?");
+
+        } else {
+
+            array_push($this->whereCollection, "{$data['column']} {$operator} ?");
+        }
 
         // push value as parameters
         array_push($this->preparedParams, $value);
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->useConjunction = true;
 
         // return instance
         return $this;
@@ -477,10 +554,21 @@ class MySQLiBuilder extends Builder
         $data = $this->beforeWhere($column, $operator, $value, $raw);
 
         // push into where collection
-        array_push($this->whereCollection, "OR NOT {$data['column']} {$operator} ?");
+        if ($this->useConjunction)
+        {
+            array_push($this->whereCollection, "OR NOT {$data['column']} {$operator} ?");
+
+        } else {
+
+            array_push($this->whereCollection, "NOT {$data['column']} {$operator} ?");
+        }
 
         // push value as parameters
         array_push($this->preparedParams, $value);
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->useConjunction = true;
 
         // return instance
         return $this;
@@ -505,7 +593,14 @@ class MySQLiBuilder extends Builder
         $variables = implode(', ', array_fill(0, count($value), '?'));
 
         // push into where collection
-        array_push($this->whereCollection, "OR {$column} IN ($variables)");
+        if ($this->useConjunction)
+        {
+            array_push($this->whereCollection, "OR {$column} IN ($variables)");
+
+        } else {
+
+            array_push($this->whereCollection, "{$column} IN ($variables)");
+        }
 
         // push value as parameters
         foreach ($value as $n => $item):
@@ -513,6 +608,10 @@ class MySQLiBuilder extends Builder
             array_push($this->preparedParams, $item);
 
         endforeach;
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->useConjunction = true;
 
         // return instance
         return $this;
@@ -537,7 +636,14 @@ class MySQLiBuilder extends Builder
         $variables = implode(', ', array_fill(0, count($value), '?'));
 
         // push into where collection
-        array_push($this->whereCollection, "OR NOT {$column} IN ($variables)");
+        if ($this->useConjunction)
+        {
+            array_push($this->whereCollection, "OR NOT {$column} IN ($variables)");
+
+        } else {
+
+            array_push($this->whereCollection, "NOT {$column} IN ($variables)");
+        }
 
         // push value as parameters
         foreach ($value as $n => $item):
@@ -545,6 +651,10 @@ class MySQLiBuilder extends Builder
             array_push($this->preparedParams, $item);
 
         endforeach;
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->useConjunction = true;
 
         // return instance
         return $this;
@@ -560,7 +670,18 @@ class MySQLiBuilder extends Builder
         }
 
         // push into where collection
-        array_push($this->whereCollection, "OR {$column} IS NULL");
+        if ($this->useConjunction)
+        {
+            array_push($this->whereCollection, "OR {$column} IS NULL");
+
+        } else {
+
+            array_push($this->whereCollection, "{$column} IS NULL");
+        }
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->useConjunction = true;
 
         // return instance
         return $this;
@@ -576,7 +697,18 @@ class MySQLiBuilder extends Builder
         }
 
         // push into where collection
-        array_push($this->whereCollection, "OR {$column} IS NOT NULL");
+        if ($this->useConjunction)
+        {
+            array_push($this->whereCollection, "OR {$column} IS NOT NULL");
+
+        } else {
+
+            array_push($this->whereCollection, "{$column} IS NOT NULL");
+        }
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->useConjunction = true;
 
         // return instance
         return $this;
@@ -584,18 +716,269 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function whereLike(): MySQLiBuilder {}
-    public function notWhereLike(): MySQLiBuilder {}
-    public function orWhereLike(): MySQLiBuilder {}
-    public function orNotWhereLike(): MySQLiBuilder {}
+    protected function setLikeValue(string $value, string $method): string
+    {
+        // set value based on method
+        switch ($method) {
+            case 'left':
+                $value = "%{$value}";
+                break;
 
-    public function groupStart(): MySQLiBuilder {}
-    public function notGroupStart(): MySQLiBuilder {}
-    public function orGroupStart(): MySQLiBuilder {}
-    public function orNotGroupStart(): MySQLiBuilder {}
-    public function groupEnd(): MySQLiBuilder {}
+            case 'right':
+                $value = "{$value}%";
+                break;
+            
+            default:
+                $value = "%{$value}%";
+                break;
+        }
 
-    public function groupBy(): MySQLiBuilder {}
+        // return
+        return $value;
+    }
+
+    //=================================================================================================
+
+    public function whereLike(string $column, string $value, string $method = 'both', bool $raw = false): MySQLiBuilder
+    {
+        $value = $this->setLikeValue($value, $method);
+
+        // escape or not
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            $value  = $this->db->escape($value);
+        }
+
+        // push into where collection
+        if (empty($this->whereCollection))
+        {
+            array_push($this->whereCollection, "WHERE {$column} LIKE ? ESCAPE '!'");
+
+        } else {
+
+            if ($this->useConjunction)
+            {
+                array_push($this->whereCollection, "AND {$column} LIKE ? ESCAPE '!'");
+
+            } else {
+
+                array_push($this->whereCollection, "{$column} LIKE ? ESCAPE '!'");
+            }
+        }
+
+        // push value as parameters
+        array_push($this->preparedParams, $value);
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->useConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function notWhereLike(string $column, string $value, string $method = 'both', bool $raw = false): MySQLiBuilder
+    {
+        $value = $this->setLikeValue($value, $method);
+
+        // escape or not
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            $value  = $this->db->escape($value);
+        }
+
+        // push into where collection
+        if (empty($this->whereCollection))
+        {
+            array_push($this->whereCollection, "WHERE NOT {$column} LIKE ? ESCAPE '!'");
+
+        } else {
+
+            if ($this->useConjunction)
+            {
+                array_push($this->whereCollection, "AND NOT {$column} LIKE ? ESCAPE '!'");
+
+            } else {
+
+                array_push($this->whereCollection, "NOT {$column} LIKE ? ESCAPE '!'");
+            }
+        }
+
+        // push value as parameters
+        array_push($this->preparedParams, $value);
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->useConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function orWhereLike(string $column, string $value, string $method = 'both', bool $raw = false): MySQLiBuilder
+    {
+        $value = $this->setLikeValue($value, $method);
+
+        // escape or not
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            $value  = $this->db->escape($value);
+        }
+
+        // push into where collection
+        if ($this->useConjunction)
+        {
+            array_push($this->whereCollection, "OR {$column} LIKE ? ESCAPE '!'");
+
+        } else {
+            
+            array_push($this->whereCollection, "{$column} LIKE ? ESCAPE '!'");
+        }
+
+        // push value as parameters
+        array_push($this->preparedParams, $value);
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->useConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function orNotWhereLike(string $column, string $value, string $method = 'both', bool $raw = false): MySQLiBuilder
+    {
+        $value = $this->setLikeValue($value, $method);
+
+        // escape or not
+        if (!$raw)
+        {
+            $column = $this->sanitizeColumn($column);
+            $value  = $this->db->escape($value);
+        }
+
+        // push into where collection
+        if ($this->useConjunction)
+        {
+            array_push($this->whereCollection, "OR NOT {$column} LIKE ? ESCAPE '!'");
+
+        } else {
+            
+            array_push($this->whereCollection, "{$column} LIKE ? ESCAPE '!'");
+        }
+
+        // push value as parameters
+        array_push($this->preparedParams, $value);
+
+        // set conjunction true
+        // after every Where Collection push
+        $this->useConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function groupStart(): MySQLiBuilder
+    {
+        // push
+        if (empty($this->whereCollection))
+        {
+            array_push($this->whereCollection, 'WHERE (');
+
+        } else {
+
+            array_push($this->whereCollection, 'AND (');
+        }
+
+        // don't use conjunction on next
+        $this->useConjunction = false;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function notGroupStart(): MySQLiBuilder
+    {
+        // push
+        if (empty($this->whereCollection))
+        {
+            array_push($this->whereCollection, 'WHERE NOT (');
+
+        } else {
+
+            array_push($this->whereCollection, 'AND NOT (');
+        }
+
+        // don't use conjunction on next
+        $this->useConjunction = false;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function orGroupStart(): MySQLiBuilder
+    {
+        // push
+        array_push($this->whereCollection, 'OR (');
+
+        // don't use conjunction on next
+        $this->useConjunction = false;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function orNotGroupStart(): MySQLiBuilder
+    {
+        // push
+        array_push($this->whereCollection, 'OR NOT (');
+
+        // don't use conjunction on next
+        $this->useConjunction = false;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function groupEnd(): MySQLiBuilder
+    {
+        // push
+        array_push($this->whereCollection, ')');
+
+        // don't use conjunction on next
+        $this->useConjunction = true;
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function groupBy(): MySQLiBuilder
+    {
+        
+    }
+
+    //=================================================================================================
 
     public function having(): MySQLiBuilder {}
     public function havingNot(): MySQLiBuilder {}
@@ -670,6 +1053,8 @@ class MySQLiBuilder extends Builder
 
         // update result
         $this->preparedQuery = "{$selectString} {$columnString} {$fromString} {$whereString}";
+
+        // dd($this);
 
         // return
         return $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
