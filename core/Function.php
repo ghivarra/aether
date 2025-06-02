@@ -211,6 +211,14 @@ if (!function_exists('sanitizeURI'))
     }
 }
 
+if (!function_exists('str_contains'))
+{
+    function str_contains(string $haystack, string $needle)
+    {
+        return $needle !== '' && mb_strpos($haystack, $needle) !== false;
+    }
+}
+
 if (!function_exists('view'))
 {
     /** 

@@ -212,7 +212,7 @@ class Routing implements RoutingInterface
         $this->save();
 
         // only parse uri before uri parameters
-        $requestURI = (stripos($uri, '?') === false) ? $uri : strstr($uri, '?', true);
+        $requestURI = str_contains($uri, '?') ? strstr($uri, '?', true) : $uri;
         $requestURI = explode('/', $requestURI);
         $requestURI = array_values(array_filter($requestURI, 'sanitizeURI'));
 
@@ -472,7 +472,7 @@ class Routing implements RoutingInterface
         }
 
         // replace (:segment) with ?SEGMENT?
-        if (stripos($rule, $this->segmentVariable) !== false)
+        if (str_contains($rule, $this->segmentVariable) !== false)
         {
             $rule = str_ireplace($this->segmentVariable, $this->segmentVariable, $rule);
         }
