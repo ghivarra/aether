@@ -33,23 +33,22 @@ class MySQLiBuilder extends Builder
         // remove backticks
         $column = str_replace('`', '', $column);
 
-        // escape column
-        $column = $this->db->escape($column);
-
         // get
-        if (!str_contains($column, '`'))
+        if (str_contains($column, '.'))
         {
-            if (str_contains($column, '.'))
+            if ($this->prefix !== substr($column, 0, strlen($this->prefix)))
             {
-                if ($this->prefix !== substr($column, 0, strlen($this->prefix)))
-                {
-                    $column = "`{$this->prefix}" . str_replace('.', '`.', $column);
+                $column = "`{$this->prefix}" . str_replace('.', '`.', $column);
 
-                } else {
+            } else {
 
-                    $column = "`" . str_replace('.', '`.', $column);
-                }
+                $column = "`" . str_replace('.', '`.', $column);
             }
+
+        } else {
+
+            // escape column
+            $column = '`' . $this->db->escape($column) . '`';
         }
 
         // return
@@ -99,7 +98,7 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            $alias  = $this->db->escape($alias);
+            $alias  = '`' . $this->db->escape($alias) . '`';
         }
 
         array_push($this->selectCollection, "AVG({$column}) AS {$alias}");
@@ -115,7 +114,7 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            $alias  = $this->db->escape($alias);
+            $alias  = '`' . $this->db->escape($alias) . '`';
         }
 
         array_push($this->selectCollection, "COUNT({$column}) AS {$alias}");
@@ -131,7 +130,7 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            $alias  = $this->db->escape($alias);
+            $alias  = '`' . $this->db->escape($alias) . '`';
         }
 
         array_push($this->selectCollection, "MAX({$column}) AS {$alias}");
@@ -147,7 +146,7 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            $alias  = $this->db->escape($alias);
+            $alias  = '`' . $this->db->escape($alias) . '`';
         }
 
         array_push($this->selectCollection, "MIN({$column}) AS {$alias}");
@@ -163,7 +162,7 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            $alias  = $this->db->escape($alias);
+            $alias  = '`' . $this->db->escape($alias) . '`';
         }
 
         array_push($this->selectCollection, "SUM({$column}) AS {$alias}");
@@ -206,7 +205,7 @@ class MySQLiBuilder extends Builder
             if (!in_array(strtolower($joinType), array_keys($this->allowedJoinType)))
             {
                 $joinType = esc($joinType);
-                throw new SystemException("{$joinType} is not allowed", 400);
+                throw new SystemException("{$joinType} is not allowed", 500);
             }
         }
 
@@ -267,7 +266,7 @@ class MySQLiBuilder extends Builder
                 if (!in_array(strtolower($joinType), array_keys($this->allowedJoinType)))
                 {
                     $joinType = esc($joinType);
-                    throw new SystemException("{$joinType} as a comparison operator is not allowed", 400);
+                    throw new SystemException("{$joinType} as a comparison operator is not allowed", 500);
                 }
             }
         }
@@ -275,7 +274,7 @@ class MySQLiBuilder extends Builder
         // return
         return [
             'column' => ($raw) ? $column : $this->sanitizeColumn($column),
-            'value'  => ($raw) ? $value : $this->db->escape($value),
+            'value'  => $value,
         ];
     }
 
@@ -356,12 +355,6 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            
-            foreach ($value as $n => $item):
-
-                $value[$n] = $this->db->escape($item);
-
-            endforeach;
         }
 
         // count values
@@ -406,12 +399,6 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            
-            foreach ($value as $n => $item):
-
-                $value[$n] = $this->db->escape($item);
-
-            endforeach;
         }
 
         // count values
@@ -580,12 +567,6 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            
-            foreach ($value as $n => $item):
-
-                $value[$n] = $this->db->escape($item);
-
-            endforeach;
         }
 
         // count values
@@ -623,12 +604,6 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            
-            foreach ($value as $n => $item):
-
-                $value[$n] = $this->db->escape($item);
-
-            endforeach;
         }
 
         // count values
@@ -746,7 +721,6 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            $value  = $this->db->escape($value);
         }
 
         // push into where collection
@@ -787,7 +761,6 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            $value  = $this->db->escape($value);
         }
 
         // push into where collection
@@ -828,7 +801,6 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            $value  = $this->db->escape($value);
         }
 
         // push into where collection
@@ -862,7 +834,6 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            $value  = $this->db->escape($value);
         }
 
         // push into where collection
@@ -1079,12 +1050,6 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            
-            foreach ($value as $n => $item):
-
-                $value[$n] = $this->db->escape($item);
-
-            endforeach;
         }
 
         // count values
@@ -1129,12 +1094,6 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            
-            foreach ($value as $n => $item):
-
-                $value[$n] = $this->db->escape($item);
-
-            endforeach;
         }
 
         // count values
@@ -1303,12 +1262,6 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            
-            foreach ($value as $n => $item):
-
-                $value[$n] = $this->db->escape($item);
-
-            endforeach;
         }
 
         // count values
@@ -1346,12 +1299,6 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            
-            foreach ($value as $n => $item):
-
-                $value[$n] = $this->db->escape($item);
-
-            endforeach;
         }
 
         // count values
@@ -1446,7 +1393,6 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            $value  = $this->db->escape($value);
         }
 
         // push into having collection
@@ -1487,7 +1433,6 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            $value  = $this->db->escape($value);
         }
 
         // push into having collection
@@ -1528,7 +1473,6 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            $value  = $this->db->escape($value);
         }
 
         // push into having collection
@@ -1562,7 +1506,6 @@ class MySQLiBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            $value  = $this->db->escape($value);
         }
 
         // push into having collection
@@ -1713,14 +1656,26 @@ class MySQLiBuilder extends Builder
 
     public function countAll(): int
     {
-        
+        $query  = "SELECT COUNT(*) AS total FROM {$this->from}";
+        $result = $this->db->rawQuery($query)->getRowArray();
+
+        // return
+        return intval($result['total']);
     }
 
     //=================================================================================================
 
     public function countAllResults(): int
     {
+        // build
+        $this->build('count');
 
+        // query
+        $query  = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
+        $result = $query->getRowArray();
+
+        // return
+        return intval($result['total']);
     }
 
     //=================================================================================================
@@ -1829,29 +1784,104 @@ class MySQLiBuilder extends Builder
         // build
         $this->build('select');
 
-        dd($this);
-
         // return
         return $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
     }
 
     //=================================================================================================
 
-    public function getCompiledSelect() {}
+    public function getCompiledSelect(): string
+    {
+        return '';
+    }
 
-    public function resetQuery() {}
+    //=================================================================================================
 
-    public function set() {}
-    public function increment() {}
-    public function decrement() {}
+    public function resetQuery(): MySQLiBuilder
+    {
+        // return instance
+        return $this;
+    }
 
-    public function insert() {}
-    public function insertBatch() {}
-    public function update() {}
-    public function updateBatch() {}
-    public function delete() {}
-    public function replace() {}
+    //=================================================================================================
 
-    public function truncate() {}
-    public function emptyTable() {}
+    public function set(): MySQLiBuilder
+    {
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function increment(): MySQLiBuilder
+    {
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function decrement(): MySQLiBuilder
+    {
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
+    public function insert(): bool
+    {
+        return true;
+    }
+
+    //=================================================================================================
+
+    public function insertBatch(): bool
+    {
+        return true;
+    }
+
+    //=================================================================================================
+
+    public function update(): bool
+    {
+        return true;
+    }
+
+    //=================================================================================================
+
+    public function updateBatch(): bool
+    {
+        return true;
+    }
+
+    //=================================================================================================
+
+    public function delete(): bool
+    {
+        return true;
+    }
+
+    //=================================================================================================
+
+    public function replace(): bool
+    {
+        return true;
+    }
+
+    //=================================================================================================
+
+    public function truncate(): bool
+    {
+        return true;
+    }
+
+    //=================================================================================================
+
+    public function emptyTable(): bool
+    {
+        return true;
+    }
+
+    //=================================================================================================
 }

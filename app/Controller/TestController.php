@@ -45,7 +45,7 @@ class TestController extends BaseController
         $builder = $db->table('post')
                       ->select(['post.id', 'post.title'])
                       ->innerJoin('user', 'user_id = user.id')
-                      ->where('view', '>=', 20)
+                      ->where('view', '<>', 20)
                       ->whereNotNull('post.title')
                       ->orderBy('title', 'DESC')
                       ->limit(2)

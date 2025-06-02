@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Aether\Database;
 
-use Aether\Database\Driver\DriverInterface;
+use Aether\Database\DriverInterface;
 
 /** 
  * Aether Query Builder

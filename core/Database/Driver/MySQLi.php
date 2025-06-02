@@ -10,7 +10,7 @@ use \mysqli_result as SQLResult;
 use \mysqli_sql_exception as SQLException;
 use Aether\Exception\SystemException;
 use Aether\Database\Builder\MySQLiBuilder;
-use Aether\Database\Driver\DriverInterface;
+use Aether\Database\DriverInterface;
 
 /** 
  * MySQLi Database Driver
@@ -51,10 +51,8 @@ class MySQLi implements DriverInterface
         {
             $message = (AETHER_ENV === 'development') ? "Failed to connect MySQLi Driver: {$mysqli->connect_error}" : $this->fallbackMessage;
             
-            throw new SystemException($message, 400);
-        }
-
-        
+            throw new SystemException($message, 500);
+        }        
 
         // set charset
         $mysqli->set_charset($config['charset']);
@@ -95,7 +93,7 @@ class MySQLi implements DriverInterface
         {
             $message = (AETHER_ENV === 'development') ? "Cannot run getResultArray() because query is not yet executed." : 'Failed to fetch data from database.';
 
-            throw new SystemException($message, 400);
+            throw new SystemException($message, 500);
         }
 
         // result
@@ -110,7 +108,7 @@ class MySQLi implements DriverInterface
         {
             $message = (AETHER_ENV === 'development') ? "Cannot run getRowArray() because query is not yet executed." : 'Failed to fetch data from database.';
 
-            throw new SystemException($message, 400);
+            throw new SystemException($message, 500);
         }
 
         // return only one
@@ -126,7 +124,7 @@ class MySQLi implements DriverInterface
         {
             $message = (AETHER_ENV === 'development') ? "You must connect to the database first before setting the table." : $this->fallbackMessage;
 
-            throw new SystemException($message, 400);
+            throw new SystemException($message, 500);
         }
 
         // find class
@@ -147,7 +145,7 @@ class MySQLi implements DriverInterface
         {
             $message = (AETHER_ENV === 'development') ? "The database type does not support transaction, transaction failed." : $this->fallbackMessage;
 
-            throw new SystemException($message, 400);
+            throw new SystemException($message, 500);
         }
         
         // return instance
@@ -165,7 +163,7 @@ class MySQLi implements DriverInterface
         {
             $message = (AETHER_ENV === 'development') ? "Cannot commit transaction, commiting transaction failed." : $this->fallbackMessage;
 
-            throw new SystemException($message, 400);
+            throw new SystemException($message, 500);
         }
         
         // return instance
@@ -183,7 +181,7 @@ class MySQLi implements DriverInterface
         {
             $message = (AETHER_ENV === 'development') ? "Cannot rollback transaction, rollback transaction failed." : $this->fallbackMessage;
 
-            throw new SystemException($message, 400);
+            throw new SystemException($message, 500);
         }
 
         // return instance
@@ -203,7 +201,7 @@ class MySQLi implements DriverInterface
 
             $message = (AETHER_ENV === 'development') ? "Cannot fetch data. Reason: {$e->getMessage()}." : 'Failed to fetch data from database.';
 
-            throw new SystemException($message, 400);
+            throw new SystemException($message, 500);
         }
 
         // return instance
@@ -223,7 +221,7 @@ class MySQLi implements DriverInterface
 
             $message = (AETHER_ENV === 'development') ? "Cannot fetch data. Reason: {$e->getMessage()}." : 'Failed to fetch data from database.';
 
-            throw new SystemException($message, 400);
+            throw new SystemException($message, 500);
         }
 
         // return instance

@@ -2,14 +2,14 @@
 
 declare(strict_types = 1);
 
-namespace Aether\Database\Driver;
+namespace Aether\Database;
 
 use Aether\Database\Builder;
 
 /** 
  * Base Database Driver
  * 
- * @class Aether\Database\BaseDriver
+ * @class Aether\Database\DriverInterface
 **/
 
 interface DriverInterface
