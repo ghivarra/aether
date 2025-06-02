@@ -79,7 +79,7 @@ class MySQLiBuilder extends Builder
         }
 
         // return
-        return $table;
+        return $this->db->escape($table);
     }
 
     //=================================================================================================
@@ -1689,7 +1689,7 @@ class MySQLiBuilder extends Builder
         }
 
         // from string
-        $fromString = "FROM {$this->from}";
+        $fromString = "FROM `{$this->from}`";
 
         // store into prepared query
         $this->preparedQuery .= " {$fromString}";
@@ -1765,7 +1765,7 @@ class MySQLiBuilder extends Builder
 
     public function countAll(): int
     {
-        $query  = "SELECT COUNT(*) AS total FROM {$this->from}";
+        $query  = "SELECT COUNT(*) AS total FROM `{$this->from}`";
         $result = $this->db->rawQuery($query)->getRowArray();
 
         // return
