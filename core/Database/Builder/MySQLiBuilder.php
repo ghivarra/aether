@@ -1543,6 +1543,9 @@ class MySQLiBuilder extends Builder
         // move to new variable
         $query  = $this->preparedQuery;
         $params = $this->preparedParams;
+        $variable = [
+            '(?,', '?,', '?),', '?)'
+        ];
 
         // explode query
         $queryArray = explode(" ", $query);
@@ -1550,9 +1553,14 @@ class MySQLiBuilder extends Builder
         // walk array to convert the question mark into params
         foreach ($queryArray as $i => $item):
 
-            if ($item === '?')
+            if (in_array($item, $variable))
             {
-                $queryArray[$i] = array_shift($params);
+                $key   = array_search($item, $variable);
+                $param = "'" . $this->db->escape(array_shift($params)) . "'";
+                $value = str_replace('?', $param, $variable[$key]);
+
+                // store
+                $queryArray[$i] = $value;
             }
 
         endforeach;
@@ -1563,10 +1571,17 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function countAll(): int
+    public function countAll(bool $resetQuery = true): int
     {
         $query  = "SELECT COUNT(*) AS total FROM `{$this->from}`";
         $result = $this->db->rawQuery($query)->getRowArray();
+
+        // reset query
+        // if commanded to do it
+        if ($resetQuery)
+        {
+            $this->resetQuery();
+        }
 
         // return
         return intval($result['total']);
@@ -1650,9 +1665,12 @@ class MySQLiBuilder extends Builder
     public function resetQuery(): MySQLiBuilder
     {
         // reset
+        $this->prefix = '';
+        $this->from = '';
+
+        // select
         $this->selectCollection = [];
         $this->distinct = false;
-        $this->from = '';
         $this->joinCollection = [];
         $this->joinParams = [];
         $this->whereCollection = [];
@@ -1668,16 +1686,29 @@ class MySQLiBuilder extends Builder
         $this->resultQuery = '';
         $this->preparedQuery = '';
         $this->preparedParams = [];
-        $this->prefix = '';
+
+        // subquery
         $this->onSubquery = false;
         $this->subqueries = [];
 
-        // insert or update
+        // create-update
         $this->setDataParams = [];
         $this->setDataCollection = [
             'key'   => [],
             'value' => [],
         ];
+
+        // create-update batch
+        $this->setColumnBatch = '';
+        $this->setDataBatchParams = [];
+        $this->setDataBatchCollection = [
+            'key'   => [],
+            'value' => [],
+        ];
+
+        // replace
+        $this->setReplaceParams = [];
+        $this->setReplaceCollection = [];
 
         // return instance
         return $this;
@@ -1998,6 +2029,9 @@ class MySQLiBuilder extends Builder
         // get current connection
         $conn = $db->getCurrentInstance();
 
+        // reset query
+        $this->resetQuery();
+
         // return
         return [
             'status'   => $db->getResult(),
@@ -2023,6 +2057,9 @@ class MySQLiBuilder extends Builder
 
         // conn
         $result = $db->getResult();
+
+        // reset query
+        $this->resetQuery();
 
         // return
         return ($result === true);
@@ -2057,6 +2094,9 @@ class MySQLiBuilder extends Builder
         // get current connection
         $conn = $db->getCurrentInstance();
 
+        // reset query
+        $this->resetQuery();
+
         // return
         return [
             'status'        => $db->getResult(),
@@ -2086,6 +2126,9 @@ class MySQLiBuilder extends Builder
         // conn
         $result = $db->getResult();
 
+        // reset query
+        $this->resetQuery();
+
         // return
         return ($result === true);
     }
@@ -2112,6 +2155,9 @@ class MySQLiBuilder extends Builder
 
         // get current connection
         $conn = $db->getCurrentInstance();
+
+        // reset query
+        $this->resetQuery();
 
         // return
         return [
@@ -2153,6 +2199,9 @@ class MySQLiBuilder extends Builder
         // get current connection
         $conn = $db->getCurrentInstance();
 
+        // reset query
+        $this->resetQuery();
+
         // return
         return [
             'status'        => $db->getResult(),
@@ -2175,6 +2224,9 @@ class MySQLiBuilder extends Builder
         // conn
         $result = $db->getResult();
 
+        // reset query
+        $this->resetQuery();
+
         // return
         return ($result === true);
     }
@@ -2188,6 +2240,9 @@ class MySQLiBuilder extends Builder
 
         // conn
         $result = $db->getResult();
+
+        // reset query
+        $this->resetQuery();
 
         // return
         return ($result === true);

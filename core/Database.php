@@ -25,6 +25,11 @@ class Database
 
     //==================================================================================================
 
+    // [ 'query' => '', 'time' => 0 ]
+    protected static array $storedQueries = [];
+
+    //==================================================================================================
+
     /** 
      * Current connection storage, so we don't have to connect
      * or reconnect again
@@ -72,6 +77,24 @@ class Database
 
         // return
         return self::$currentConnection[$defaultConnection];
+    }
+
+    //==================================================================================================
+
+    public static function getAllQueries(): array
+    {
+        return self::$storedQueries;
+    }
+
+    //==================================================================================================
+
+    public static function storeQuery(string $query, float|int $time, array $backtrace = []): void
+    {
+        array_push(self::$storedQueries, [
+            'query'     => $query,
+            'time'      => $time,
+            'backtrace' => $backtrace,
+        ]);
     }
 
     //==================================================================================================

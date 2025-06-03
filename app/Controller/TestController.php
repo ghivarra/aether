@@ -30,10 +30,23 @@ class TestController extends BaseController
         $faker  = FakerFactory::create('id_ID');
         $data   = [];
 
-        foreach(range(0, 4) as $i):
+        foreach(range(0, 5) as $i):
 
             $data[$i] = [
-                'id'     => 11 + $i,
+                'name'   => $faker->name(),
+                'age'    => $faker->numberBetween(1, 17),
+                'status' => $status[$faker->numberBetween(0, 1)],
+            ];
+
+        endforeach;
+
+        // update data
+        $updateData = [];
+
+        foreach(range(0, 5) as $i):
+
+            $updateData[$i] = [
+                'id'     => 20 + $i,
                 'name'   => $faker->name(),
                 'age'    => $faker->numberBetween(1, 17),
                 // 'status' => $status[$faker->numberBetween(0, 1)],
@@ -41,11 +54,12 @@ class TestController extends BaseController
 
         endforeach;
 
-        // builder
-        $builder = $db->table('user')
-                      ->updateBulk($data, 'id');
+        // test performance
+        $db->table('user')->insertBulk($data);
+        $db->table('user')->updateBulk($updateData, 'id');
 
-        dd($builder);
+        // debug
+        dd(Database::getAllQueries());
 
         // home
         return view('HomeView', $data);

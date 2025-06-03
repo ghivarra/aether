@@ -11,6 +11,7 @@ use \mysqli_sql_exception as SQLException;
 use Aether\Exception\SystemException;
 use Aether\Database\Builder\MySQLiBuilder;
 use Aether\Database\DriverInterface;
+use Aether\Database;
 
 /** 
  * MySQLi Database Driver
@@ -191,10 +192,53 @@ class MySQLi implements DriverInterface
 
     public function preparedQuery(string $query, array $params = []): MySQLi
     {
+        if (AETHER_ENV === 'development')
+        {
+            // store time
+            $timeStart = hrtime(true);
+        }
+
         // execute
         try {
 
             $this->result = $this->connection->execute_query($query, $params);
+
+            // store for debugging purposes
+            if (AETHER_ENV === 'development')
+            {
+                $variable = [
+                    '(?,', '?,', '?),', '?)'
+                ];
+
+                // explode query
+                $queryArray = explode(" ", $query);
+
+                // walk array to convert the question mark into params
+                foreach ($queryArray as $i => $item):
+
+                    if (in_array($item, $variable))
+                    {
+                        $key   = array_search($item, $variable);
+                        $param = "'" . $this->escape(array_shift($params)) . "'";
+                        $value = str_replace('?', $param, $variable[$key]);
+
+                        // store
+                        $queryArray[$i] = $value;
+                    }
+
+                endforeach;
+                
+                // get diff
+                $fullQuery = implode(" ", $queryArray);
+                $timeEnd   = hrtime(true);
+                $timeDiff  = round((($timeEnd - $timeStart) / 1000000), 2);
+
+                // get backtrace
+                $backtrace = array_slice(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), 1);
+
+                // store
+                Database::storeQuery($fullQuery, $timeDiff, $backtrace);
+            }
 
         } catch (SQLException $e) {
 
@@ -211,10 +255,30 @@ class MySQLi implements DriverInterface
 
     public function rawQuery($query): MySQLi
     {
+        if (AETHER_ENV === 'development')
+        {
+            // store time
+            $timeStart = hrtime(true);
+        }
+
         // execute
         try {
 
             $this->result = $this->connection->query($query);
+
+            // store for debugging purposes
+            if (AETHER_ENV === 'development')
+            {
+                // get diff
+                $timeEnd   = hrtime(true);
+                $timeDiff  = round((($timeEnd - $timeStart) / 1000000), 2);
+
+                // get backtrace
+                $backtrace = array_slice(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), 1);
+
+                // store
+                Database::storeQuery($query, $timeDiff, $backtrace);
+            }
 
         } catch (SQLException $e) {
 

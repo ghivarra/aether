@@ -92,10 +92,10 @@ abstract class Builder
     abstract public function offset(int $num): Builder;
     abstract public function limit(int $num): Builder;
 
-    abstract public function countAll(): int;
-    abstract public function countAllResults(): int;
+    abstract public function countAll(bool $resetQuery = true): int;
+    abstract public function countAllResults(bool $resetQuery = true): int;
 
-    abstract public function get(): DriverInterface;
+    abstract public function get(bool $resetQuery = true): DriverInterface;
     abstract public function getCompiledSelect(): string;
 
     abstract public function resetQuery(): Builder;
