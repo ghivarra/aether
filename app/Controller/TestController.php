@@ -53,6 +53,7 @@ class TestController extends BaseController
 //                      ->offset(0)
 //                      ->get()
 //                      ->getResultArray();
+
         $status = ['aktif', 'nonaktif'];
         $faker  = FakerFactory::create('id');
         $data   = [
@@ -62,9 +63,9 @@ class TestController extends BaseController
         ];
 
         $builder = $db->table('user')
-                      ->set($data)
-                      ->where('id', '=', 5)
-                      ->update();
+                      // ->set($data)
+                      ->whereNotIn('id', [3, 4])
+                      ->delete();
 
         dd($builder);
 

@@ -1768,7 +1768,16 @@ class MySQLiBuilder extends Builder
                 break;
 
             case 'delete':
-                # code...
+                $this->preparedQuery = "DELETE FROM `{$this->from}`";
+
+                // where string        
+                if (!empty($this->whereCollection))
+                {
+                    $whereString = implode(" ", $this->whereCollection);
+
+                    // store into prepared query
+                    $this->preparedQuery .= " {$whereString}";
+                }
                 break;
 
             case 'replace':
@@ -1815,7 +1824,7 @@ class MySQLiBuilder extends Builder
                 break;
 
             case 'delete':
-                # code...
+                $this->preparedParams = $this->whereParams;
                 break;
 
             case 'replace':
@@ -1906,9 +1915,29 @@ class MySQLiBuilder extends Builder
 
     public function delete(): array
     {
+        // build query
+        $this->buildSetQuery('delete');
+
+        // build set params
+        $this->buildSetParams('delete');
+
+        // check if prepared params is not empty
+        if (empty($this->preparedParams))
+        {
+            $db = $this->db->rawQuery($this->preparedQuery);
+
+        } else {
+
+            $db = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
+        }
+
+        // get current connection
+        $conn = $db->getCurrentInstance();
+
+        // return
         return [
-            'status'        => '',
-            'affected_rows' => '',
+            'status'        => $db->getResult(),
+            'affected_rows' => $conn->affected_rows,
         ];
     }
 
