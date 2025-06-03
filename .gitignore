@@ -86,6 +86,7 @@ phpunit
 #-------------------------
 vendor/
 node_modules/
+composer.lock
 
 #-------------------------
 # IDE / Development Files
