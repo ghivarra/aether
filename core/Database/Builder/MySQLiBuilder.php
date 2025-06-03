@@ -1695,16 +1695,26 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function increment(): MySQLiBuilder
+    public function increment(string $column, int $incNum = 1, bool $raw = false): MySQLiBuilder
     {
+        $column = ($raw) ? $column : $this->sanitizeColumn($column);
+
+        // set
+        $this->pushSetData($column, "{$column}+{$incNum}", false);
+
         // return instance
         return $this;
     }
 
     //=================================================================================================
 
-    public function decrement(): MySQLiBuilder
+    public function decrement(string $column, int $incNum = 1, bool $raw = false): MySQLiBuilder
     {
+        $column = ($raw) ? $column : $this->sanitizeColumn($column);
+
+        // set
+        $this->pushSetData($column, "{$column}+{$incNum}", false);
+
         // return instance
         return $this;
     }
@@ -1839,8 +1849,14 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function insert(): array
+    public function insert(array $data = []): array
     {
+        // set data if data not empty
+        if (!empty($data))
+        {
+            $this->set($data);
+        }
+
         // build query
         $this->buildSetQuery('insert');
 
@@ -1876,8 +1892,14 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function update(): array
+    public function update(array $data): array
     {
+        // set data if data not empty
+        if (!empty($data))
+        {
+            $this->set($data);
+        }
+
         // build query
         $this->buildSetQuery('update');
 
