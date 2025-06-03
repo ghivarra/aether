@@ -1433,7 +1433,7 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function buildQuery(string $command): void
+    protected function buildQuery(string $command): void
     {
         // reset prepared
         $this->preparedQuery = '';
@@ -1580,15 +1580,38 @@ class MySQLiBuilder extends Builder
 
     public function compileQueryString(): string
     {
-        $query = $this->preparedQuery;
+        // move to new variable
+        $query  = $this->preparedQuery;
+        $params = $this->preparedParams;
+
+        // explode query
+        $queryArray = explode(" ", $query);
+
+        // walk array to convert the question mark into params
+        foreach ($queryArray as $i => $item):
+
+            if ($item === '?')
+            {
+                $queryArray[$i] = array_shift($params);
+            }
+
+        endforeach;
         
-        return '';
+        // return
+        return implode(" ", $queryArray);
     }
 
     //=================================================================================================
 
     public function getCompiledSelect(): string
     {
+        // build query first
+        $this->buildQuery('select');
+
+        // build params
+        $this->buildParams();
+
+        // return as string
         return $this->compileQueryString();
     }
 

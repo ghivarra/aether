@@ -50,8 +50,9 @@ class TestController extends BaseController
                       ->orderBy('title', 'DESC')
                       ->limit(2)
                       ->offset(0)
-                      ->get()
-                      ->getResultArray();
+                      ->getCompiledSelect();
+                      //->get()
+                      //->getResultArray();
 
         dd($builder);
 
