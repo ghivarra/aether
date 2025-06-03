@@ -208,7 +208,7 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function join(string $table, string $condition, string $joinType = '', bool $raw = false): MySQLiBuilder
+    public function join(string $table, string|array $condition, string $joinType = '', bool $raw = false): MySQLiBuilder
     {
         if (!empty($joinType))
         {
@@ -219,11 +219,31 @@ class MySQLiBuilder extends Builder
             }
         }
 
+        // check if condition is array
+        if (is_array($condition))
+        {
+            $condition[0] = $this->addPrefix($condition[0], $this->db);
+            
+            // push into params
+            if (isset($condition[1]) && !empty($condition[1]))
+            {
+                foreach ($condition[1] as $param):
+
+                    array_push($this->joinParams, $param);
+
+                endforeach;
+            }
+
+        } else {
+
+            $condition = $this->addPrefix($condition, $this->db);
+        }
+
         // sanitize data
         $data = [
             'type'      => empty($joinType) ? null : strtolower($joinType),
             'table'     => ($raw) ? $table : $this->sanitizeTable($table),
-            'condition' => ($raw) ? $condition : $this->addPrefix($condition),
+            'condition' => is_array($condition) ? $condition[0] : $condition,
         ];
 
         // push data
@@ -235,7 +255,7 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function innerJoin(string $table, string $condition, bool $raw = false): MySQLiBuilder
+    public function innerJoin(string $table, string|array $condition, bool $raw = false): MySQLiBuilder
     {
         // return instance
         return $this->join($table, $condition, 'inner', $raw);
@@ -243,7 +263,7 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function OuterJoin(string $table, string $condition, bool $raw = false): MySQLiBuilder
+    public function OuterJoin(string $table, string|array $condition, bool $raw = false): MySQLiBuilder
     {
         // return instance
         return $this->join($table, $condition, 'outer', $raw);
@@ -251,7 +271,7 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function leftJoin(string $table, string $condition, bool $raw = false): MySQLiBuilder
+    public function leftJoin(string $table, string|array $condition, bool $raw = false): MySQLiBuilder
     {
         // return instance
         return $this->join($table, $condition, 'left', $raw);
@@ -259,7 +279,7 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function rightJoin(string $table, string $condition, bool $raw = false): MySQLiBuilder
+    public function rightJoin(string $table, string|array $condition, bool $raw = false): MySQLiBuilder
     {
         // return instance
         return $this->join($table, $condition, 'right', $raw);

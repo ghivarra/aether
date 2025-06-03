@@ -28,12 +28,12 @@ abstract class Builder
     
     abstract public function from(string $tableName, mixed $db, string $DBPrefix): Builder;
 
-    abstract public function join(string $table, string $condition, string $joinType = '', bool $raw = false): Builder;
+    abstract public function join(string $table, string|array $condition, string $joinType = '', bool $raw = false): Builder;
 
-    abstract public function innerJoin(string $table, string $condition, bool $raw = false): Builder;
-    abstract public function outerJoin(string $table, string $condition, bool $raw = false): Builder;
-    abstract public function leftJoin(string $table, string $condition, bool $raw = false): Builder;
-    abstract public function rightJoin(string $table, string $condition, bool $raw = false): Builder;
+    abstract public function innerJoin(string $table, string|array $condition, bool $raw = false): Builder;
+    abstract public function outerJoin(string $table, string|array $condition, bool $raw = false): Builder;
+    abstract public function leftJoin(string $table, string|array $condition, bool $raw = false): Builder;
+    abstract public function rightJoin(string $table, string|array $condition, bool $raw = false): Builder;
 
     abstract public function where(string $column, string $operator, string|int $value, bool $raw = false): Builder;
     abstract public function whereNot(string $column, string $operator, string|int $value, bool $raw = false): Builder;
