@@ -7,7 +7,6 @@ namespace Aether\Database\Builder;
 use Aether\Database\Builder;
 use Aether\Database\BaseBuilderTrait;
 use Aether\Database\Driver\MySQLi;
-use Aether\Database\DriverInterface;
 use Aether\Exception\SystemException;
 
 class MySQLiBuilder extends Builder
@@ -15,6 +14,7 @@ class MySQLiBuilder extends Builder
     use BaseBuilderTrait;
 
     protected MySQLi|null $db = null;
+    protected bool $allowTruncate = true;
     protected array $allowedJoinType = [
         'inner' => 'INNER',
         'left'  => 'LEFT',
@@ -1955,14 +1955,33 @@ class MySQLiBuilder extends Builder
 
     public function truncate(): bool
     {
-        return true;
+        if (!$this->allowTruncate)
+        {
+            return $this->emptyTable();
+        }
+
+        // return db
+        $db = $this->db->rawQuery("TRUNCATE TABLE `{$this->from}`");
+
+        // conn
+        $result = $db->getResult();
+
+        // return
+        return ($result === true);
     }
 
     //=================================================================================================
 
     public function emptyTable(): bool
     {
-        return true;
+        // return db
+        $db = $this->db->rawQuery("DELETE FROM `{$this->from}`");
+
+        // conn
+        $result = $db->getResult();
+
+        // return
+        return ($result === true);
     }
 
     //=================================================================================================
