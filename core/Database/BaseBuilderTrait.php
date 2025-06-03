@@ -48,6 +48,14 @@ trait BaseBuilderTrait
         'value' => [],
     ];
 
+    // create-update batch
+    public string $setColumnBatch = '';
+    public array $setDataBatchParams = [];
+    public array $setDataBatchCollection = [
+        'key'   => [],
+        'value' => [],
+    ];
+
     // replace
     public array $setReplaceParams = [];
     public array $setReplaceCollection = [];

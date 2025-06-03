@@ -1774,8 +1774,18 @@ class MySQLiBuilder extends Builder
                 $this->preparedQuery = "INSERT INTO `{$this->from}` ({$columns}) VALUES ({$values})";
                 break;
 
-            case 'insertBatch':
-                # code...
+            case 'insertBulk':
+                $values  = [];
+                $columns = implode(', ', $this->setDataBatchCollection['key']);
+
+                foreach ($this->setDataBatchCollection['value'] as $value):
+
+                    array_push($values, '('. implode(', ', $value) .')');
+
+                endforeach;
+
+                $values = implode(', ', $values);
+                $this->preparedQuery = "INSERT INTO `{$this->from}` ({$columns}) VALUES {$values}";
                 break;
 
             case 'update':  
@@ -1805,8 +1815,67 @@ class MySQLiBuilder extends Builder
                 }
                 break;
 
-            case 'updateBatch':
-                # code...
+            case 'updateBulk':
+
+                // show columns data
+                $tableColumns = $this->db->rawQuery("SHOW COLUMNS FROM `{$this->from}`")->getResultArray();
+                $keys         = $this->setDataBatchCollection['key'];
+                $tableDataCol = array_column($tableColumns, 'Field');
+                $tempTables   = [];
+
+                // handle columns
+                foreach ($keys as $key):
+                    
+                    $tmp = str_ireplace('`', '', $key);
+                    $num = array_search($tmp, $tableDataCol);
+
+                    if ($num === FALSE)
+                    {
+                        $message = (AETHER_ENV === 'development') ? "Column {$key} is not found in table `{$this->from}`" : 'Failed to update data';
+                        throw new SystemException($message, 500);
+                    }
+
+                    $columnData = $tableColumns[$num];
+                    $null       = ($columnData['Null'] == 'NO') ? 'NOT NULL' : 'NULL';
+                    $type       = strtoupper($columnData['Type']);
+
+                    // push
+                    array_push($tempTables, "{$columnData['Field']} {$type} {$null}");
+
+                endforeach;
+
+                // make create table script
+                $tempTables    = implode(', ', $tempTables);
+                $tempTableName = 'tmp_' . time() . '_' . random_int(10000, 99999);
+
+                // run temp table query
+                $this->db->rawQuery("CREATE TEMPORARY TABLE {$tempTableName} ({$tempTables})");
+
+                // temporary insert bulk
+                $values  = [];
+                $columns = implode(', ', $this->setDataBatchCollection['key']);
+
+                foreach ($this->setDataBatchCollection['value'] as $value):
+
+                    array_push($values, '('. implode(', ', $value) .')');
+
+                endforeach;
+
+                // insert bulk into temp table using prepared statement
+                $this->db->preparedQuery("INSERT INTO `{$tempTableName}` ({$columns}) VALUES " . implode(', ', $values), $this->setDataBatchParams);
+
+                // create join script
+                $mainTableAlias = 'main';
+                $tempTableAlias = 'tmp';
+                $updateSets     = [];
+
+                foreach ($keys as $updatedKey):
+
+                    array_push($updateSets, "`{$mainTableAlias}`.{$updatedKey} = `{$tempTableAlias}`.{$updatedKey}");
+
+                endforeach;
+
+                $this->preparedQuery = "UPDATE `{$this->from}` AS `{$mainTableAlias}` JOIN `{$tempTableName}` AS `{$tempTableAlias}` ON `{$mainTableAlias}`.{$this->setColumnBatch} = `{$tempTableAlias}`.{$this->setColumnBatch} SET " . implode(", ", $updateSets);
                 break;
 
             case 'upsert':
@@ -1866,16 +1935,16 @@ class MySQLiBuilder extends Builder
                 $this->preparedParams = $this->setDataParams;
                 break;
 
-            case 'insertBatch':
-                # code...
+            case 'insertBulk':
+                $this->preparedParams = $this->setDataBatchParams;
                 break;
 
             case 'update':
                 $this->preparedParams = array_merge($this->setDataParams, $this->whereParams);
                 break;
 
-            case 'updateBatch':
-                # code...
+            case 'updateBulk':
+                // do nothing
                 break;
 
             case 'upsert':
@@ -1938,9 +2007,25 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function insertBatch(): bool
+    public function insertBulk(array $data): bool
     {
-        return true;
+        // push data
+        $this->pushSetDataBatch($data);
+
+        // build
+        $this->buildSetQuery('insertBulk');
+
+        // build
+        $this->buildSetParams('insertBulk');
+
+        // insert bulk start
+        $db = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
+
+        // conn
+        $result = $db->getResult();
+
+        // return
+        return ($result === true);
     }
 
     //=================================================================================================
@@ -1981,9 +2066,28 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function updateBatch(): bool
+    public function updateBulk(array $data, string $targetColumn): bool
     {
-        return true;
+        // set table column batch
+        $this->setColumnBatch = $this->sanitizeColumn($targetColumn);
+
+        // push data
+        $this->pushSetDataBatch($data);
+
+        // build
+        $this->buildSetQuery('updateBulk');
+
+        // build
+        $this->buildSetParams('updateBulk');
+
+        // insert bulk start
+        $db = $this->db->rawQuery($this->preparedQuery);
+
+        // conn
+        $result = $db->getResult();
+
+        // return
+        return ($result === true);
     }
 
     //=================================================================================================
@@ -2378,6 +2482,45 @@ class MySQLiBuilder extends Builder
                 array_push($this->setDataParams, $value);
             }
         }
+    }
+
+    //==================================================================================================
+
+    protected function pushSetDataBatch(array $data): void
+    {
+        // push keys
+        $columns = array_keys($data[0]);
+
+        foreach ($columns as $i => $column):
+
+            $columns[$i] = $this->sanitizeColumn($column);
+
+        endforeach;
+
+        // set keys
+        $this->setDataBatchCollection['key'] = $columns;
+
+        // push data
+        foreach ($data as $item):
+
+            // set key/value
+            $values = [];
+
+            // iterate
+            foreach ($item as $value):
+                
+                // push value
+                array_push($values, '?');
+
+                // push into params
+                array_push($this->setDataBatchParams, $value);
+
+            endforeach;
+
+            // set update
+            array_push($this->setDataBatchCollection['value'], $values);
+
+        endforeach;
     }
 
     //==================================================================================================

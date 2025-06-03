@@ -106,9 +106,9 @@ abstract class Builder
     abstract public function decrement(string $column, int $incNum = 1, bool $raw = false): Builder;
 
     abstract public function insert(array $data = []): array;
-    abstract public function insertBatch(): bool;
+    abstract public function insertBulk(array $data): bool;
     abstract public function update(array $data): array;
-    abstract public function updateBatch(): bool;
+    abstract public function updateBulk(array $data, string $targetColumn): bool;
     abstract public function delete(): array;
     abstract public function replace(array $data = []): array;
 
