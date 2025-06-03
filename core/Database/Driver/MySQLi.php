@@ -23,7 +23,7 @@ class MySQLi implements DriverInterface
     protected MySQLiBuilder|null $builder = null;
     protected SQL|null $connection = null;
     protected SQLDriver|null $connectionDriver = null;
-    protected SQLResult|null $result = null;
+    protected SQLResult|null|bool $result = null;
     protected array $config = [];
     protected string $fallbackMessage = 'Failed to connect to database';
 
@@ -225,6 +225,20 @@ class MySQLi implements DriverInterface
 
         // return instance
         return $this;
+    }
+
+    //===========================================================================================
+
+    public function getCurrentInstance(): SQL
+    {
+        return $this->connection;
+    }
+
+    //===========================================================================================
+
+    public function getResult(): SQLResult|null|bool
+    {
+        return $this->result;
     }
 
     //===========================================================================================

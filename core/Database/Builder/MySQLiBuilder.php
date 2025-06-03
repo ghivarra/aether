@@ -7,6 +7,7 @@ namespace Aether\Database\Builder;
 use Aether\Database\Builder;
 use Aether\Database\BaseBuilderTrait;
 use Aether\Database\Driver\MySQLi;
+use Aether\Database\DriverInterface;
 use Aether\Exception\SystemException;
 
 class MySQLiBuilder extends Builder
@@ -1422,7 +1423,7 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function buildParams(): void
+    public function buildGetParams(): void
     {
         // reset params
         $this->preparedParams = [];
@@ -1433,7 +1434,7 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    protected function buildQuery(string $command): void
+    protected function buildGetQuery(string $command): void
     {
         // reset prepared
         $this->preparedQuery = '';
@@ -1536,57 +1537,7 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function countAll(): int
-    {
-        $query  = "SELECT COUNT(*) AS total FROM `{$this->from}`";
-        $result = $this->db->rawQuery($query)->getRowArray();
-
-        // return
-        return intval($result['total']);
-    }
-
-    //=================================================================================================
-
-    public function countAllResults(): int
-    {
-        // build
-        $this->buildQuery('count');
-
-        // query
-        $query  = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
-        $result = $query->getRowArray();
-
-        // return
-        return intval($result['total']);
-    }
-
-    //=================================================================================================
-
-    public function get(bool $resetQuery = false): MySQLi
-    {
-        // build query
-        $this->buildQuery('select');
-
-        // build params
-        $this->buildParams();
-
-        // store variable
-        $result = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
-
-        // reset query
-        // if commanded to do it
-        if ($resetQuery)
-        {
-            $this->resetQuery();
-        }
-
-        // return
-        return $result;
-    }
-
-    //=================================================================================================
-
-    protected function compileQueryString(): string
+    protected function compileGetQuery(): string
     {
         // move to new variable
         $query  = $this->preparedQuery;
@@ -1611,16 +1562,76 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function getCompiledSelect(bool $resetQuery = false): string
+    public function countAll(): int
     {
-        // build query first
-        $this->buildQuery('select');
+        $query  = "SELECT COUNT(*) AS total FROM `{$this->from}`";
+        $result = $this->db->rawQuery($query)->getRowArray();
+
+        // return
+        return intval($result['total']);
+    }
+
+    //=================================================================================================
+
+    public function countAllResults(bool $resetQuery = true): int
+    {
+        // build query
+        $this->buildGetQuery('count');
 
         // build params
-        $this->buildParams();
+        $this->buildGetParams();
+
+        // query
+        $query  = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
+        $result = $query->getRowArray();
+
+        // reset query
+        // if commanded to do it
+        if ($resetQuery)
+        {
+            $this->resetQuery();
+        }
+
+        // return
+        return intval($result['total']);
+    }
+
+    //=================================================================================================
+
+    public function get(bool $resetQuery = true): MySQLi
+    {
+        // build query
+        $this->buildGetQuery('select');
+
+        // build params
+        $this->buildGetParams();
+
+        // store variable
+        $result = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
+
+        // reset query
+        // if commanded to do it
+        if ($resetQuery)
+        {
+            $this->resetQuery();
+        }
+
+        // return
+        return $result;
+    }
+
+    //=================================================================================================
+
+    public function getCompiledSelect(bool $resetQuery = true): string
+    {
+        // build query first
+        $this->buildGetQuery('select');
+
+        // build params
+        $this->buildGetParams();
 
         // return as string
-        $result = $this->compileQueryString();
+        $result = $this->compileGetQuery();
 
         // reset query
         // if commanded to do it
@@ -1653,8 +1664,6 @@ class MySQLiBuilder extends Builder
         $this->orderByCollection = [];
         $this->limitCount = null;
         $this->offsetCount = null;
-        $this->setCollection = [];
-        $this->setParams = [];
         $this->resultQuery = '';
         $this->preparedQuery = '';
         $this->preparedParams = [];
@@ -1662,14 +1671,24 @@ class MySQLiBuilder extends Builder
         $this->onSubquery = false;
         $this->subqueries = [];
 
+        // insert or update
+        $this->setDataParams = [];
+        $this->setDataCollection = [
+            'key'   => [],
+            'value' => [],
+        ];
+
         // return instance
         return $this;
     }
 
     //=================================================================================================
 
-    public function set(): MySQLiBuilder
+    public function set(string|array $data, string|int|null|bool $value = false): MySQLiBuilder
     {
+        // push data
+        $this->pushSetData($data, $value);
+
         // return instance
         return $this;
     }
@@ -1692,9 +1711,151 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function insert(): bool
+    protected function buildSetQuery(string $type = 'insert'): void
     {
-        return true;
+        // reset prepared statement
+        $this->preparedQuery = '';
+
+        // build string
+        switch ($type) {
+            case 'insert':
+                $columns = implode(', ', $this->setDataCollection['key']);
+                $values  = implode(', ', $this->setDataCollection['value']);
+                $this->preparedQuery = "INSERT INTO `{$this->from}` ({$columns}) VALUES ({$values})";
+                break;
+
+            case 'insertBatch':
+                # code...
+                break;
+
+            case 'update':  
+                $sets = [];
+
+                foreach ($this->setDataCollection['key'] as $i => $column):
+
+                    $column = $this->sanitizeColumn($column);
+                    $value  = $this->setDataCollection['value'][$i];
+                    array_push($sets, "{$column} = {$value}");
+
+                endforeach;
+
+                // sets
+                $columns = implode(', ', $sets);
+
+                // update query
+                $this->preparedQuery = "UPDATE `{$this->from}` SET {$columns}";
+
+                // where string        
+                if (!empty($this->whereCollection))
+                {
+                    $whereString = implode(" ", $this->whereCollection);
+
+                    // store into prepared query
+                    $this->preparedQuery .= " {$whereString}";
+                }
+                break;
+
+            case 'updateBatch':
+                # code...
+                break;
+
+            case 'upsert':
+                # code...
+                break;
+
+            case 'upsertBatch':
+                # code...
+                break;
+
+            case 'delete':
+                # code...
+                break;
+
+            case 'replace':
+                # code...
+                break;
+            
+            default:
+                return;
+                break;
+        }
+    }
+
+    //=================================================================================================
+
+    protected function buildSetParams(string $type = 'insert'): void
+    {
+        // reset prepared params
+        $this->preparedParams = [];
+
+        // build string
+        switch ($type) {
+            case 'insert':
+                $this->preparedParams = $this->setDataParams;
+                break;
+
+            case 'insertBatch':
+                # code...
+                break;
+
+            case 'update':
+                $this->preparedParams = array_merge($this->setDataParams, $this->whereParams);
+                break;
+
+            case 'updateBatch':
+                # code...
+                break;
+
+            case 'upsert':
+                # code...
+                break;
+
+            case 'upsertBatch':
+                # code...
+                break;
+
+            case 'delete':
+                # code...
+                break;
+
+            case 'replace':
+                # code...
+                break;
+            
+            default:
+                return;
+                break;
+        }
+    }
+
+    //=================================================================================================
+
+    public function insert(): array
+    {
+        // build query
+        $this->buildSetQuery('insert');
+
+        // build set params
+        $this->buildSetParams('insert');
+
+        // check if prepared params is not empty
+        if (empty($this->preparedParams))
+        {
+            $db = $this->db->rawQuery($this->preparedQuery);
+
+        } else {
+
+            $db = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
+        }
+
+        // get current connection
+        $conn = $db->getCurrentInstance();
+
+        // return
+        return [
+            'status'   => $db->getResult(),
+            'insertID' => $conn->insert_id
+        ];
     }
 
     //=================================================================================================
@@ -1706,9 +1867,32 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function update(): bool
+    public function update(): array
     {
-        return true;
+        // build query
+        $this->buildSetQuery('update');
+
+        // build set params
+        $this->buildSetParams('update');
+
+        // check if prepared params is not empty
+        if (empty($this->preparedParams))
+        {
+            $db = $this->db->rawQuery($this->preparedQuery);
+
+        } else {
+
+            $db = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
+        }
+
+        // get current connection
+        $conn = $db->getCurrentInstance();
+
+        // return
+        return [
+            'status'        => $db->getResult(),
+            'affected_rows' => $conn->affected_rows,
+        ];
     }
 
     //=================================================================================================
@@ -1720,16 +1904,22 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function delete(): bool
+    public function delete(): array
     {
-        return true;
+        return [
+            'status'        => '',
+            'affected_rows' => '',
+        ];
     }
 
     //=================================================================================================
 
-    public function replace(): bool
+    public function replace(): array
     {
-        return true;
+        return [
+            'status'        => '',
+            'affected_rows' => '',
+        ];
     }
 
     //=================================================================================================

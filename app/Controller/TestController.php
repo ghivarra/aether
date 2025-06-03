@@ -3,6 +3,7 @@
 use App\Controller\BaseController;
 use Aether\Interface\ResponseInterface;
 use Aether\Database;
+use Faker\Factory as FakerFactory;
 
 /** 
  * Test Controller
@@ -42,17 +43,28 @@ class TestController extends BaseController
 //                      ->get()
 //                      ->getResultArray();
 
-        $builder = $db->table('post')
-                      ->select(['wkwk_post.id', 'title', 'user.name'])
-                      ->innerJoin('user', ['user_id = user.id AND user.status = ?', ['aktif']])
-                      ->where('view', '<>', 20)
-                      ->whereNotNull('post.title')
-                      ->orderBy('title', 'DESC')
-                      ->limit(2)
-                      ->offset(0)
-                      ->getCompiledSelect();
-                      //->get()
-                      //->getResultArray();
+//        $builder = $db->table('post')
+//                      ->select(['wkwk_post.id', 'title', 'user.name'])
+//                      ->innerJoin('user', ['user_id = user.id AND user.status = ?', ['aktif']])
+//                      ->where('view', '<>', 20)
+//                      ->whereNotNull('post.title')
+//                      ->orderBy('title', 'DESC')
+//                      ->limit(2)
+//                      ->offset(0)
+//                      ->get()
+//                      ->getResultArray();
+        $status = ['aktif', 'nonaktif'];
+        $faker  = FakerFactory::create('id');
+        $data   = [
+            'name'   => $faker->name(),
+            'age'    => $faker->numberBetween(1, 17),
+            'status' => $status[$faker->numberBetween(0, 1)],
+        ];
+
+        $builder = $db->table('user')
+                      ->set($data)
+                      ->where('id', '=', 5)
+                      ->update();
 
         dd($builder);
 

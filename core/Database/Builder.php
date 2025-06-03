@@ -100,16 +100,16 @@ abstract class Builder
 
     abstract public function resetQuery(): Builder;
 
-    abstract public function set(): Builder;
+    abstract public function set(string|array $data, string|int|null|bool $value = false): Builder;
     abstract public function increment(): Builder;
     abstract public function decrement(): Builder;
 
-    abstract public function insert(): bool;
+    abstract public function insert(): array;
     abstract public function insertBatch(): bool;
-    abstract public function update(): bool;
+    abstract public function update(): array;
     abstract public function updateBatch(): bool;
-    abstract public function delete(): bool;
-    abstract public function replace(): bool;
+    abstract public function delete(): array;
+    abstract public function replace(): array;
 
     abstract public function truncate(): bool;
     abstract public function emptyTable(): bool;

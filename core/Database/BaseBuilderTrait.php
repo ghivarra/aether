@@ -14,9 +14,13 @@ use Aether\Database\DriverInterface;
 
 trait BaseBuilderTrait
 {
+    // tables
+    public string $prefix = '';
+    public string $from = '';
+
+    // select
     public array $selectCollection = [];
     public bool $distinct = false;
-    public string $from = '';
     public array $joinCollection = [];
     public array $joinParams = [];
     public array $whereCollection = [];
@@ -29,14 +33,20 @@ trait BaseBuilderTrait
     public array $orderByCollection = [];
     public int|null $limitCount = null;
     public int|null $offsetCount = null;
-    public array $setCollection = [];
-    public array $setParams = [];
     public string $resultQuery = '';
     public string $preparedQuery = '';
     public array $preparedParams = [];
-    public string $prefix = '';
+
+    // subquery
     public bool $onSubquery = false;
     public array $subqueries = [];
+
+    // create-update-replace
+    public array $setDataParams = [];
+    public array $setDataCollection = [
+        'key'   => [],
+        'value' => [],
+    ];
 
     //==================================================================================================
 
@@ -279,6 +289,53 @@ trait BaseBuilderTrait
             default:
                 // do nothing
                 break;
+        }
+    }
+
+    //==================================================================================================
+
+    /** 
+     * Control on where to push set data, what to run before or after pushing
+     * 
+     * @param string|array $data
+     * 
+     * @return void
+    **/
+    protected function pushSetData(string|array $data, string|int|null|bool $value, bool $prepared = true): void
+    {
+        if (is_array($data) && !$value)
+        {
+            foreach ($data as $key => $item):
+
+                // use raw value
+                $preparedValue = ($prepared) ? '?' : $item;
+
+                // push
+                array_push($this->setDataCollection['key'], $key);
+                array_push($this->setDataCollection['value'], $preparedValue);
+
+                // update prepared value
+                if ($prepared)
+                {
+                    array_push($this->setDataParams, $item);
+                }
+
+            endforeach;
+
+        } else {
+
+            // use raw value
+            $preparedValue = ($prepared) ? '?' : $value;
+
+            // push
+            array_push($this->setDataCollection['key'], $data);
+            array_push($this->setDataCollection['value'], $preparedValue);
+
+            // update prepared value
+            if ($prepared)
+            {
+                array_push($this->setDataParams, $value);
+            }
         }
     }
 
