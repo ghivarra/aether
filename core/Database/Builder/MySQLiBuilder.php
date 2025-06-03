@@ -8,6 +8,7 @@ use Aether\Database\Builder;
 use Aether\Database\BaseBuilderTrait;
 use Aether\Database\Driver\MySQLi;
 use Aether\Exception\SystemException;
+use Aether\Database\DriverInterface;
 
 class MySQLiBuilder extends Builder
 {
@@ -1695,6 +1696,45 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
+    public function setReplace(string|array $data, string|int|null $oldValue = '', string|int|null $newValue = '', bool $raw = false): MySQLiBuilder
+    {
+        if (is_array($data))
+        {
+            foreach ($data as $item):
+
+                $raw = isset($item[3]) ? $item[3] : false;
+                $this->setReplace($item[0], $item[1], $item[2], $raw);
+
+            endforeach;
+
+            // return
+            return $this;
+        }
+
+        // always sanitize
+        // no point in not sanitizing
+        $column = $this->sanitizeColumn($data);
+
+        // push column
+        array_push($this->setReplaceCollection, [
+            'column'   => $column,
+            'oldValue' => ($raw) ? $oldValue : '?',
+            'newValue' => ($raw) ? $newValue : '?',
+        ]);
+
+        // push into params if not raw
+        if (!$raw)
+        {
+            array_push($this->setReplaceParams, $oldValue);
+            array_push($this->setReplaceParams, $newValue);
+        }
+
+        // return instance
+        return $this;
+    }
+
+    //=================================================================================================
+
     public function increment(string $column, int $incNum = 1, bool $raw = false): MySQLiBuilder
     {
         $column = ($raw) ? $column : $this->sanitizeColumn($column);
@@ -1791,7 +1831,20 @@ class MySQLiBuilder extends Builder
                 break;
 
             case 'replace':
-                # code...
+                $setReplace = [];
+
+                // generate replace query
+                foreach ($this->setReplaceCollection as $item):
+
+                    array_push($setReplace, "{$item['column']} = REPLACE({$item['column']}, {$item['oldValue']}, {$item['newValue']})");
+
+                endforeach;
+
+                // set replace
+                $setReplace = implode(', ', $setReplace);
+
+                // update query
+                $this->preparedQuery = "UPDATE `{$this->from}` SET {$setReplace}";
                 break;
             
             default:
@@ -1838,7 +1891,7 @@ class MySQLiBuilder extends Builder
                 break;
 
             case 'replace':
-                # code...
+                $this->preparedParams = $this->setReplaceParams;
                 break;
             
             default:
@@ -1965,11 +2018,41 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function replace(): array
+    public function replace(array $data = []): array
     {
+        if (!empty($data))
+        {
+            foreach ($data as $item):
+
+                $raw = isset($item[3]) ? $item[3] : false;
+                $this->setReplace($item[0], $item[1], $item[2], $raw);
+
+            endforeach;
+        }
+
+        // set query
+        $this->buildSetQuery('replace');
+
+        // set params
+        $this->buildSetParams('replace');
+
+        // check if prepared params is not empty
+        if (empty($this->preparedParams))
+        {
+            $db = $this->db->rawQuery($this->preparedQuery);
+
+        } else {
+
+            $db = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
+        }
+
+        // get current connection
+        $conn = $db->getCurrentInstance();
+
+        // return
         return [
-            'status'        => '',
-            'affected_rows' => '',
+            'status'        => $db->getResult(),
+            'affected_rows' => $conn->affected_rows,
         ];
     }
 
@@ -2007,4 +2090,295 @@ class MySQLiBuilder extends Builder
     }
 
     //=================================================================================================
+
+    protected function addPrefix(string $input, DriverInterface $db): string
+    {
+        // explode
+        $inputArray = explode(" ", $input);
+
+        // done
+        foreach ($inputArray as $i => $inputItem):
+
+            if (str_contains($inputItem, '.'))
+            {
+                // remove backticks, single-quotes, double-quotes
+                $column = str_replace(['`', '"', '"'], '', $inputItem);
+
+                // explode and sanitize
+                $columnArray    = explode('.', $column);
+                $columnArray[0] = $db->escape($columnArray[0]);
+                $columnArray[1] = '`' . $db->escape($columnArray[1]) . '`';
+
+                if ($this->prefix !== substr($columnArray[0], 0, strlen($this->prefix)))
+                {
+                    // add prefix
+                    $columnArray[0] = "`{$this->prefix}{$columnArray[0]}`";
+
+                    // implode
+                    $column = implode('.', $columnArray);
+
+                } else {
+
+                    $columnArray[0] = "`{$columnArray[0]}`";
+                    $column         = implode('.', $columnArray);
+                }
+
+            } else {
+
+                $column = $inputItem;
+            }
+
+            // set
+            $inputArray[$i] = $column;
+
+        endforeach;
+
+        // return
+        return implode(" ", $inputArray);
+
+        // ALL the script below bring too much bug and problems, not gonna use this any longer
+        // AI IS GREAT, BUT GENERATING A PERFECT SCRIPT STILL NOT THERE YET
+
+        // Generated this script 95% using OpenAI, It helped me so much as I was totally clueless
+        // about regex pattern, I know regex is so powerful and what it can do but still...
+
+        // If ignoring value and only lookup table name
+
+        //        return preg_replace_callback(
+        //            '/(?:(\b[a-zA-Z_][a-zA-Z0-9_]*)\.)?([a-zA-Z_][a-zA-Z0-9_]*)/',
+        //            function ($matches) use ($prefix, $contextTable) {
+        //                $table = $matches[1] ?? null;
+        //                $column = $matches[2];
+        //
+        //                if ($table) {
+        //                    return "`{$prefix}{$table}`.$column";
+        //                } else {
+        //                    // No table specified: assume it's the context table
+        //                    return "`{$contextTable}`.$column";
+        //                }
+        //            },
+        //            $input
+        //        );
+
+        // $pattern      = '/(?:(\b[a-zA-Z_][a-zA-Z0-9_]*)\.)?([a-zA-Z_][a-zA-Z0-9_]*)/';
+        // $result       = '';
+        // $offset       = 0;
+        // $prefix       = $this->prefix;
+        // $contextTable = $this->from;
+
+        // Match quoted strings to skip them
+        // preg_match_all('/(["\'])(?:\\\\.|(?!\1).)*\1/', $input, $quotedMatches, PREG_OFFSET_CAPTURE);
+
+        //        foreach ($quotedMatches[0] as $match):
+        //
+        //            $quoteStart = $match[1];
+        //            $quoteEnd = $quoteStart + strlen($match[0]);
+        //
+        //            // Process content before the quoted string
+        //            $before = substr($input, $offset, $quoteStart - $offset);
+        //            $before = preg_replace_callback($pattern, function ($matches) use ($contextTable, $prefix) {
+        //                $table = $matches[1] ?? null;
+        //                $column = $matches[2];
+        //
+        //                if ($table)
+        //                {
+        //                    return "`{$prefix}{$table}`.$column";
+        //
+        //                } else {
+        //
+        //                    return "`{$contextTable}`.$column";
+        //                }
+        //
+        //            }, $before);
+        //
+        //            $result .= $before;
+        //
+        //            // Append the quoted string untouched
+        //            $result .= $match[0];
+        //            $offset = $quoteEnd;
+        //
+        //        endforeach;
+        //
+        //        // Process remaining string after last quote
+        //        if ($offset < strlen($input))
+        //        {
+        //            $rest = substr($input, $offset);
+        //            $rest = preg_replace_callback($pattern, function ($matches) use ($contextTable, $prefix) {
+        //                $table = $matches[1] ?? null;
+        //                $column = $matches[2];
+        //
+        //                if ($table)
+        //                {
+        //                    return "`{$prefix}{$table}`.$column";
+        //
+        //                } else {
+        //                    
+        //                    return "`{$contextTable}`.$column";
+        //                }
+        //
+        //            }, $rest);
+        //
+        //            $result .= $rest;
+        //        }
+        //
+        //        // return
+        //        return $result;
+    }
+
+    //==================================================================================================
+
+    /** 
+     * Control on where to push collections, what to run before or after pushing, about conjunctions etc.
+     * 
+     * @param 'join'|'where'|'having'|'groupWhere'|'groupWhereEnd'|'groupHaving'|'groupHavingEnd' $type
+     * 
+     * @return void
+    **/
+    protected function pushCollection(string $type = 'where', string|array $data = '', string|int|bool|float|null|array $params = null): void
+    {
+        switch ($type) {
+            case 'join':
+                $collectionVarName = 'joinCollection';
+                $paramsVarName = 'joinParams';
+                break;
+
+            case 'where':
+                $collectionVarName = 'whereCollection';
+                $paramsVarName = 'whereParams';
+                break;
+                
+            case 'groupWhere':
+                $collectionVarName = 'whereCollection';
+                $paramsVarName = 'whereParams';
+                break;
+
+            case 'groupWhereEnd':
+                $collectionVarName = 'whereCollection';
+                $paramsVarName = 'whereParams';
+                break;
+
+            case 'having':
+                $collectionVarName = 'havingCollection';
+                $paramsVarName = 'havingParams';
+                break;
+
+            case 'groupHaving':
+                $collectionVarName = 'havingCollection';
+                $paramsVarName = 'havingParams';
+                break;
+
+            case 'groupHavingEnd':
+                $collectionVarName = 'havingCollection';
+                $paramsVarName = 'havingParams';
+                break;
+            
+            default:
+                return;
+                break;
+        }
+
+        // push into collection
+        array_push($this->$collectionVarName, $data);
+
+        // push params if exist
+        if (!is_null($params))
+        {
+            if (is_array($params))
+            {
+                foreach ($params as $param):
+
+                    array_push($this->$paramsVarName, $param);
+
+                endforeach;
+
+            } else {
+
+                array_push($this->$paramsVarName, $params);
+            }
+        }
+
+        // after push into params
+        switch ($type) {
+            case 'join':
+                // do nothing
+                break;
+
+            case 'where':
+                $this->useConjunction = true;
+                break;
+                
+            case 'groupWhere':
+                $this->useConjunction = false;
+                break;
+
+            case 'groupWhereEnd':
+                $this->useConjunction = true;
+                break;
+
+            case 'having':
+                $this->havingUseConjunction = true;
+                break;
+
+            case 'groupHaving':
+                $this->havingUseConjunction = false;
+                break;
+
+            case 'groupHavingEnd':
+                $this->havingUseConjunction = true;
+                break;
+            
+            default:
+                // do nothing
+                break;
+        }
+    }
+
+    //==================================================================================================
+
+    /** 
+     * Control on where to push set data, what to run before or after pushing
+     * 
+     * @param string|array $data
+     * 
+     * @return void
+    **/
+    protected function pushSetData(string|array $data, string|int|null|bool $value, bool $prepared = true): void
+    {
+        if (is_array($data) && !$value)
+        {
+            foreach ($data as $key => $item):
+
+                // use raw value
+                $preparedValue = ($prepared) ? '?' : $item;
+
+                // push
+                array_push($this->setDataCollection['key'], $key);
+                array_push($this->setDataCollection['value'], $preparedValue);
+
+                // update prepared value
+                if ($prepared)
+                {
+                    array_push($this->setDataParams, $item);
+                }
+
+            endforeach;
+
+        } else {
+
+            // use raw value
+            $preparedValue = ($prepared) ? '?' : $value;
+
+            // push
+            array_push($this->setDataCollection['key'], $data);
+            array_push($this->setDataCollection['value'], $preparedValue);
+
+            // update prepared value
+            if ($prepared)
+            {
+                array_push($this->setDataParams, $value);
+            }
+        }
+    }
+
+    //==================================================================================================
 }

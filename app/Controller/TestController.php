@@ -63,9 +63,10 @@ class TestController extends BaseController
         ];
 
         $builder = $db->table('user')
-                      // ->set($data)
-                      ->whereNotIn('id', [3, 4])
-                      ->delete();
+                      ->replace([
+                        ['name', "`name`", "CONCAT(`name`, 'hahahaha')", true],
+                        ['age', 5, 8],
+                      ]);
 
         dd($builder);
 

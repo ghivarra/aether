@@ -101,6 +101,7 @@ abstract class Builder
     abstract public function resetQuery(): Builder;
 
     abstract public function set(string|array $data, string|int|null|bool $value = false): Builder;
+    abstract public function setReplace(string|array $data, string|int|null $oldValue = '', string|int|null $newValue = '', bool $raw = false): Builder;
     abstract public function increment(string $column, int $incNum = 1, bool $raw = false): Builder;
     abstract public function decrement(string $column, int $incNum = 1, bool $raw = false): Builder;
 
@@ -109,7 +110,7 @@ abstract class Builder
     abstract public function update(array $data): array;
     abstract public function updateBatch(): bool;
     abstract public function delete(): array;
-    abstract public function replace(): array;
+    abstract public function replace(array $data = []): array;
 
     abstract public function truncate(): bool;
     abstract public function emptyTable(): bool;
