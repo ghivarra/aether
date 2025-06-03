@@ -77,12 +77,11 @@ class MySQLi implements DriverInterface
 
     //===========================================================================================
 
-    public function escape(mixed $data): string
+    public function escape(string|int|float $data): string
     {
-        $stringData = strval($data);
-
+        // convert into string
         // return
-        return $this->connection->real_escape_string($stringData);
+        return $this->connection->real_escape_string(strval($data));
     }
 
     //===========================================================================================
