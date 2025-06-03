@@ -36,9 +36,7 @@ trait BaseBuilderTrait
     public array $preparedParams = [];
     public string $prefix = '';
     public bool $onSubquery = false;
-    public array $subqueries = [
-
-    ];
+    public array $subqueries = [];
 
     //==================================================================================================
 

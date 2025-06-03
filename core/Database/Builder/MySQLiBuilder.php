@@ -1562,7 +1562,7 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function get(): MySQLi
+    public function get(bool $resetQuery = false): MySQLi
     {
         // build query
         $this->buildQuery('select');
@@ -1570,15 +1570,23 @@ class MySQLiBuilder extends Builder
         // build params
         $this->buildParams();
 
-        // dd($this);
+        // store variable
+        $result = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
+
+        // reset query
+        // if commanded to do it
+        if ($resetQuery)
+        {
+            $this->resetQuery();
+        }
 
         // return
-        return $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
+        return $result;
     }
 
     //=================================================================================================
 
-    public function compileQueryString(): string
+    protected function compileQueryString(): string
     {
         // move to new variable
         $query  = $this->preparedQuery;
@@ -1603,7 +1611,7 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function getCompiledSelect(): string
+    public function getCompiledSelect(bool $resetQuery = false): string
     {
         // build query first
         $this->buildQuery('select');
@@ -1612,13 +1620,48 @@ class MySQLiBuilder extends Builder
         $this->buildParams();
 
         // return as string
-        return $this->compileQueryString();
+        $result = $this->compileQueryString();
+
+        // reset query
+        // if commanded to do it
+        if ($resetQuery)
+        {
+            $this->resetQuery();
+        }
+
+        // return
+        return $result;
     }
 
     //=================================================================================================
 
     public function resetQuery(): MySQLiBuilder
     {
+        // reset
+        $this->selectCollection = [];
+        $this->distinct = false;
+        $this->from = '';
+        $this->joinCollection = [];
+        $this->joinParams = [];
+        $this->whereCollection = [];
+        $this->whereParams = [];
+        $this->useConjunction = true;
+        $this->groupByCollection = [];
+        $this->havingCollection = [];
+        $this->havingParams = [];
+        $this->havingUseConjunction = true;
+        $this->orderByCollection = [];
+        $this->limitCount = null;
+        $this->offsetCount = null;
+        $this->setCollection = [];
+        $this->setParams = [];
+        $this->resultQuery = '';
+        $this->preparedQuery = '';
+        $this->preparedParams = [];
+        $this->prefix = '';
+        $this->onSubquery = false;
+        $this->subqueries = [];
+
         // return instance
         return $this;
     }
