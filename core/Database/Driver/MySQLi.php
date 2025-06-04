@@ -73,7 +73,16 @@ class MySQLi implements DriverInterface
     public function disconnect(): bool
     {   
         // disconnect
-        return $this->connection->close();
+        $this->connection->close();
+
+        // empty
+        $this->builder = null;
+        $this->connection = null;
+        $this->connectionDriver = null;
+        $this->result = null;
+
+        // return
+        return true;
     }
 
     //===========================================================================================
@@ -97,7 +106,13 @@ class MySQLi implements DriverInterface
         }
 
         // result
-        return $this->result->fetch_all(MYSQLI_ASSOC);
+        $result = $this->result->fetch_all(MYSQLI_ASSOC);
+
+        // free result
+        $this->result->free();
+
+        // return result
+        return $result;
     }
 
     //===========================================================================================
@@ -112,7 +127,13 @@ class MySQLi implements DriverInterface
         }
 
         // return only one
-        return $this->result->fetch_array(MYSQLI_ASSOC);
+        $result = $this->result->fetch_array(MYSQLI_ASSOC);
+
+        // free result
+        $this->result->free();
+
+        // return result
+        return $result;
     }
 
     //===========================================================================================

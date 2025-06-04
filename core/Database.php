@@ -81,6 +81,25 @@ class Database
 
     //==================================================================================================
 
+    public static function disconnect(string $defaultConnection = 'default'): bool
+    {
+        if (!isset(self::$currentConnection[$defaultConnection]))
+        {
+            return false;
+        }
+
+        // disconnect
+        self::$currentConnection[$defaultConnection]->disconnect();
+
+        // remove instance
+        unset(self::$currentConnection[$defaultConnection]);
+
+        // return
+        return true;
+    }
+
+    //==================================================================================================
+
     public static function getAllQueries(): array
     {
         return self::$storedQueries;
