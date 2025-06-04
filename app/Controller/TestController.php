@@ -26,6 +26,9 @@ class TestController extends BaseController
         ];
         
         $db     = Database::connect();
+
+        dd($db);
+
         $status = ['aktif', 'nonaktif'];
         $faker  = FakerFactory::create('id_ID');
         $data   = [];

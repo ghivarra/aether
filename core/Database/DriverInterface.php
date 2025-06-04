@@ -14,7 +14,7 @@ use Aether\Database\Builder;
 
 interface DriverInterface
 {
-    public function connect(array $config): DriverInterface;
+    public function connect(array $confi, string $defaultConn = 'default'): DriverInterface;
 
     //===========================================================================================
 
@@ -23,6 +23,14 @@ interface DriverInterface
     //===========================================================================================
 
     public function escape(string|int|float $data): string;
+
+    //===========================================================================================
+
+    public function getCurrentInstance();
+
+    //===========================================================================================
+
+    public function getResult();
 
     //===========================================================================================
 

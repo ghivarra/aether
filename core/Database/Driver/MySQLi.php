@@ -26,11 +26,12 @@ class MySQLi implements DriverInterface
     protected SQLDriver|null $connectionDriver = null;
     protected SQLResult|null|bool $result = null;
     protected array $config = [];
+    protected string $defaultConn = '';
     protected string $fallbackMessage = 'Failed to connect to database';
 
     //===========================================================================================
 
-    public function connect(array $config): MySQLi
+    public function connect(array $config, string $defaultConn = 'default'): MySQLi
     {
         $this->connectionDriver = new SQLDriver();
 
@@ -45,21 +46,18 @@ class MySQLi implements DriverInterface
         }
 
         // try connect
-        $mysqli = new SQL($config['hostname'], $config['username'], $config['password'], $config['database'], $config['port']);
+        $this->connection = new SQL($config['hostname'], $config['username'], $config['password'], $config['database'], $config['port']);
 
         // check if connection failed
-        if ($mysqli->connect_errno)
+        if ($this->connection->connect_errno)
         {
-            $message = (AETHER_ENV === 'development') ? "Failed to connect MySQLi Driver: {$mysqli->connect_error}" : $this->fallbackMessage;
+            $message = (AETHER_ENV === 'development') ? "Failed to connect MySQLi Driver: {$this->connection->connect_error}" : $this->fallbackMessage;
             
             throw new SystemException($message, 500);
         }        
 
         // set charset
-        $mysqli->set_charset($config['charset']);
-
-        // set into SQL
-        $this->connection = $mysqli;
+        $this->connection->set_charset($config['charset']);
 
         // set config
         $this->config = $config;
@@ -75,7 +73,15 @@ class MySQLi implements DriverInterface
         // disconnect
         $this->connection->close();
 
+        // clear on database static data
+        if (isset(Database::$currentConnection[$this->defaultConn]))
+        {
+            unset(Database::$currentConnection[$this->defaultConn]);
+        }
+
         // empty
+        $this->defaultConn = '';
+        $this->config = [];
         $this->builder = null;
         $this->connection = null;
         $this->connectionDriver = null;

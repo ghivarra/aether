@@ -69,7 +69,7 @@ class Database
 
             // initiate class
             $DB   = new self::$DBDrivers[$realConfig['DBDriver']]();
-            $conn = $DB->connect($realConfig);
+            $conn = $DB->connect($realConfig, $defaultConnection);
 
             // push connection
             self::$currentConnection[$defaultConnection] = $conn;
