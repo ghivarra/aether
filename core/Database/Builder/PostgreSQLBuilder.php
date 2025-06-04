@@ -19,6 +19,8 @@ class PostgreSQLBuilder extends Builder
         'inner' => 'INNER',
         'left'  => 'LEFT',
         'right' => 'RIGHT',
+        'full'  => 'FULL',
+        'cross' => 'CROSS',
     ];
     protected array $allowedComparisonOperator = [
         '=', '!=', '>', '<', '<=', '>=', '<>'
@@ -26,6 +28,13 @@ class PostgreSQLBuilder extends Builder
     protected array $allowedOrder = [
         'ASC', 'DESC'
     ];
+
+    //=================================================================================================
+
+    protected function generatePlaceholder(int $start, int $end): array
+    {
+        return array_map(fn($i) => '$'. $i, range($start, $end));
+    }
 
     //=================================================================================================
 
@@ -40,26 +49,26 @@ class PostgreSQLBuilder extends Builder
             // explode and sanitize
             $columnArray    = explode('.', $column);
             $columnArray[0] = $this->db->escape($columnArray[0]);
-            $columnArray[1] = '`' . $this->db->escape($columnArray[1]) . '`';
+            $columnArray[1] = $this->db->escape($columnArray[1], 'identifier');
 
             if ($this->prefix !== substr($columnArray[0], 0, strlen($this->prefix)))
             {
                 // add prefix
-                $columnArray[0] = "`{$this->prefix}{$columnArray[0]}`";
+                $columnArray[0] = $this->db->escape($this->prefix . $columnArray[0], 'identifier');
 
                 // implode
                 $column = implode('.', $columnArray);
 
             } else {
 
-                $columnArray[0] = "`{$columnArray[0]}`";
+                $columnArray[0] = $this->db->escape($columnArray[0], 'identifier');
                 $column         = implode('.', $columnArray);
             }
 
         } else {
 
             // escape column
-            $column = '`' . $this->db->escape($column) . '`';
+            $column = $this->db->escape($column, 'identifier');
         }
 
         // return
@@ -80,7 +89,7 @@ class PostgreSQLBuilder extends Builder
         }
 
         // return
-        return $this->db->escape($table);
+        return $this->db->escape($table, 'string');
     }
 
     //=================================================================================================
@@ -109,7 +118,7 @@ class PostgreSQLBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            $alias  = '`' . $this->db->escape($alias) . '`';
+            $alias  = $this->db->escape($alias, 'identifier');
         }
 
         array_push($this->selectCollection, "AVG({$column}) AS {$alias}");
@@ -125,7 +134,7 @@ class PostgreSQLBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            $alias  = '`' . $this->db->escape($alias) . '`';
+            $alias  = $this->db->escape($alias, 'identifier');
         }
 
         array_push($this->selectCollection, "COUNT({$column}) AS {$alias}");
@@ -141,7 +150,7 @@ class PostgreSQLBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            $alias  = '`' . $this->db->escape($alias) . '`';
+            $alias  = $this->db->escape($alias, 'identifier');
         }
 
         array_push($this->selectCollection, "MAX({$column}) AS {$alias}");
@@ -157,7 +166,7 @@ class PostgreSQLBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            $alias  = '`' . $this->db->escape($alias) . '`';
+            $alias  = $this->db->escape($alias, 'identifier');
         }
 
         array_push($this->selectCollection, "MIN({$column}) AS {$alias}");
@@ -173,7 +182,7 @@ class PostgreSQLBuilder extends Builder
         if (!$raw)
         {
             $column = $this->sanitizeColumn($column);
-            $alias  = '`' . $this->db->escape($alias) . '`';
+            $alias  = $this->db->escape($alias, 'identifier');
         }
 
         array_push($this->selectCollection, "SUM({$column}) AS {$alias}");
@@ -211,6 +220,11 @@ class PostgreSQLBuilder extends Builder
 
     public function join(string $table, string|array $condition, string $joinType = '', bool $raw = false): PostgreSQLBuilder
     {
+        if ($joinType === '')
+        {
+            $joinType = 'inner';
+        }
+
         if (!empty($joinType))
         {
             if (!in_array(strtolower($joinType), array_keys($this->allowedJoinType)))
@@ -316,20 +330,23 @@ class PostgreSQLBuilder extends Builder
         // execute before
         $data = $this->beforeWhere($column, $operator, $value, $raw);
 
+        // generate placeholder
+        $placeholder = '$' . (count($this->whereParams) + 1);
+
         // push into where collection
         if (empty($this->whereCollection))
         {
-            $this->pushCollection('where', "WHERE {$data['column']} {$operator} ?", $value);
+            $this->pushCollection('where', "WHERE {$data['column']} {$operator} {$placeholder}", $value);
 
         } else {
 
             if ($this->useConjunction)
             {
-                $this->pushCollection('where', "AND {$data['column']} {$operator} ?", $value);
+                $this->pushCollection('where', "AND {$data['column']} {$operator} {$placeholder}", $value);
 
             } else {
 
-                $this->pushCollection('where', "{$data['column']} {$operator} ?", $value);
+                $this->pushCollection('where', "{$data['column']} {$operator} {$placeholder}", $value);
             }
         }
 
@@ -344,20 +361,23 @@ class PostgreSQLBuilder extends Builder
         // execute before
         $data = $this->beforeWhere($column, $operator, $value, $raw);
 
+        // generate placeholder
+        $placeholder = '$' . (count($this->whereParams) + 1);
+
         // push into where collection
         if (empty($this->whereCollection))
         {
-            $this->pushCollection('where', "WHERE NOT {$data['column']} {$operator} ?", $value);
+            $this->pushCollection('where', "WHERE NOT {$data['column']} {$operator} {$placeholder}", $value);
 
         } else {
 
             if ($this->useConjunction)
             {
-                $this->pushCollection('where', "AND NOT {$data['column']} {$operator} ?", $value);
+                $this->pushCollection('where', "AND NOT {$data['column']} {$operator} {$placeholder}", $value);
 
             } else {
 
-                $this->pushCollection('where', "NOT {$data['column']} {$operator} ?", $value);
+                $this->pushCollection('where', "NOT {$data['column']} {$operator} {$placeholder}", $value);
             }
         }
 
@@ -375,7 +395,9 @@ class PostgreSQLBuilder extends Builder
         }
 
         // count values
-        $variables = implode(', ', array_fill(0, count($value), '?'));
+        $totalParams  = count($this->whereParams);
+        $placeholders = $this->generatePlaceholder(($totalParams + 1), ($totalParams + count($value)));
+        $variables    = implode(', ', $placeholders);
 
         // push into where collection
         if (empty($this->whereCollection))
@@ -408,7 +430,9 @@ class PostgreSQLBuilder extends Builder
         }
 
         // count values
-        $variables = implode(', ', array_fill(0, count($value), '?'));
+        $totalParams  = count($this->whereParams);
+        $placeholders = $this->generatePlaceholder(($totalParams + 1), ($totalParams + count($value)));
+        $variables    = implode(', ', $placeholders);
 
         // push into where collection
         if (empty($this->whereCollection))
@@ -498,14 +522,17 @@ class PostgreSQLBuilder extends Builder
         // execute before
         $data = $this->beforeWhere($column, $operator, $value, $raw);
 
+        // where
+        $placeholder = '$' . (count($this->whereParams) + 1);
+
         // push into where collection
         if ($this->useConjunction)
         {
-            $this->pushCollection('where', "OR {$data['column']} {$operator} ?", $value);
+            $this->pushCollection('where', "OR {$data['column']} {$operator} {$placeholder}", $value);
 
         } else {
 
-            $this->pushCollection('where', "{$data['column']} {$operator} ?", $value);
+            $this->pushCollection('where', "{$data['column']} {$operator} {$placeholder}", $value);
         }
 
         // return instance
@@ -519,14 +546,17 @@ class PostgreSQLBuilder extends Builder
         // execute before
         $data = $this->beforeWhere($column, $operator, $value, $raw);
 
+        // generate placeholder
+        $placeholder = '$' . (count($this->whereParams) + 1);
+
         // push into where collection
         if ($this->useConjunction)
         {
-            $this->pushCollection('where', "OR NOT {$data['column']} {$operator} ?", $value);
+            $this->pushCollection('where', "OR NOT {$data['column']} {$operator} {$placeholder}", $value);
 
         } else {
 
-            $this->pushCollection('where', "NOT {$data['column']} {$operator} ?", $value);
+            $this->pushCollection('where', "NOT {$data['column']} {$operator} {$placeholder}", $value);
         }
 
         // return instance
@@ -543,7 +573,9 @@ class PostgreSQLBuilder extends Builder
         }
 
         // count values
-        $variables = implode(', ', array_fill(0, count($value), '?'));
+        $totalParams  = count($this->whereParams);
+        $placeholders = $this->generatePlaceholder(($totalParams + 1), ($totalParams + count($value)));
+        $variables    = implode(', ', $placeholders);
 
         // push into where collection
         if ($this->useConjunction)
@@ -569,7 +601,9 @@ class PostgreSQLBuilder extends Builder
         }
 
         // count values
-        $variables = implode(', ', array_fill(0, count($value), '?'));
+        $totalParams  = count($this->whereParams);
+        $placeholders = $this->generatePlaceholder(($totalParams + 1), ($totalParams + count($value)));
+        $variables    = implode(', ', $placeholders);
 
         // push into where collection
         if ($this->useConjunction)
@@ -666,20 +700,23 @@ class PostgreSQLBuilder extends Builder
             $column = $this->sanitizeColumn($column);
         }
 
+        // generate placeholder
+        $placeholder = '$' . (count($this->whereParams) + 1);
+
         // push into where collection
         if (empty($this->whereCollection))
         {
-            $this->pushCollection('where', "WHERE {$column} LIKE ? ESCAPE '!'", $value);
+            $this->pushCollection('where', "WHERE {$column} LIKE {$placeholder}", $value);
 
         } else {
 
             if ($this->useConjunction)
             {
-                $this->pushCollection('where', "AND {$column} LIKE ? ESCAPE '!'", $value);
+                $this->pushCollection('where', "AND {$column} LIKE {$placeholder}", $value);
 
             } else {
 
-                $this->pushCollection('where', "{$column} LIKE ? ESCAPE '!'", $value);
+                $this->pushCollection('where', "{$column} LIKE {$placeholder}", $value);
             }
         }
 
@@ -699,20 +736,23 @@ class PostgreSQLBuilder extends Builder
             $column = $this->sanitizeColumn($column);
         }
 
+        // generate placeholder
+        $placeholder = '$' . (count($this->whereParams) + 1);
+
         // push into where collection
         if (empty($this->whereCollection))
         {
-            $this->pushCollection('where', "WHERE {$column} NOT LIKE ? ESCAPE '!'", $value);
+            $this->pushCollection('where', "WHERE {$column} NOT LIKE {$placeholder}", $value);
 
         } else {
 
             if ($this->useConjunction)
             {
-                $this->pushCollection('where', "AND {$column} NOT LIKE ? ESCAPE '!'", $value);
+                $this->pushCollection('where', "AND {$column} NOT LIKE {$placeholder}", $value);
 
             } else {
 
-                $this->pushCollection('where', "{$column} NOT LIKE ? ESCAPE '!'", $value);
+                $this->pushCollection('where', "{$column} NOT LIKE {$placeholder}", $value);
             }
         }
 
@@ -732,14 +772,17 @@ class PostgreSQLBuilder extends Builder
             $column = $this->sanitizeColumn($column);
         }
 
+        // generate placeholder
+        $placeholder = '$' . (count($this->whereParams) + 1);
+
         // push into where collection
         if ($this->useConjunction)
         {
-            $this->pushCollection('where', "OR {$column} LIKE ? ESCAPE '!'", $value);
+            $this->pushCollection('where', "OR {$column} LIKE {$placeholder}", $value);
 
         } else {
             
-            $this->pushCollection('where', "{$column} LIKE ? ESCAPE '!'", $value);
+            $this->pushCollection('where', "{$column} LIKE {$placeholder}", $value);
         }
 
         // return instance
@@ -758,14 +801,17 @@ class PostgreSQLBuilder extends Builder
             $column = $this->sanitizeColumn($column);
         }
 
+        // generate placeholder
+        $placeholder = '$' . (count($this->whereParams) + 1);
+
         // push into where collection
         if ($this->useConjunction)
         {
-            $this->pushCollection('where', "OR {$column} NOT LIKE ? ESCAPE '!'", $value);
+            $this->pushCollection('where', "OR {$column} NOT LIKE {$placeholder}", $value);
 
         } else {
             
-            $this->pushCollection('where', "{$column} NOT LIKE ? ESCAPE '!'", $value);
+            $this->pushCollection('where', "{$column} NOT LIKE {$placeholder}", $value);
         }
 
         // return instance
@@ -880,20 +926,23 @@ class PostgreSQLBuilder extends Builder
         // execute before
         $data = $this->beforeWhere($column, $operator, $value, $raw);
 
+        // generate placeholder
+        $placeholder = '$' . (count($this->havingParams) + 1);
+
         // push into having collection
         if (empty($this->havingCollection))
         {
-            $this->pushCollection('having', "HAVING {$data['column']} {$operator} ?", $value);
+            $this->pushCollection('having', "HAVING {$data['column']} {$operator} {$placeholder}", $value);
 
         } else {
 
             if ($this->havingUseConjunction)
             {
-                $this->pushCollection('having', "AND {$data['column']} {$operator} ?", $value);
+                $this->pushCollection('having', "AND {$data['column']} {$operator} {$placeholder}", $value);
 
             } else {
 
-                $this->pushCollection('having', "{$data['column']} {$operator} ?", $value);
+                $this->pushCollection('having', "{$data['column']} {$operator} {$placeholder}", $value);
             }
         }
 
@@ -908,20 +957,23 @@ class PostgreSQLBuilder extends Builder
         // execute before
         $data = $this->beforeWhere($column, $operator, $value, $raw);
 
+        // generate placeholder
+        $placeholder = '$' . (count($this->havingParams) + 1);
+
         // push into having collection
         if (empty($this->havingCollection))
         {
-            $this->pushCollection('having', "HAVING NOT {$data['column']} {$operator} ?", $value);
+            $this->pushCollection('having', "HAVING NOT {$data['column']} {$operator} {$placeholder}", $value);
 
         } else {
 
             if ($this->havingUseConjunction)
             {
-                $this->pushCollection('having', "AND NOT {$data['column']} {$operator} ?", $value);
+                $this->pushCollection('having', "AND NOT {$data['column']} {$operator} {$placeholder}", $value);
 
             } else {
 
-                $this->pushCollection('having', "NOT {$data['column']} {$operator} ?", $value);
+                $this->pushCollection('having', "NOT {$data['column']} {$operator} {$placeholder}", $value);
             }
         }
 
@@ -939,7 +991,9 @@ class PostgreSQLBuilder extends Builder
         }
 
         // count values
-        $variables = implode(', ', array_fill(0, count($value), '?'));
+        $totalParams  = count($this->havingParams);
+        $placeholders = $this->generatePlaceholder(($totalParams + 1), ($totalParams + count($value)));
+        $variables    = implode(', ', $placeholders);
 
         // push into having collection
         if (empty($this->havingCollection))
@@ -972,7 +1026,9 @@ class PostgreSQLBuilder extends Builder
         }
 
         // count values
-        $variables = implode(', ', array_fill(0, count($value), '?'));
+        $totalParams  = count($this->havingParams);
+        $placeholders = $this->generatePlaceholder(($totalParams + 1), ($totalParams + count($value)));
+        $variables    = implode(', ', $placeholders);
 
         // push into having collection
         if (empty($this->havingCollection))
@@ -1062,14 +1118,17 @@ class PostgreSQLBuilder extends Builder
         // execute before
         $data = $this->beforeWhere($column, $operator, $value, $raw);
 
+        // generate placeholder
+        $placeholder = '$' . (count($this->havingParams) + 1);
+
         // push into having collection
         if ($this->havingUseConjunction)
         {
-            $this->pushCollection('having', "OR {$data['column']} {$operator} ?", $value);
+            $this->pushCollection('having', "OR {$data['column']} {$operator} {$placeholder}", $value);
 
         } else {
 
-            $this->pushCollection('having', "{$data['column']} {$operator} ?", $value);
+            $this->pushCollection('having', "{$data['column']} {$operator} {$placeholder}", $value);
         }
 
         // return instance
@@ -1083,14 +1142,17 @@ class PostgreSQLBuilder extends Builder
         // execute before
         $data = $this->beforeWhere($column, $operator, $value, $raw);
 
+        // generate placeholder
+        $placeholder = '$' . (count($this->havingParams) + 1);
+
         // push into having collection
         if ($this->havingUseConjunction)
         {
-            $this->pushCollection('having', "OR NOT {$data['column']} {$operator} ?", $value);
+            $this->pushCollection('having', "OR NOT {$data['column']} {$operator} {$placeholder}", $value);
 
         } else {
 
-            $this->pushCollection('having', "NOT {$data['column']} {$operator} ?", $value);
+            $this->pushCollection('having', "NOT {$data['column']} {$operator} {$placeholder}", $value);
         }
 
         // return instance
@@ -1107,7 +1169,9 @@ class PostgreSQLBuilder extends Builder
         }
 
         // count values
-        $variables = implode(', ', array_fill(0, count($value), '?'));
+        $totalParams  = count($this->havingParams);
+        $placeholders = $this->generatePlaceholder(($totalParams + 1), ($totalParams + count($value)));
+        $variables    = implode(', ', $placeholders);
 
         // push into having collection
         if ($this->havingUseConjunction)
@@ -1133,7 +1197,9 @@ class PostgreSQLBuilder extends Builder
         }
 
         // count values
-        $variables = implode(', ', array_fill(0, count($value), '?'));
+        $totalParams  = count($this->havingParams);
+        $placeholders = $this->generatePlaceholder(($totalParams + 1), ($totalParams + count($value)));
+        $variables    = implode(', ', $placeholders);
 
         // push into having collection
         if ($this->havingUseConjunction)
@@ -1207,20 +1273,23 @@ class PostgreSQLBuilder extends Builder
             $column = $this->sanitizeColumn($column);
         }
 
+        // generate placeholder
+        $placeholder = '$' . (count($this->havingParams) + 1);
+
         // push into having collection
         if (empty($this->havingCollection))
         {
-            $this->pushCollection('having', "HAVING {$column} LIKE ? ESCAPE '!'", $value);
+            $this->pushCollection('having', "HAVING {$column} LIKE {$placeholder}", $value);
 
         } else {
 
             if ($this->havingUseConjunction)
             {
-                $this->pushCollection('having', "AND {$column} LIKE ? ESCAPE '!'", $value);
+                $this->pushCollection('having', "AND {$column} LIKE {$placeholder}", $value);
 
             } else {
 
-                $this->pushCollection('having', "{$column} LIKE ? ESCAPE '!'", $value);
+                $this->pushCollection('having', "{$column} LIKE {$placeholder}", $value);
             }
         }
 
@@ -1240,20 +1309,23 @@ class PostgreSQLBuilder extends Builder
             $column = $this->sanitizeColumn($column);
         }
 
+        // generate placeholder
+        $placeholder = '$' . (count($this->havingParams) + 1);
+
         // push into having collection
         if (empty($this->havingCollection))
         {
-            $this->pushCollection('having', "HAVING {$column} NOT LIKE ? ESCAPE '!'", $value);
+            $this->pushCollection('having', "HAVING {$column} NOT LIKE {$placeholder}", $value);
 
         } else {
 
             if ($this->havingUseConjunction)
             {
-                $this->pushCollection('having', "AND {$column} NOT LIKE ? ESCAPE '!'", $value);
+                $this->pushCollection('having', "AND {$column} NOT LIKE {$placeholder}", $value);
 
             } else {
 
-                $this->pushCollection('having', "{$column} NOT LIKE ? ESCAPE '!'", $value);
+                $this->pushCollection('having', "{$column} NOT LIKE {$placeholder}", $value);
             }
         }
 
@@ -1273,14 +1345,17 @@ class PostgreSQLBuilder extends Builder
             $column = $this->sanitizeColumn($column);
         }
 
+        // generate placeholder
+        $placeholder = '$' . (count($this->havingParams) + 1);
+
         // push into having collection
         if ($this->havingUseConjunction)
         {
-            $this->pushCollection('having', "OR {$column} LIKE ? ESCAPE '!'", $value);
+            $this->pushCollection('having', "OR {$column} LIKE {$placeholder}", $value);
 
         } else {
             
-            $this->pushCollection('having', "{$column} LIKE ? ESCAPE '!'", $value);
+            $this->pushCollection('having', "{$column} LIKE {$placeholder}", $value);
         }
 
         // return instance
@@ -1299,14 +1374,17 @@ class PostgreSQLBuilder extends Builder
             $column = $this->sanitizeColumn($column);
         }
 
+        // generate placeholder
+        $placeholder = '$' . (count($this->havingParams) + 1);
+
         // push into having collection
         if ($this->havingUseConjunction)
         {
-            $this->pushCollection('having', "OR {$column} NOT LIKE ? ESCAPE '!'", $value);
+            $this->pushCollection('having', "OR {$column} NOT LIKE {$placeholder}", $value);
 
         } else {
             
-            $this->pushCollection('having', "{$column} NOT LIKE ? ESCAPE '!'", $value);
+            $this->pushCollection('having', "{$column} NOT LIKE {$placeholder}", $value);
         }
 
         // return instance
@@ -1439,6 +1517,9 @@ class PostgreSQLBuilder extends Builder
         // reset prepared
         $this->preparedQuery = '';
 
+        // set table
+        $table = $this->db->escape($this->from, 'identifier');
+
         // set command
         if ($command === 'select')
         {
@@ -1450,7 +1531,7 @@ class PostgreSQLBuilder extends Builder
             
             // column collection
             // and string
-            $this->selectCollection = empty($this->selectCollection) ? [ "`{$this->from}`.*" ] : $this->selectCollection;
+            $this->selectCollection = empty($this->selectCollection) ? [ "{$table}.*" ] : $this->selectCollection;
             $columnString = implode(', ', $this->selectCollection);
 
             // store into prepared query
@@ -1463,7 +1544,7 @@ class PostgreSQLBuilder extends Builder
         }
 
         // from string
-        $fromString = "FROM `{$this->from}`";
+        $fromString = "FROM {$table}";
 
         // store into prepared query
         $this->preparedQuery .= " {$fromString}";
@@ -1537,42 +1618,98 @@ class PostgreSQLBuilder extends Builder
 
     //=================================================================================================
 
-    protected function compileGetQuery(): string
+    protected function extractPostgresPlaceholders(string $sql): array
+    {
+        // AI GENERATED SNIPPETS //
+
+        $placeholders = [];
+        $length = strlen($sql);
+        $inString = false;
+        $escaped = false;
+
+        for ($i = 0; $i < $length; $i++) {
+            $char = $sql[$i];
+
+            // Handle string start/end
+            if ($char === "'" && !$escaped) {
+                $inString = !$inString;
+                continue;
+            }
+
+            // Handle escape by doubling single quotes inside strings (e.g., 'O''Reilly')
+            if ($char === "'" && $inString && $i + 1 < $length && $sql[$i + 1] === "'") {
+                $i++; // Skip the next quote
+                continue;
+            }
+
+            // Check for placeholders only when not in a string
+            if (!$inString && $char === '$') {
+                $j = $i + 1;
+                $number = '';
+                while ($j < $length && ctype_digit($sql[$j])) {
+                    $number .= $sql[$j];
+                    $j++;
+                }
+
+                if ($number !== '') {
+                    $placeholders[] = '$' . $number;
+                    $i = $j - 1;
+                }
+            }
+
+            $escaped = ($char === '\\' && !$escaped);
+        }
+
+        $placeholders = array_unique($placeholders);
+        natsort($placeholders);
+
+        // return
+        return array_values($placeholders);
+    }
+
+    //=================================================================================================
+
+    public function compilePreparedQuery(string $query = '', array $params = []): string
     {
         // move to new variable
-        $query  = $this->preparedQuery;
-        $params = $this->preparedParams;
-        $variable = [
-            '(?,', '?,', '?),', '?)'
-        ];
+        $query  = empty($query) ? $this->preparedQuery : $query;
+        $params = empty($params) ? $this->preparedParams : $params;
 
-        // explode query
-        $queryArray = explode(" ", $query);
+        // mutate params
+        foreach ($params as $n => $param):
 
-        // walk array to convert the question mark into params
-        foreach ($queryArray as $i => $item):
-
-            if (in_array($item, $variable))
-            {
-                $key   = array_search($item, $variable);
-                $param = "'" . $this->db->escape(array_shift($params)) . "'";
-                $value = str_replace('?', $param, $variable[$key]);
-
-                // store
-                $queryArray[$i] = $value;
-            }
+            $params[$n] = $this->db->escape($param, 'literal');
 
         endforeach;
         
+        // placeholders
+        $placeholders = $this->extractPostgresPlaceholders($query);
+        $tempQuery    = $query;
+
+        foreach ($placeholders as $i => $placeholder):
+
+            // find position
+            $len = strlen($placeholder);
+            $pos = strpos($tempQuery, $placeholder);
+
+            // string replace
+            $tempQuery = substr_replace($tempQuery, strval($params[$i]), $pos, $len);
+
+        endforeach;
+
+        // check temp query
+        $compiledQuery = $tempQuery;
+
         // return
-        return implode(" ", $queryArray);
+        return $compiledQuery;
     }
 
     //=================================================================================================
 
     public function countAll(bool $resetQuery = true): int
     {
-        $query  = "SELECT COUNT(*) AS total FROM `{$this->from}`";
+        $table  = $this->db->escape($this->from, 'identifier');
+        $query  = "SELECT COUNT(*) AS total FROM {$table}";
         $result = $this->db->rawQuery($query)->getRowArray();
 
         // reset query
@@ -1646,7 +1783,7 @@ class PostgreSQLBuilder extends Builder
         $this->buildGetParams();
 
         // return as string
-        $result = $this->compileGetQuery();
+        $result = $this->compilePreparedQuery();
 
         // reset query
         // if commanded to do it
@@ -1748,8 +1885,8 @@ class PostgreSQLBuilder extends Builder
         // push column
         array_push($this->setReplaceCollection, [
             'column'   => $column,
-            'oldValue' => ($raw) ? $oldValue : '?',
-            'newValue' => ($raw) ? $newValue : '?',
+            'oldValue' => ($raw) ? $oldValue : '$' . (count($this->setReplaceParams) + 1),
+            'newValue' => ($raw) ? $newValue : '$' . (count($this->setReplaceParams) + 2),
         ]);
 
         // push into params if not raw
@@ -1796,12 +1933,15 @@ class PostgreSQLBuilder extends Builder
         // reset prepared statement
         $this->preparedQuery = '';
 
+        // set table
+        $table = $this->db->escape($this->from, 'identifier');
+
         // build string
         switch ($type) {
             case 'insert':
                 $columns = implode(', ', $this->setDataCollection['key']);
                 $values  = implode(', ', $this->setDataCollection['value']);
-                $this->preparedQuery = "INSERT INTO `{$this->from}` ({$columns}) VALUES ({$values})";
+                $this->preparedQuery = "INSERT INTO {$table} ({$columns}) VALUES ({$values})";
                 break;
 
             case 'insertBulk':
@@ -1815,7 +1955,7 @@ class PostgreSQLBuilder extends Builder
                 endforeach;
 
                 $values = implode(', ', $values);
-                $this->preparedQuery = "INSERT INTO `{$this->from}` ({$columns}) VALUES {$values}";
+                $this->preparedQuery = "INSERT INTO {$table} ({$columns}) VALUES {$values}";
                 break;
 
             case 'update':  
@@ -1833,7 +1973,7 @@ class PostgreSQLBuilder extends Builder
                 $columns = implode(', ', $sets);
 
                 // update query
-                $this->preparedQuery = "UPDATE `{$this->from}` SET {$columns}";
+                $this->preparedQuery = "UPDATE {$table} SET {$columns}";
 
                 // where string        
                 if (!empty($this->whereCollection))
@@ -1846,66 +1986,79 @@ class PostgreSQLBuilder extends Builder
                 break;
 
             case 'updateBulk':
+                $tempTableName = $this->db->escape('tmp_' . time() . '_' . random_int(10000, 99999), 'identifier');
+                $keys          = $this->setDataBatchCollection['key'];
+                $setQuery      = [];
 
-                // show columns data
-                $tableColumns = $this->db->rawQuery("SHOW COLUMNS FROM `{$this->from}`")->getResultArray();
-                $keys         = $this->setDataBatchCollection['key'];
-                $tableDataCol = array_column($tableColumns, 'Field');
-                $tempTables   = [];
+                // find data_type based on column name
+                $placeholders = $this->generatePlaceholder(2, (count($keys) + 1));
+                $query        = "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = \$1 AND column_name IN (". implode(', ', $placeholders) .")";
+                $params       = [ $this->from ];
+                $rawColumns   = [];
 
-                // handle columns
-                foreach ($keys as $key):
-                    
-                    $tmp = str_ireplace('`', '', $key);
-                    $num = array_search($tmp, $tableDataCol);
+                // add to params
+                foreach ($keys as $column):
 
-                    if ($num === FALSE)
-                    {
-                        $message = (AETHER_ENV === 'development') ? "Column {$key} is not found in table `{$this->from}`" : 'Failed to update data';
-                        throw new SystemException($message, 500);
-                    }
-
-                    $columnData = $tableColumns[$num];
-                    $null       = ($columnData['Null'] == 'NO') ? 'NOT NULL' : 'NULL';
-                    $type       = strtoupper($columnData['Type']);
-
-                    // push
-                    array_push($tempTables, "{$columnData['Field']} {$type} {$null}");
+                    array_push($params, str_ireplace(['`', '"', "'"], '', $column));
+                    array_push($rawColumns, str_ireplace(['`', '"', "'"], '', $column));
 
                 endforeach;
 
-                // make create table script
-                $tempTables    = implode(', ', $tempTables);
-                $tempTableName = 'tmp_' . time() . '_' . random_int(10000, 99999);
+                // generate prepared query
+                $columnData = $this->db->preparedQuery($query, $params)->getResultArray();
+                $dataType   = [];
 
-                // run temp table query
-                $this->db->rawQuery("CREATE TEMPORARY TABLE {$tempTableName} ({$tempTables})");
+                foreach ($columnData as $item):
 
-                // temporary insert bulk
-                $values  = [];
-                $columns = implode(', ', $this->setDataBatchCollection['key']);
+                    $dataType[$item['column_name']] = strtoupper($item['data_type']);
+
+                endforeach;
+
+                // create keys/columns
+                foreach ($keys as $key):
+
+                    if ($key !== $this->setColumnBatch)
+                    {
+                        array_push($setQuery, "{$key} = {$tempTableName}.{$key}");
+                    }
+
+                endforeach;
+
+                // create values
+                $values = [];
 
                 foreach ($this->setDataBatchCollection['value'] as $value):
 
-                    array_push($values, '('. implode(', ', $value) .')');
+                    $str = "(";
+
+                    foreach ($value as $i => $item)
+                    {
+                        $num = intval(substr($item, 1)) - 1;
+                        $val = $this->setDataBatchParams[$num];
+
+                        if ($i === 0)
+                        {
+                            $str .= $this->db->escape($val, 'literal') . "::" . $dataType[$rawColumns[$i]];
+
+                        } else {
+
+                            $str .= ', ' . $this->db->escape($val, 'literal') . "::" . $dataType[$rawColumns[$i]];
+                        }
+                    }
+
+                    $str .= ")";
+
+                    // store to values
+                    array_push($values, $str);
 
                 endforeach;
 
-                // insert bulk into temp table using prepared statement
-                $this->db->preparedQuery("INSERT INTO `{$tempTableName}` ({$columns}) VALUES " . implode(', ', $values), $this->setDataBatchParams);
+                // implode
+                $valueQuery = implode(", ", $values);
+                $asQuery    = implode(", ", $this->setDataBatchCollection['key']);
 
-                // create join script
-                $mainTableAlias = 'main';
-                $tempTableAlias = 'tmp';
-                $updateSets     = [];
-
-                foreach ($keys as $updatedKey):
-
-                    array_push($updateSets, "`{$mainTableAlias}`.{$updatedKey} = `{$tempTableAlias}`.{$updatedKey}");
-
-                endforeach;
-
-                $this->preparedQuery = "UPDATE `{$this->from}` AS `{$mainTableAlias}` JOIN `{$tempTableName}` AS `{$tempTableAlias}` ON `{$mainTableAlias}`.{$this->setColumnBatch} = `{$tempTableAlias}`.{$this->setColumnBatch} SET " . implode(", ", $updateSets);
+                // build prepared query
+                $this->preparedQuery = "UPDATE {$table} SET " . implode(", ", $setQuery) . " FROM (VALUES {$valueQuery}) AS {$tempTableName}({$asQuery}) WHERE {$table}.{$this->setColumnBatch} = {$tempTableName}.{$this->setColumnBatch}";
                 break;
 
             case 'upsert':
@@ -1917,7 +2070,7 @@ class PostgreSQLBuilder extends Builder
                 break;
 
             case 'delete':
-                $this->preparedQuery = "DELETE FROM `{$this->from}`";
+                $this->preparedQuery = "DELETE FROM {$table}";
 
                 // where string        
                 if (!empty($this->whereCollection))
@@ -1943,7 +2096,7 @@ class PostgreSQLBuilder extends Builder
                 $setReplace = implode(', ', $setReplace);
 
                 // update query
-                $this->preparedQuery = "UPDATE `{$this->from}` SET {$setReplace}";
+                $this->preparedQuery = "UPDATE {$table} SET {$setReplace}";
                 break;
             
             default:
@@ -2218,7 +2371,8 @@ class PostgreSQLBuilder extends Builder
         }
 
         // return db
-        $db = $this->db->rawQuery("TRUNCATE TABLE `{$this->from}`");
+        $table = $this->db->escape($this->from, 'identifier');
+        $db    = $this->db->rawQuery("TRUNCATE TABLE {$table}");
 
         // conn
         $result = $db->getResult();
@@ -2235,7 +2389,8 @@ class PostgreSQLBuilder extends Builder
     public function emptyTable(): bool
     {
         // return db
-        $db = $this->db->rawQuery("DELETE FROM `{$this->from}`");
+        $table = $this->db->escape($this->from, 'identifier');
+        $db    = $this->db->rawQuery("DELETE FROM {$table}");
 
         // conn
         $result = $db->getResult();
@@ -2265,19 +2420,19 @@ class PostgreSQLBuilder extends Builder
                 // explode and sanitize
                 $columnArray    = explode('.', $column);
                 $columnArray[0] = $db->escape($columnArray[0]);
-                $columnArray[1] = '`' . $db->escape($columnArray[1]) . '`';
+                $columnArray[1] = $db->escape($columnArray[1], 'identifier');
 
                 if ($this->prefix !== substr($columnArray[0], 0, strlen($this->prefix)))
                 {
                     // add prefix
-                    $columnArray[0] = "`{$this->prefix}{$columnArray[0]}`";
+                    $columnArray[0] = $db->escape($this->prefix . $columnArray[0], 'identifier');
 
                     // implode
                     $column = implode('.', $columnArray);
 
                 } else {
 
-                    $columnArray[0] = "`{$columnArray[0]}`";
+                    $columnArray[0] = $db->escape($columnArray[0], 'identifier');
                     $column         = implode('.', $columnArray);
                 }
 
@@ -2293,94 +2448,6 @@ class PostgreSQLBuilder extends Builder
 
         // return
         return implode(" ", $inputArray);
-
-        // ALL the script below bring too much bug and problems, not gonna use this any longer
-        // AI IS GREAT, BUT GENERATING A PERFECT SCRIPT STILL NOT THERE YET
-
-        // Generated this script 95% using OpenAI, It helped me so much as I was totally clueless
-        // about regex pattern, I know regex is so powerful and what it can do but still...
-
-        // If ignoring value and only lookup table name
-
-        //        return preg_replace_callback(
-        //            '/(?:(\b[a-zA-Z_][a-zA-Z0-9_]*)\.)?([a-zA-Z_][a-zA-Z0-9_]*)/',
-        //            function ($matches) use ($prefix, $contextTable) {
-        //                $table = $matches[1] ?? null;
-        //                $column = $matches[2];
-        //
-        //                if ($table) {
-        //                    return "`{$prefix}{$table}`.$column";
-        //                } else {
-        //                    // No table specified: assume it's the context table
-        //                    return "`{$contextTable}`.$column";
-        //                }
-        //            },
-        //            $input
-        //        );
-
-        // $pattern      = '/(?:(\b[a-zA-Z_][a-zA-Z0-9_]*)\.)?([a-zA-Z_][a-zA-Z0-9_]*)/';
-        // $result       = '';
-        // $offset       = 0;
-        // $prefix       = $this->prefix;
-        // $contextTable = $this->from;
-
-        // Match quoted strings to skip them
-        // preg_match_all('/(["\'])(?:\\\\.|(?!\1).)*\1/', $input, $quotedMatches, PREG_OFFSET_CAPTURE);
-
-        //        foreach ($quotedMatches[0] as $match):
-        //
-        //            $quoteStart = $match[1];
-        //            $quoteEnd = $quoteStart + strlen($match[0]);
-        //
-        //            // Process content before the quoted string
-        //            $before = substr($input, $offset, $quoteStart - $offset);
-        //            $before = preg_replace_callback($pattern, function ($matches) use ($contextTable, $prefix) {
-        //                $table = $matches[1] ?? null;
-        //                $column = $matches[2];
-        //
-        //                if ($table)
-        //                {
-        //                    return "`{$prefix}{$table}`.$column";
-        //
-        //                } else {
-        //
-        //                    return "`{$contextTable}`.$column";
-        //                }
-        //
-        //            }, $before);
-        //
-        //            $result .= $before;
-        //
-        //            // Append the quoted string untouched
-        //            $result .= $match[0];
-        //            $offset = $quoteEnd;
-        //
-        //        endforeach;
-        //
-        //        // Process remaining string after last quote
-        //        if ($offset < strlen($input))
-        //        {
-        //            $rest = substr($input, $offset);
-        //            $rest = preg_replace_callback($pattern, function ($matches) use ($contextTable, $prefix) {
-        //                $table = $matches[1] ?? null;
-        //                $column = $matches[2];
-        //
-        //                if ($table)
-        //                {
-        //                    return "`{$prefix}{$table}`.$column";
-        //
-        //                } else {
-        //                    
-        //                    return "`{$contextTable}`.$column";
-        //                }
-        //
-        //            }, $rest);
-        //
-        //            $result .= $rest;
-        //        }
-        //
-        //        // return
-        //        return $result;
     }
 
     //==================================================================================================
@@ -2507,7 +2574,7 @@ class PostgreSQLBuilder extends Builder
             foreach ($data as $key => $item):
 
                 // use raw value
-                $preparedValue = ($prepared) ? '?' : $item;
+                $preparedValue = ($prepared) ? '$' . (count($this->setDataParams) + 1) : $item;
 
                 // push
                 array_push($this->setDataCollection['key'], $key);
@@ -2524,7 +2591,7 @@ class PostgreSQLBuilder extends Builder
         } else {
 
             // use raw value
-            $preparedValue = ($prepared) ? '?' : $value;
+            $preparedValue = ($prepared) ? '$' . (count($this->setDataParams) + 1) : $value;
 
             // push
             array_push($this->setDataCollection['key'], $data);
@@ -2564,7 +2631,7 @@ class PostgreSQLBuilder extends Builder
             foreach ($item as $value):
                 
                 // push value
-                array_push($values, '?');
+                array_push($values, '$' . (count($this->setDataBatchParams) + 1));
 
                 // push into params
                 array_push($this->setDataBatchParams, $value);

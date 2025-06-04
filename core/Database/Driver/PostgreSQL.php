@@ -10,6 +10,7 @@ use PgSql\Result as PgSQLResult;
 use Aether\Database\Builder\PostgreSQLBuilder;
 use Aether\Exception\SystemException;
 use \Throwable;
+use Aether\Database;
 
 /** 
  * PostgreSQL Database Driver
@@ -19,8 +20,8 @@ use \Throwable;
 
 class PostgreSQL implements DriverInterface
 {
-    protected PostgreSQLBuilder $builder;
-    protected PgSQL $connection;
+    protected PostgreSQLBuilder|null $builder;
+    protected PgSQL|null $connection;
     protected PgSQLResult|null|bool $result = null;
     protected array $config = [];
     protected string $defaultConn = '';
@@ -47,6 +48,9 @@ class PostgreSQL implements DriverInterface
         // set config
         $this->config = $config;
 
+        // set default connection
+        $this->defaultConn = $defaultConn;
+
         // return
         return $this;
     }
@@ -55,14 +59,56 @@ class PostgreSQL implements DriverInterface
 
     public function disconnect(): bool
     {
+        // disconnect
+        pg_close($this->connection);
+
+        // clear on database static data
+        if (isset(Database::$currentConnection[$this->defaultConn]))
+        {
+            unset(Database::$currentConnection[$this->defaultConn]);
+        }
+
+        // empty
+        $this->defaultConn = '';
+        $this->config = [];
+        $this->builder = null;
+        $this->connection = null;
+        $this->result = null;
+
+        // return
         return true;
     }
 
     //===========================================================================================
 
-    public function escape(string|int|float $data): string
+    public function escape(string|int|float $data, string $type = 'string'): string|int
     {
-        return '';
+        if (is_int($data))
+        {
+            return $data;
+        }
+
+        switch ($type) {
+            case 'literal':
+                return pg_escape_literal($this->connection, strval($data));
+                break;
+
+            case 'bytea':
+                return pg_escape_bytea($this->connection, strval($data));
+                break;
+
+            case 'identifier':
+                return pg_escape_identifier($this->connection, strval($data));
+                break;
+
+            case 'string':
+                return pg_escape_string($this->connection, strval($data));
+                break;
+            
+            default:
+                return pg_escape_string($this->connection, strval($data));
+                break;
+        }
     }
 
     //===========================================================================================
@@ -74,7 +120,7 @@ class PostgreSQL implements DriverInterface
 
     //===========================================================================================
 
-    public function getResult(): PgSQLResult
+    public function getResult(): PgSQLResult|bool
     {
         return $this->result;
     }
@@ -83,30 +129,55 @@ class PostgreSQL implements DriverInterface
 
     public function getResultArray(): array
     {
-        return [];
+        // parse result
+        $result = pg_fetch_all($this->result, PGSQL_ASSOC);
+
+        // free data
+        pg_free_result($this->result);
+
+        // return
+        return $result;
     }
 
     //===========================================================================================
 
     public function getRowArray(): array | null
     {
-        return null;
+        // parse result
+        $result = pg_fetch_assoc($this->result);
+
+        // free data
+        pg_free_result($this->result);
+
+        // return
+        return (!$result) ? null : $result;
     }
 
     //===========================================================================================
 
     public function table(string $tableName): PostgreSQLBuilder
     {
-        $builder = new PostgreSQLBuilder();
+        $this->builder = new PostgreSQLBuilder();
 
         // return
-        return $builder;
+        return $this->builder->from($tableName, $this, $this->config['DBPrefix']);
     }
 
     //===========================================================================================
 
     public function transBegin(): PostgreSQL
     {
+        try {
+
+            pg_query($this->connection, "BEGIN");
+
+        } catch (Throwable $e) {
+
+            $message = (AETHER_ENV === 'development') ? $e->getMessage() : "Failed to open transaction in database.";
+            throw new SystemException($message, $e->getCode());
+        }
+
+        // return
         return $this;
     }
 
@@ -114,6 +185,17 @@ class PostgreSQL implements DriverInterface
 
     public function transCommit(): PostgreSQL
     {
+        try {
+
+            pg_query($this->connection, "COMMIT");
+
+        } catch (Throwable $e) {
+
+            $message = (AETHER_ENV === 'development') ? $e->getMessage() : "Failed to commit transaction in database.";
+            throw new SystemException($message, $e->getCode());
+        }
+
+        // return
         return $this;
     }
 
@@ -121,6 +203,17 @@ class PostgreSQL implements DriverInterface
 
     public function transRollback(): PostgreSQL
     {
+        try {
+
+            pg_query($this->connection, "ROLLBACK");
+
+        } catch (Throwable $e) {
+
+            $message = (AETHER_ENV === 'development') ? $e->getMessage() : "Failed to rollback transaction in database.";
+            throw new SystemException($message, $e->getCode());
+        }
+
+        // return
         return $this;
     }
 
@@ -128,6 +221,38 @@ class PostgreSQL implements DriverInterface
 
     public function preparedQuery(string $query, array $params = []): PostgreSQL
     {
+        if ($this->config['DBDebug'])
+        {
+            // store time
+            $timeStart = hrtime(true);
+        }
+
+        try {
+
+            $this->result = pg_query_params($this->connection, $query, $params);
+
+            // store for debugging purposes
+            if ($this->config['DBDebug'])
+            {
+                // get diff
+                $fullQuery = $this->builder->compilePreparedQuery($query, $params);
+                $timeEnd   = hrtime(true);
+                $timeDiff  = round((($timeEnd - $timeStart) / 1000000), 2);
+
+                // get backtrace
+                $backtrace = array_slice(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), 1);
+
+                // store
+                Database::storeQuery($fullQuery, $timeDiff, $backtrace);
+            }
+
+        } catch (Throwable $e) {
+
+            $message = (AETHER_ENV === 'development') ? $e->getMessage() : "Failed to fetch data.";
+            throw new SystemException($message, $e->getCode());
+        }
+
+        // return instance
         return $this;
     }
     
@@ -135,6 +260,39 @@ class PostgreSQL implements DriverInterface
 
     public function rawQuery($query): PostgreSQL
     {
+        if ($this->config['DBDebug'])
+        {
+            // store time
+            $timeStart = hrtime(true);
+        }
+
+        // execute
+        try {
+
+            $this->result = pg_query($this->connection, $query);
+
+            // store for debugging purposes
+            if ($this->config['DBDebug'])
+            {
+                // get diff
+                $timeEnd   = hrtime(true);
+                $timeDiff  = round((($timeEnd - $timeStart) / 1000000), 2);
+
+                // get backtrace
+                $backtrace = array_slice(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), 1);
+
+                // store
+                Database::storeQuery($query, $timeDiff, $backtrace);
+            }
+
+        } catch (Throwable $e) {
+
+            $message = ($this->config['DBDebug']) ? "Cannot fetch data. Reason: {$e->getMessage()}." : 'Failed to fetch data from database.';
+
+            throw new SystemException($message, 500);
+        }
+
+        // return instance
         return $this;
     }
 

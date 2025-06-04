@@ -25,9 +25,18 @@ class TestController extends BaseController
             ]
         ];
         
-        $db     = Database::connect();
+        $db      = Database::connect();
+        $builder = $db->table('post')
+                      ->select(['post.id', 'title', 'view', 'user_id', 'user.name', 'user.age'])
+                      ->whereIn('user_id', [2, 3])
+                      ->whereNotIn('user_id', [1, 12])
+                      ->join('user', 'user_id = user.id')
+                      ->orderBy('name', 'ASC')
+                      ->get()
+                      ->getResultArray();
 
-        dd($db);
+        //dd($builder);
+        //dd(Database::getAllQueries());
 
         $status = ['aktif', 'nonaktif'];
         $faker  = FakerFactory::create('id_ID');
