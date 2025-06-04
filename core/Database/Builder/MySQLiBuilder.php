@@ -1538,13 +1538,13 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    protected function compileGetQuery(): string
+    public function compilePreparedQuery(string $query = '', array $params = []): string
     {
         // move to new variable
-        $query  = $this->preparedQuery;
-        $params = $this->preparedParams;
+        $query    = empty($query) ? $this->preparedQuery : $query;
+        $params   = empty($params) ? $this->preparedParams : $params;
         $variable = [
-            '(?,', '?,', '?),', '?)'
+            '(?,', '?,', '?),', '?)', '?'
         ];
 
         // explode query
@@ -1647,7 +1647,7 @@ class MySQLiBuilder extends Builder
         $this->buildGetParams();
 
         // return as string
-        $result = $this->compileGetQuery();
+        $result = $this->compilePreparedQuery();
 
         // reset query
         // if commanded to do it
@@ -1902,7 +1902,13 @@ class MySQLiBuilder extends Builder
 
                 foreach ($keys as $updatedKey):
 
-                    array_push($updateSets, "`{$mainTableAlias}`.{$updatedKey} = `{$tempTableAlias}`.{$updatedKey}");
+                    // don't update the key
+                    // it is the same anyway
+                    // make it more efficient
+                    if ($updatedKey !== $this->setColumnBatch)
+                    {
+                        array_push($updateSets, "`{$mainTableAlias}`.{$updatedKey} = `{$tempTableAlias}`.{$updatedKey}");
+                    }
 
                 endforeach;
 

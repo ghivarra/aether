@@ -51,7 +51,7 @@ class MySQLi implements DriverInterface
         // check if connection failed
         if ($this->connection->connect_errno)
         {
-            $message = (AETHER_ENV === 'development') ? "Failed to connect MySQLi Driver: {$this->connection->connect_error}" : $this->fallbackMessage;
+            $message = ($this->config['DBDebug']) ? "Failed to connect MySQLi Driver: {$this->connection->connect_error}" : $this->fallbackMessage;
             
             throw new SystemException($message, 500);
         }        
@@ -106,7 +106,7 @@ class MySQLi implements DriverInterface
     {
         if (is_null($this->result))
         {
-            $message = (AETHER_ENV === 'development') ? "Cannot run getResultArray() because query is not yet executed." : 'Failed to fetch data from database.';
+            $message = ($this->config['DBDebug']) ? "Cannot run getResultArray() because query is not yet executed." : 'Failed to fetch data from database.';
 
             throw new SystemException($message, 500);
         }
@@ -127,7 +127,7 @@ class MySQLi implements DriverInterface
     {
         if (is_null($this->result))
         {
-            $message = (AETHER_ENV === 'development') ? "Cannot run getRowArray() because query is not yet executed." : 'Failed to fetch data from database.';
+            $message = ($this->config['DBDebug']) ? "Cannot run getRowArray() because query is not yet executed." : 'Failed to fetch data from database.';
 
             throw new SystemException($message, 500);
         }
@@ -149,7 +149,7 @@ class MySQLi implements DriverInterface
         // search config
         if (!isset($this->config['DBDriver']) || is_null($this->connection))
         {
-            $message = (AETHER_ENV === 'development') ? "You must connect to the database first before setting the table." : $this->fallbackMessage;
+            $message = ($this->config['DBDebug']) ? "You must connect to the database first before setting the table." : $this->fallbackMessage;
 
             throw new SystemException($message, 500);
         }
@@ -170,7 +170,7 @@ class MySQLi implements DriverInterface
 
         if (!$transaction)
         {
-            $message = (AETHER_ENV === 'development') ? "The database type does not support transaction, transaction failed." : $this->fallbackMessage;
+            $message = ($this->config['DBDebug']) ? "The database type does not support transaction, transaction failed." : $this->fallbackMessage;
 
             throw new SystemException($message, 500);
         }
@@ -188,7 +188,7 @@ class MySQLi implements DriverInterface
 
         if (!$transaction)
         {
-            $message = (AETHER_ENV === 'development') ? "Cannot commit transaction, commiting transaction failed." : $this->fallbackMessage;
+            $message = ($this->config['DBDebug']) ? "Cannot commit transaction, commiting transaction failed." : $this->fallbackMessage;
 
             throw new SystemException($message, 500);
         }
@@ -206,7 +206,7 @@ class MySQLi implements DriverInterface
 
         if (!$transaction)
         {
-            $message = (AETHER_ENV === 'development') ? "Cannot rollback transaction, rollback transaction failed." : $this->fallbackMessage;
+            $message = ($this->config['DBDebug']) ? "Cannot rollback transaction, rollback transaction failed." : $this->fallbackMessage;
 
             throw new SystemException($message, 500);
         }
@@ -219,7 +219,7 @@ class MySQLi implements DriverInterface
 
     public function preparedQuery(string $query, array $params = []): MySQLi
     {
-        if (AETHER_ENV === 'development')
+        if ($this->config['DBDebug'])
         {
             // store time
             $timeStart = hrtime(true);
@@ -231,32 +231,10 @@ class MySQLi implements DriverInterface
             $this->result = $this->connection->execute_query($query, $params);
 
             // store for debugging purposes
-            if (AETHER_ENV === 'development')
+            if ($this->config['DBDebug'])
             {
-                $variable = [
-                    '(?,', '?,', '?),', '?)'
-                ];
-
-                // explode query
-                $queryArray = explode(" ", $query);
-
-                // walk array to convert the question mark into params
-                foreach ($queryArray as $i => $item):
-
-                    if (in_array($item, $variable))
-                    {
-                        $key   = array_search($item, $variable);
-                        $param = "'" . $this->escape(array_shift($params)) . "'";
-                        $value = str_replace('?', $param, $variable[$key]);
-
-                        // store
-                        $queryArray[$i] = $value;
-                    }
-
-                endforeach;
-                
                 // get diff
-                $fullQuery = implode(" ", $queryArray);
+                $fullQuery = $this->builder->compilePreparedQuery($query, $params);;
                 $timeEnd   = hrtime(true);
                 $timeDiff  = round((($timeEnd - $timeStart) / 1000000), 2);
 
@@ -269,7 +247,7 @@ class MySQLi implements DriverInterface
 
         } catch (SQLException $e) {
 
-            $message = (AETHER_ENV === 'development') ? "Cannot fetch data. Reason: {$e->getMessage()}." : 'Failed to fetch data from database.';
+            $message = ($this->config['DBDebug']) ? "Cannot fetch data. Reason: {$e->getMessage()}." : 'Failed to fetch data from database.';
 
             throw new SystemException($message, 500);
         }
@@ -282,7 +260,7 @@ class MySQLi implements DriverInterface
 
     public function rawQuery($query): MySQLi
     {
-        if (AETHER_ENV === 'development')
+        if ($this->config['DBDebug'])
         {
             // store time
             $timeStart = hrtime(true);
@@ -294,7 +272,7 @@ class MySQLi implements DriverInterface
             $this->result = $this->connection->query($query);
 
             // store for debugging purposes
-            if (AETHER_ENV === 'development')
+            if ($this->config['DBDebug'])
             {
                 // get diff
                 $timeEnd   = hrtime(true);
@@ -309,7 +287,7 @@ class MySQLi implements DriverInterface
 
         } catch (SQLException $e) {
 
-            $message = (AETHER_ENV === 'development') ? "Cannot fetch data. Reason: {$e->getMessage()}." : 'Failed to fetch data from database.';
+            $message = ($this->config['DBDebug']) ? "Cannot fetch data. Reason: {$e->getMessage()}." : 'Failed to fetch data from database.';
 
             throw new SystemException($message, 500);
         }
