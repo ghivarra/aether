@@ -42,11 +42,15 @@ class Database
 
     public static function connect(string $defaultConnection = 'default'): DriverInterface
     {
+        // initiate config
+        $config = new DatabaseConfig();
+
+        // set based on config
+        $defaultConnection = $config->defaultDB;
+
+        // check
         if (!isset(self::$currentConnection[$defaultConnection]))
         {
-            // initiate config
-            $config = new DatabaseConfig();
-
             // create fallback message
             $fallbackMessage = 'Failed to connect to the database';
 
