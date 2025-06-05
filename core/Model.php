@@ -485,7 +485,7 @@ class Model
             'result_status' => is_bool($result) ? $result : $result['status'],
         ];
 
-        // do before insert
+        // do after insert
         // call if using callback
         if ($this->useCallbacks)
         {
@@ -503,16 +503,14 @@ class Model
         // sanitize fields and checking singleton or not
         $data = $this->checkBeforeInput($data, 'update');
 
-        // do before insert
+        // do before update
         // call if using callback
         if ($this->useCallbacks)
         {
             $data = $this->triggerCallback('beforeUpdate', $data);
         }
 
-        // start using conditional
-        $this->useConditional = true;
-        $this->builder->groupStart();
+        // check soft delete
         $this->checkSoftDeleteOption();
 
         // if
@@ -536,7 +534,7 @@ class Model
             'result_status' => is_bool($result) ? $result : $result['status'],
         ];
 
-        // do before insert
+        // do after update
         // call if using callback
         if ($this->useCallbacks)
         {
@@ -554,7 +552,7 @@ class Model
         // sanitize fields and checking singleton or not
         $data = $this->checkBeforeInput($data, 'save');
 
-        // do before insert
+        // do before save
         // call if using callback
         if ($this->useCallbacks)
         {
@@ -582,7 +580,7 @@ class Model
             'result_status' => $result,
         ];
 
-        // do before insert
+        // do after save
         // call if using callback
         if ($this->useCallbacks)
         {
@@ -597,14 +595,80 @@ class Model
 
     public function delete(): array
     {
-        return [];
+        // check where
+        $this->checkSoftDeleteOption();
+
+        // do before delete
+        // call if using callback
+        if ($this->useCallbacks)
+        {
+            $this->triggerCallback('beforeDelete', [
+                'method'      => __FUNCTION__,
+                'truncate'    => ($this->useConditional) ? false : true
+            ]);
+        }
+
+        // generate timestamp
+        $time = $this->generateTimestamp();
+
+        // executing
+        if ($this->useSoftDelete)
+        {
+            $result = $this->builder->update([
+                $this->deletedField => $time
+            ]);
+
+        } else {
+
+            $result = $this->builder->delete();
+        }
+
+        // do after delete
+        // call if using callback
+        if ($this->useCallbacks)
+        {
+            $result = $this->triggerCallback('afterDelete', $result);
+        }
+
+        // return
+        return $result;
     }
 
     //======================================================================================================
 
     public function purge(): array
     {
-        return [];
+        // add so it will still purge
+        if ($this->useTimestamps)
+        {
+            $this->withDeletedOption = true;
+        }
+
+        // add soft delete option
+        $this->checkSoftDeleteOption();
+
+        // do before delete
+        // call if using callback
+        if ($this->useCallbacks)
+        {
+            $this->triggerCallback('beforeDelete', [
+                'method'      => __FUNCTION__,
+                'truncate'    => ($this->useConditional) ? false : true
+            ]);
+        }
+
+        // executing
+        $result = $this->builder->delete();
+
+        // do after delete
+        // call if using callback
+        if ($this->useCallbacks)
+        {
+            $result = $this->triggerCallback('afterDelete', $result);
+        }
+
+        // return
+        return $result;
     }
 
     //======================================================================================================
