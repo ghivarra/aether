@@ -6,6 +6,8 @@ namespace Aether;
 
 use Aether\Database\BaseModelTrait;
 use Aether\Database;
+use Aether\Exception\SystemException;
+use SysvSemaphore;
 
 /** 
  * Model
@@ -39,31 +41,20 @@ class Model
     protected string $createdField = 'created_at';
     protected string $updatedField = 'updated_at';
     protected string $deletedField = 'deleted_at';
-
-    // insert/update/upsert general validation
-    protected bool $useValidation = true;
-    protected array $validationRules = [];
-    protected array $validationMessages = [];
     
     // callbacks
     protected bool $useCallbacks = false;
 
     protected array $beforeFind = [];
     protected array $beforeInsert = [];
-    protected array $beforeInsertBulk = [];
     protected array $beforeUpdate = [];
-    protected array $beforeUpdateBulk = [];
-    protected array $beforeUpsert = [];
-    protected array $beforeUpsertBulk = [];
+    protected array $beforeSave = [];
     protected array $beforeDelete = [];
 
     protected array $afterFind = [];
     protected array $afterInsert = [];
-    protected array $afterInsertBulk = [];
     protected array $afterUpdate = [];
-    protected array $afterUpdateBulk = [];
-    protected array $afterUpsert = [];
-    protected array $afterUpsertBulk = [];
+    protected array $afterSave = [];
     protected array $afterDelete = [];
 
     //======================================================================================================
@@ -123,7 +114,30 @@ class Model
 
     //======================================================================================================
 
-    public function checkSoftDeleteOption(): void
+    protected function generateTimestamp(): string
+    {
+        switch ($this->dateFormat) {
+            case 'date':
+                return date('Y-m-d');
+                break;
+
+            case 'time':
+                return date('H:i:s');
+                break;
+
+            case 'datetime':
+                return date('Y-m-d H:i:s');
+                break;
+            
+            default:
+                return ''; // return, not valid
+                break;
+        }
+    }
+
+    //======================================================================================================
+
+    protected function checkSoftDeleteOption(): void
     {
         // check if conditional used
         if ($this->useConditional)
@@ -147,7 +161,7 @@ class Model
 
     //======================================================================================================
 
-    public function checkBeforeFind(bool $resetQuery = false): void
+    protected function checkBeforeFind(bool $resetQuery = false): void
     {
         if ($resetQuery)
         {
@@ -157,6 +171,118 @@ class Model
 
         // set multiple result on
         $this->checkSoftDeleteOption();
+    }
+
+    //======================================================================================================
+
+    protected function checkBeforeInput(array $data, string $type): array
+    {
+        // check input cannot be empty
+        if (empty($data))
+        {
+            throw new SystemException('Inputted data cannot be empty.', 500);
+        }
+
+        // resort array
+        $newData = array_merge($data);
+
+        // sort array
+        // check singleton
+        $singleton = isset($data[0], $data[1]) ? false : true;
+
+        // sanitize field
+        if ($singleton)
+        {
+            foreach ($newData as $key => $value):
+
+                if (!in_array($key, $this->allowedFields))
+                {
+                    unset($newData[$key]);
+
+                } else {
+
+                    $newData[$key] = $value;
+                }
+
+            endforeach;
+
+            if (empty($newData))
+            {
+                throw new SystemException('Inputted data cannot be empty.', 500);
+            }
+
+            // if using timestamp, then add
+            if ($this->useTimestamps)
+            {
+                $timestamp = $this->generateTimestamp();
+
+                if ($type === 'update')
+                {
+                    $newData[$this->updatedField] = $timestamp;
+
+                } else {
+
+                    $newData[$this->createdField] = $timestamp;
+                    $newData[$this->updatedField] = $timestamp;
+
+                    if ($this->useSoftDelete)
+                    {
+                        $newData[$this->deletedField] = null;
+                    }
+                }
+            }
+
+        } else {
+
+            foreach ($newData as $i => $item):
+
+                // sanitize fields
+                foreach ($item as $key => $value)
+                {
+                    if (!in_array($key, $this->allowedFields))
+                    {
+                        unset($newData[$i][$key]);
+    
+                    } else {
+    
+                        $newData[$i][$key] = $value;
+                    }
+
+                    if (empty($newData[$i]))
+                    {
+                        throw new SystemException('Inputted data cannot be empty.', 500);
+                    }
+                }
+
+                // if using timestamp, then add
+                if ($this->useTimestamps)
+                {
+                    $timestamp = $this->generateTimestamp();
+
+                    if ($type === 'update')
+                    {
+                        $newData[$i][$this->updatedField] = $timestamp;
+
+                    } else {
+
+                        $newData[$i][$this->createdField] = $timestamp;
+                        $newData[$i][$this->updatedField] = $timestamp;
+                        
+                        if ($this->useSoftDelete)
+                        {
+                            $newData[$i][$this->deletedField] = null;
+                        }
+                    }
+                }
+
+            endforeach;
+        }
+
+        // return
+        return [
+            'singleton'     => $singleton,
+            'sanitizedData' => $newData,
+        ];
     }
 
     //======================================================================================================
@@ -201,7 +327,7 @@ class Model
     public function countAllResults(bool $resetQuery = true): int
     {
         // call
-        $this->checkBeforeFind(true);
+        $this->checkBeforeFind(false);
 
         // call if using callback
         if ($this->useCallbacks)
@@ -231,7 +357,7 @@ class Model
     public function find(bool $resetQuery = true): array
     {
         // call
-        $this->checkBeforeFind();
+        $this->checkBeforeFind(false);
 
         // call if using callback
         if ($this->useCallbacks)
@@ -299,10 +425,10 @@ class Model
 
     //======================================================================================================
 
-    public function first(bool $resetQuery = true)
+    public function first(bool $resetQuery = true): array
     {
         // call
-        $this->checkBeforeFind();
+        $this->checkBeforeFind(false);
 
         // call if using callback
         if ($this->useCallbacks)
@@ -329,37 +455,172 @@ class Model
 
     //======================================================================================================
 
-    public function save()
+    public function insert(array $data): array
     {
-        
+        // sanitize fields and checking singleton or not
+        $data = $this->checkBeforeInput($data, 'insert');
+
+        // do before insert
+        // call if using callback
+        if ($this->useCallbacks)
+        {
+            $data = $this->triggerCallback('beforeInsert', $data);
+        }
+
+        // if
+        if ($data['singleton'])
+        {
+            // execute query
+            $result = $this->builder->insert($data['sanitizedData']);
+
+        } else {
+
+            // execute query
+            $result = $this->builder->insertBulk($data['sanitizedData']);
+        }
+
+        // set data
+        $data = [
+            'singleton'     => $data['singleton'],
+            'result_status' => is_bool($result) ? $result : $result['status'],
+        ];
+
+        // do before insert
+        // call if using callback
+        if ($this->useCallbacks)
+        {
+            $data = $this->triggerCallback('afterInsert', $data);
+        }
+
+        // return
+        return $data;
     }
 
     //======================================================================================================
 
-    public function delete()
+    public function update(array $data, string|null $columnKey = null): array
     {
-        
+        // sanitize fields and checking singleton or not
+        $data = $this->checkBeforeInput($data, 'update');
+
+        // do before insert
+        // call if using callback
+        if ($this->useCallbacks)
+        {
+            $data = $this->triggerCallback('beforeUpdate', $data);
+        }
+
+        // start using conditional
+        $this->useConditional = true;
+        $this->builder->groupStart();
+        $this->checkSoftDeleteOption();
+
+        // if
+        if ($data['singleton'])
+        {
+            // insert single
+            $result = $this->builder->update($data['sanitizedData']);
+
+        } else {
+
+            // set column key
+            $columnKey = is_null($columnKey) ? $this->primaryKey : $columnKey;
+
+            // insert bulk
+            $result = $this->builder->updateBulk($data['sanitizedData'], $columnKey);
+        }
+
+        // set data
+        $data = [
+            'singleton'     => $data['singleton'],
+            'result_status' => is_bool($result) ? $result : $result['status'],
+        ];
+
+        // do before insert
+        // call if using callback
+        if ($this->useCallbacks)
+        {
+            $data = $this->triggerCallback('afterUpdate', $data);
+        }
+
+        // return
+        return $data;
     }
 
     //======================================================================================================
 
-    public function purge()
+    public function save(array $data, string|null $columnKey = null): array
     {
-        
+        // sanitize fields and checking singleton or not
+        $data = $this->checkBeforeInput($data, 'save');
+
+        // do before insert
+        // call if using callback
+        if ($this->useCallbacks)
+        {
+            $data = $this->triggerCallback('beforeSave', $data);
+        }
+
+        // set column key
+        $columnKey = is_null($columnKey) ? $this->primaryKey : $columnKey;
+
+        // if
+        if ($data['singleton'])
+        {
+            // insert single
+            $result = $this->builder->upsert($data['sanitizedData'], $columnKey, [$this->createdField, $this->updatedField]);
+
+        } else {
+
+            // insert bulk
+            $result = $this->builder->upsertBulk($data['sanitizedData'], $columnKey, [$this->createdField, $this->updatedField]);
+        }
+
+        // set data
+        $data = [
+            'singleton'     => $data['singleton'],
+            'result_status' => $result,
+        ];
+
+        // do before insert
+        // call if using callback
+        if ($this->useCallbacks)
+        {
+            $data = $this->triggerCallback('afterSave', $data);
+        }
+
+        // return
+        return $data;
     }
 
     //======================================================================================================
 
-    public function deletedOnly()
+    public function delete(): array
+    {
+        return [];
+    }
+
+    //======================================================================================================
+
+    public function purge(): array
+    {
+        return [];
+    }
+
+    //======================================================================================================
+
+    public function deletedOnly(): Model
     {
         $this->deletedOnlyOption = true;
+        return $this;
     }
 
     //======================================================================================================
 
-    public function withDeleted()
+    public function withDeleted(): Model
     {
         $this->withDeletedOption = true;
+        return $this;
     }
 
     //======================================================================================================

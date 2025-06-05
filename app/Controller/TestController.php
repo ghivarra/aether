@@ -25,7 +25,7 @@ class TestController extends BaseController
             ]
         ];
         
-        $db      = Database::connect('default');
+        $db      = Database::connect('mariadb');
         $builder = $db->table('post')
                       ->select(['post.id', 'title', 'view', 'user_id', 'user.name', 'user.age'])
                       ->whereIn('user_id', [2, 3])
@@ -42,7 +42,7 @@ class TestController extends BaseController
         $faker  = FakerFactory::create('id_ID');
         $data   = [];
 
-        foreach(range(0, 520) as $i):
+        foreach(range(0, 5) as $i):
 
             $data[$i] = [
                 'name'   => $faker->name(),
@@ -55,20 +55,20 @@ class TestController extends BaseController
         // update data
         $updateData = [];
 
-        foreach(range(0, 300) as $i):
+        foreach(range(0, 10) as $i):
 
             $updateData[$i] = [
-                'id'     => 20 + $i,
+                'id'     => 5 + $i,
                 'name'   => $faker->name(),
                 'age'    => $faker->numberBetween(1, 17),
-                // 'status' => $status[$faker->numberBetween(0, 1)],
+                'status' => $status[$faker->numberBetween(0, 1)],
             ];
 
         endforeach;
 
         // test performance
         // $db->table('user')->insertBulk($data);
-        // $db->table('user')->updateBulk($updateData, 'id');
+        // $db->table('user')->upsertBulk($updateData, 'id');
 
         // debug
         dd(Database::getAllQueries());
