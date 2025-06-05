@@ -16,6 +16,7 @@ class MySQLiBuilder extends Builder
 
     protected MySQLi|null $db = null;
     protected bool $allowTruncate = true;
+    protected int $bulkLimit = 100;
     protected array $allowedJoinType = [
         'inner' => 'INNER',
         'left'  => 'LEFT',
@@ -1664,10 +1665,6 @@ class MySQLiBuilder extends Builder
 
     public function resetQuery(): MySQLiBuilder
     {
-        // reset
-        $this->prefix = '';
-        $this->from = '';
-
         // select
         $this->selectCollection = [];
         $this->distinct = false;
@@ -2049,20 +2046,47 @@ class MySQLiBuilder extends Builder
 
     public function insertBulk(array $data): bool
     {
-        // push data
-        $this->pushSetDataBatch($data);
+        // divide by 500 if more than 500
+        $total = count($data);
 
-        // build
-        $this->buildSetQuery('insertBulk');
+        if ($total > $this->bulkLimit)
+        {
+            $count  = ceil($total / $this->bulkLimit) - 1;
+            $divide = range(0, intval($count));
+            $num    = 1;
+            
+            foreach ($divide as $iteration):
 
-        // build
-        $this->buildSetParams('insertBulk');
+                $start    = $iteration * $this->bulkLimit;
+                $dataPart = array_slice($data, $start, $this->bulkLimit);
 
-        // insert bulk start
-        $db = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
+                // add insert bulk
+                $this->insertBulk($dataPart);
 
-        // conn
-        $result = $db->getResult();
+                $num++;
+
+            endforeach;
+
+            // conn
+            $result = $this->db->getResult();
+
+        } else {
+
+            // push data
+            $this->pushSetDataBatch($data);
+    
+            // build
+            $this->buildSetQuery('insertBulk');
+    
+            // build
+            $this->buildSetParams('insertBulk');
+    
+            // insert bulk start
+            $db = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
+
+            // conn
+            $result = $db->getResult();
+        }
 
         // reset query
         $this->resetQuery();
@@ -2114,23 +2138,50 @@ class MySQLiBuilder extends Builder
 
     public function updateBulk(array $data, string $targetColumn): bool
     {
-        // set table column batch
-        $this->setColumnBatch = $this->sanitizeColumn($targetColumn);
+        // divide by 500 if more than 500
+        $total = count($data);
 
-        // push data
-        $this->pushSetDataBatch($data);
+        if ($total > $this->bulkLimit)
+        {
+            $count  = ceil($total / $this->bulkLimit) - 1;
+            $divide = range(0, intval($count));
+            $num    = 1;
+            
+            foreach ($divide as $iteration):
 
-        // build
-        $this->buildSetQuery('updateBulk');
+                $start    = $iteration * $this->bulkLimit;
+                $dataPart = array_slice($data, $start, $this->bulkLimit);
 
-        // build
-        $this->buildSetParams('updateBulk');
+                // add update bulk
+                $this->updateBulk($dataPart, $targetColumn);
 
-        // insert bulk start
-        $db = $this->db->rawQuery($this->preparedQuery);
+                $num++;
 
-        // conn
-        $result = $db->getResult();
+            endforeach;
+
+            // conn
+            $result = $this->db->getResult();
+
+        } else {
+            
+            // set table column batch
+            $this->setColumnBatch = $this->sanitizeColumn($targetColumn);
+    
+            // push data
+            $this->pushSetDataBatch($data);
+    
+            // build
+            $this->buildSetQuery('updateBulk');
+    
+            // build
+            $this->buildSetParams('updateBulk');
+    
+            // insert bulk start
+            $db = $this->db->rawQuery($this->preparedQuery);
+    
+            // conn
+            $result = $db->getResult();
+        }
 
         // reset query
         $this->resetQuery();

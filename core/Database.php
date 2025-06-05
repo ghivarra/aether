@@ -40,14 +40,14 @@ class Database
     
     //==================================================================================================
 
-    public static function connect(string $defaultConnection = 'default'): DriverInterface
+    public static function connect(string $defaultConnection = ''): DriverInterface
     {
         // initiate config
         $config = new DatabaseConfig();
 
         // set based on config
-        $defaultConnection = $config->defaultDB;
-
+        $defaultConnection = ($defaultConnection === '') ? $config->defaultDB : $defaultConnection;
+        
         // check
         if (!isset(self::$currentConnection[$defaultConnection]))
         {
