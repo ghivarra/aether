@@ -2065,7 +2065,7 @@ class PostgreSQLBuilder extends Builder
 
                 foreach ($this->setDataCollection['key'] as $column):
 
-                    if ($this->sanitizeColumn($column) !== $this->setColumnBatch)
+                    if ($this->sanitizeColumn($column) !== $this->setColumnBatch && !in_array($column, $this->setExcludedColumns))
                     {
                         array_push($sets, "{$column} = EXCLUDED.{$column}");
                     }
@@ -2081,7 +2081,7 @@ class PostgreSQLBuilder extends Builder
 
                 foreach ($this->setDataBatchCollection['key'] as $column):
 
-                    if ($this->sanitizeColumn($column) !== $this->setColumnBatch)
+                    if ($this->sanitizeColumn($column) !== $this->setColumnBatch && !in_array($column, $this->setExcludedColumns))
                     {
                         array_push($sets, "{$column} = EXCLUDED.{$column}");
                     }
@@ -2311,7 +2311,7 @@ class PostgreSQLBuilder extends Builder
 
     //=================================================================================================
 
-    public function updateBulk(array $data, string $targetColumn): bool
+    public function updateBulk(array $data, string $targetColumn, array $excludedColumns = []): bool
     {
         // divide by 500 if more than 500
         $total = count($data);
@@ -2340,7 +2340,7 @@ class PostgreSQLBuilder extends Builder
         } else {
 
             // set table column batch
-            $this->setColumnBatch = $this->sanitizeColumn($targetColumn);
+            $this->setColumnBatch     = $this->sanitizeColumn($targetColumn);
 
             // push data
             $this->pushSetDataBatch($data);
@@ -2367,10 +2367,11 @@ class PostgreSQLBuilder extends Builder
 
     //=================================================================================================
 
-    public function upsert(array $data, string $targetColumn): bool
+    public function upsert(array $data, string $targetColumn, array $excludedColumns = []): bool
     {
         // set table column batch
-        $this->setColumnBatch = $this->sanitizeColumn($targetColumn);
+        $this->setColumnBatch     = $this->sanitizeColumn($targetColumn);
+        $this->setExcludedColumns = $excludedColumns;
 
         // push data
         $this->pushSetData($data, false);
@@ -2393,7 +2394,7 @@ class PostgreSQLBuilder extends Builder
 
     //=================================================================================================
 
-    public function upsertBulk(array $data, string $targetColumn): bool
+    public function upsertBulk(array $data, string $targetColumn, array $excludedColumns = []): bool
     {
         // divide by 500 if more than 500
         $total = count($data);
@@ -2422,7 +2423,8 @@ class PostgreSQLBuilder extends Builder
         } else {
 
             // set table column batch
-            $this->setColumnBatch = $this->sanitizeColumn($targetColumn);
+            $this->setColumnBatch     = $this->sanitizeColumn($targetColumn);
+            $this->setExcludedColumns = $excludedColumns;
 
             // push data
             $this->pushSetDataBatch($data);

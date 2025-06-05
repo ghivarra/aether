@@ -1919,7 +1919,7 @@ class MySQLiBuilder extends Builder
 
                 foreach ($this->setDataCollection['key'] as $column):
 
-                    if ($this->sanitizeColumn($column) !== $this->setColumnBatch)
+                    if ($this->sanitizeColumn($column) !== $this->setColumnBatch && !in_array($column, $this->setExcludedColumns))
                     {
                         $column = $this->sanitizeColumn($column);
                         array_push($sets, "{$column} = VALUES({$column})");
@@ -1936,7 +1936,7 @@ class MySQLiBuilder extends Builder
 
                 foreach ($this->setDataBatchCollection['key'] as $column):
 
-                    if ($this->sanitizeColumn($column) !== $this->setColumnBatch)
+                    if ($this->sanitizeColumn($column) !== $this->setColumnBatch && !in_array($column, $this->setExcludedColumns))
                     {
                         array_push($sets, "{$column} = VALUES({$column})");
                     }
@@ -2228,10 +2228,11 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function upsert(array $data, string $targetColumn = 'id'): bool
+    public function upsert(array $data, string $targetColumn = 'id', array $excludedColumns = []): bool
     {
         // set table column batch
-        $this->setColumnBatch = $this->sanitizeColumn($targetColumn);
+        $this->setColumnBatch     = $this->sanitizeColumn($targetColumn);
+        $this->setExcludedColumns = $excludedColumns;
 
         // push data
         $this->pushSetData($data, false);
@@ -2254,7 +2255,7 @@ class MySQLiBuilder extends Builder
 
     //=================================================================================================
 
-    public function upsertBulk(array $data, string $targetColumn = 'id'): bool
+    public function upsertBulk(array $data, string $targetColumn = 'id', array $excludedColumns = []): bool
     {
         // divide by 500 if more than 500
         $total = count($data);
@@ -2283,7 +2284,8 @@ class MySQLiBuilder extends Builder
         } else {
 
             // set table column batch
-            $this->setColumnBatch = $this->sanitizeColumn($targetColumn);
+            $this->setColumnBatch     = $this->sanitizeColumn($targetColumn);
+            $this->setExcludedColumns = $excludedColumns;
 
             // push data
             $this->pushSetDataBatch($data);

@@ -50,6 +50,7 @@ trait BaseBuilderTrait
 
     // create-update batch
     public string $setColumnBatch = '';
+    public array $setExcludedColumns = [];
     public array $setDataBatchParams = [];
     public array $setDataBatchCollection = [
         'key'   => [],
