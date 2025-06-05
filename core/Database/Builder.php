@@ -109,6 +109,8 @@ abstract class Builder
     abstract public function insertBulk(array $data): bool;
     abstract public function update(array $data): array;
     abstract public function updateBulk(array $data, string $targetColumn): bool;
+    abstract public function upsert(array $data, string $targetColumn): bool;
+    abstract public function upsertBulk(array $data, string $targetColumn): bool;
     abstract public function delete(): array;
     abstract public function replace(array $data = []): array;
 

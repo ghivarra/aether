@@ -1913,11 +1913,47 @@ class MySQLiBuilder extends Builder
                 break;
 
             case 'upsert':
-                # code...
+                $keys         = implode(", ", $this->setDataCollection['key']);
+                $placeholders = implode(", ", $this->setDataCollection['value']);
+                $sets         = [];
+
+                foreach ($this->setDataCollection['key'] as $column):
+
+                    if ($this->sanitizeColumn($column) !== $this->setColumnBatch)
+                    {
+                        $column = $this->sanitizeColumn($column);
+                        array_push($sets, "{$column} = VALUES({$column})");
+                    }
+                    
+                endforeach;
+
+                $this->preparedQuery = "INSERT INTO `{$this->from}` ($keys) VALUES ({$placeholders}) ON DUPLICATE KEY UPDATE ". implode(", ", $sets);
                 break;
 
-            case 'upsertBatch':
-                # code...
+            case 'upsertBulk':
+                $keys = implode(", ", $this->setDataBatchCollection['key']);
+                $sets = [];
+
+                foreach ($this->setDataBatchCollection['key'] as $column):
+
+                    if ($this->sanitizeColumn($column) !== $this->setColumnBatch)
+                    {
+                        array_push($sets, "{$column} = VALUES({$column})");
+                    }
+                    
+                endforeach;
+                
+                $placeholders = [];
+
+                foreach ($this->setDataBatchCollection['value'] as $values):
+
+                    array_push($placeholders, "(" . implode(", ", $values) . ")");
+
+                endforeach;
+
+                $placeholders = implode(", ", $placeholders);
+
+                $this->preparedQuery = "INSERT INTO `{$this->from}` ($keys) VALUES {$placeholders} ON DUPLICATE KEY UPDATE ". implode(", ", $sets);
                 break;
 
             case 'delete':
@@ -1982,11 +2018,11 @@ class MySQLiBuilder extends Builder
                 break;
 
             case 'upsert':
-                # code...
+                $this->preparedParams = $this->setDataParams;
                 break;
 
-            case 'upsertBatch':
-                # code...
+            case 'upsertBulk':
+                $this->preparedParams = $this->setDataBatchParams;
                 break;
 
             case 'delete':
@@ -2185,6 +2221,85 @@ class MySQLiBuilder extends Builder
 
         // reset query
         $this->resetQuery();
+
+        // return
+        return ($result === true);
+    }
+
+    //=================================================================================================
+
+    public function upsert(array $data, string $targetColumn = 'id'): bool
+    {
+        // set table column batch
+        $this->setColumnBatch = $this->sanitizeColumn($targetColumn);
+
+        // push data
+        $this->pushSetData($data, false);
+
+        // build
+        $this->buildSetQuery('upsert');
+
+        // build
+        $this->buildSetParams('upsert');
+
+        // insert bulk start
+        $db = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
+
+        // conn
+        $result = $db->getResult();
+        
+        // return
+        return ($result === true);
+    }
+
+    //=================================================================================================
+
+    public function upsertBulk(array $data, string $targetColumn = 'id'): bool
+    {
+        // divide by 500 if more than 500
+        $total = count($data);
+
+        if ($total > $this->bulkLimit)
+        {
+            $count  = ceil($total / $this->bulkLimit) - 1;
+            $divide = range(0, intval($count));
+            $num    = 1;
+            
+            foreach ($divide as $iteration):
+
+                $start    = $iteration * $this->bulkLimit;
+                $dataPart = array_slice($data, $start, $this->bulkLimit);
+
+                // add insert bulk
+                $this->upsertBulk($dataPart, $targetColumn);
+
+                $num++;
+
+            endforeach;
+
+            // conn
+            $result = $this->db->getResult();
+            
+        } else {
+
+            // set table column batch
+            $this->setColumnBatch = $this->sanitizeColumn($targetColumn);
+
+            // push data
+            $this->pushSetDataBatch($data);
+
+            // build
+            $this->buildSetQuery('upsertBulk');
+
+            // build
+            $this->buildSetParams('upsertBulk');
+
+            // insert bulk start
+            $db = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
+
+            // conn
+            $result = $db->getResult();
+        }
 
         // return
         return ($result === true);
