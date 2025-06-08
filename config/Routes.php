@@ -36,7 +36,7 @@ class Routes
                 $route->get('(:segment)', TestController::class, 'index')->as('page.category');
             }, ['after' => ['isLoggedOut']]);
 
-            $route->get('/', TestController::class, 'ggwp')->as('page');
+            $route->get('/', TestController::class, 'page')->as('page');
 
         }, ['before' => ['isAdmin']]);
 
