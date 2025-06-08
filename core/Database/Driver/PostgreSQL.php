@@ -81,7 +81,7 @@ class PostgreSQL implements DriverInterface
 
     //===========================================================================================
 
-    public function escape(string|int|float $data, string $type = 'string'): string|int
+    public function escape(string|int|float|null $data, string $type = 'string'): string|int
     {
         if (is_int($data))
         {

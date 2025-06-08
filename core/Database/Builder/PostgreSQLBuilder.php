@@ -2011,6 +2011,7 @@ class PostgreSQLBuilder extends Builder
 
                 // create values
                 $values = [];
+                $params = $this->setDataBatchParams;
 
                 foreach ($this->setDataBatchCollection['value'] as $value):
 
@@ -2018,8 +2019,7 @@ class PostgreSQLBuilder extends Builder
 
                     foreach ($value as $i => $item)
                     {
-                        $num = intval(substr($item, 1)) - 1;
-                        $val = $this->setDataBatchParams[$num];
+                        $val = array_shift($params);
 
                         if ($i === 0)
                         {
@@ -2188,6 +2188,9 @@ class PostgreSQLBuilder extends Builder
         // build set params
         $this->buildSetParams('insert');
 
+        // set seed on placeholder
+        $this->seedPlaceholder();
+
         // check if prepared params is not empty
         if (empty($this->preparedParams))
         {
@@ -2249,6 +2252,9 @@ class PostgreSQLBuilder extends Builder
     
             // build
             $this->buildSetParams('insertBulk');
+
+            // set seed on placeholder
+            $this->seedPlaceholder();
     
             // insert bulk start
             $db = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
@@ -2347,6 +2353,9 @@ class PostgreSQLBuilder extends Builder
 
             // build
             $this->buildSetParams('updateBulk');
+
+            // set seed on placeholder
+            $this->seedPlaceholder();
 
             // insert bulk start
             $db = $this->db->rawQuery($this->preparedQuery);
