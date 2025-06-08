@@ -7,7 +7,6 @@ namespace Aether;
 use Aether\Database\BaseModelTrait;
 use Aether\Database;
 use Aether\Exception\SystemException;
-use SysvSemaphore;
 
 /** 
  * Model
@@ -25,11 +24,6 @@ class Model
     // table description
     protected string $table = '';
     protected string $primaryKey = '';
-    protected string $primaryKeyType = 'integer';
-
-    // model option
-    protected bool $useAutoIncrement = true;
-    protected bool $useSoftDelete = false;
 
     // insert/update/upsert option
     protected array $allowedFields = [];
@@ -40,6 +34,8 @@ class Model
     protected string $dateFormat = 'datetime'; // datetime, date, or just time
     protected string $createdField = 'created_at';
     protected string $updatedField = 'updated_at';
+
+    protected bool $useSoftDelete = false;
     protected string $deletedField = 'deleted_at';
     
     // callbacks
@@ -73,6 +69,12 @@ class Model
 
         // set builder
         $this->builder = $this->db->table($this->table);
+
+        // add primary keys to allowed fields
+        if (!in_array($this->primaryKey, $this->allowedFields))
+        {
+            array_push($this->allowedFields, $this->primaryKey);
+        }
     }
 
     //======================================================================================================
@@ -80,10 +82,30 @@ class Model
     public function __call(string $method, array $arguments): Model
     {
         // check if where then use group start
-        if (str_contains($method, 'where') || str_contains($method, 'Where'))
+        if (str_contains($method, 'where') && !$this->useConditional || str_contains($method, 'Where') && !$this->useConditional)
         {
             $this->useConditional = true;
             $this->builder->groupStart();
+        }
+
+        // give warning and throw error on using get, getRowArray, and getResultArray
+        $restrictedMethod = ['get', 'getRowArray', 'getResultArray'];
+
+        if (in_array($method, $restrictedMethod))
+        {
+            $message = (AETHER_ENV === 'development') ? 'You should not use one of these methods/functions in Model: ' . implode(', ', $restrictedMethod) : 'Failed to utilize ORM Model';
+
+            throw new SystemException($message, 500);
+        }
+
+        // give warning
+        $restrictedModify = ['insertBulk', 'updateBulk', 'upsert', 'upsertBulk'];
+
+        if (in_array($method, $restrictedModify))
+        {
+            $message = (AETHER_ENV === 'development') ? 'You should not use one of these methods/functions in Model: ' . implode(', ', $restrictedModify) . '. Use one of these instead: insert (also detect if using bulk/batch insert out of the box), update (detect if using bulk/batch update out of the box), and save (instead of upsert)' : 'Failed to utilize ORM Model';
+
+            throw new SystemException($message, 500);
         }
 
         // redirect to builder if not exist
@@ -296,6 +318,9 @@ class Model
 
     public function countAll(bool $resetQuery = true): int
     {
+        // reset conditional
+        $this->useConditional = false;
+
         // call
         $this->checkBeforeFind(true);
 
@@ -386,6 +411,9 @@ class Model
 
     public function findAll(bool $resetQuery = true, int|null $limit = null, int|null $offset = null): array
     {
+        // reset conditional
+        $this->useConditional = false;
+
         // call
         $this->checkBeforeFind(true);
 
