@@ -1743,7 +1743,7 @@ class PostgreSQLBuilder extends Builder
 
         // seed placeholder
         $this->seedPlaceholder();
-        
+
         // store variable
         $result = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
 
@@ -1870,8 +1870,8 @@ class PostgreSQLBuilder extends Builder
         // push column
         array_push($this->setReplaceCollection, [
             'column'   => $column,
-            'oldValue' => ($raw) ? $oldValue : '$' . (count($this->setReplaceParams) + 1),
-            'newValue' => ($raw) ? $newValue : '$' . (count($this->setReplaceParams) + 2),
+            'oldValue' => ($raw) ? $oldValue : $this->placeholder,
+            'newValue' => ($raw) ? $newValue : $this->placeholder,
         ]);
 
         // push into params if not raw
@@ -2201,10 +2201,13 @@ class PostgreSQLBuilder extends Builder
         // reset query
         $this->resetQuery();
 
+        // result array
+        $result = $db->getResult();
+
         // return
         return [
-            'status'   => $db->getResult(),
-            'insertID' => null,
+            'status'   => (empty($result['error'])) ? true : false,
+            'insertID' => $result['insert_id'],
         ];
     }
 
@@ -2258,7 +2261,7 @@ class PostgreSQLBuilder extends Builder
         $this->resetQuery();
 
         // return
-        return ($result === true);
+        return (empty($result['error'])) ? true : false;
     }
 
     //=================================================================================================
@@ -2293,10 +2296,13 @@ class PostgreSQLBuilder extends Builder
         // reset query
         $this->resetQuery();
 
+        // result array
+        $result = $db->getResult();
+
         // return
         return [
-            'status'        => $db->getResult(),
-            'affected_rows' => null,
+            'status'        => (empty($result['error'])) ? true : false,
+            'affected_rows' => $result['affected_rows'],
         ];
     }
 
@@ -2353,7 +2359,7 @@ class PostgreSQLBuilder extends Builder
         $this->resetQuery();
 
         // return
-        return ($result === true);
+        return (empty($result['error'])) ? true : false;
     }
 
     //=================================================================================================
@@ -2380,7 +2386,7 @@ class PostgreSQLBuilder extends Builder
         $result = $db->getResult();
         
         // return
-        return ($result === true);
+        return (empty($result['error'])) ? true : false;
     }
 
     //=================================================================================================
@@ -2434,7 +2440,7 @@ class PostgreSQLBuilder extends Builder
         }
 
         // return
-        return ($result === true);
+        return (empty($result['error'])) ? true : false;
     }
 
     //=================================================================================================
@@ -2463,10 +2469,13 @@ class PostgreSQLBuilder extends Builder
         // reset query
         $this->resetQuery();
 
+        // result array
+        $result = $db->getResult();
+
         // return
         return [
-            'status'        => $db->getResult(),
-            'affected_rows' => null,
+            'status'        => (empty($result['error'])) ? true : false,
+            'affected_rows' => $result['affected_rows'],
         ];
     }
 
@@ -2503,13 +2512,13 @@ class PostgreSQLBuilder extends Builder
             $db = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
         }
 
-        // reset query
-        $this->resetQuery();
+        // result array
+        $result = $db->getResult();
 
         // return
         return [
-            'status'        => $db->getResult(),
-            'affected_rows' => null,
+            'status'        => (empty($result['error'])) ? true : false,
+            'affected_rows' => $result['affected_rows'],
         ];
     }
 
@@ -2533,7 +2542,7 @@ class PostgreSQLBuilder extends Builder
         $this->resetQuery();
 
         // return
-        return ($result === true);
+        return (empty($result['error'])) ? true : false;
     }
 
     //=================================================================================================
@@ -2551,7 +2560,7 @@ class PostgreSQLBuilder extends Builder
         $this->resetQuery();
 
         // return
-        return ($result === true);
+        return (empty($result['error'])) ? true : false;
     }
 
     //=================================================================================================
@@ -2726,7 +2735,7 @@ class PostgreSQLBuilder extends Builder
             foreach ($data as $key => $item):
 
                 // use raw value
-                $preparedValue = ($prepared) ? '$' . (count($this->setDataParams) + 1) : $item;
+                $preparedValue = ($prepared) ? $this->placeholder : $item;
 
                 // push
                 array_push($this->setDataCollection['key'], $key);
@@ -2743,7 +2752,7 @@ class PostgreSQLBuilder extends Builder
         } else {
 
             // use raw value
-            $preparedValue = ($prepared) ? '$' . (count($this->setDataParams) + 1) : $value;
+            $preparedValue = ($prepared) ? $this->placeholder : $value;
 
             // push
             array_push($this->setDataCollection['key'], $data);
@@ -2783,7 +2792,7 @@ class PostgreSQLBuilder extends Builder
             foreach ($item as $value):
                 
                 // push value
-                array_push($values, '$' . (count($this->setDataBatchParams) + 1));
+                array_push($values, $this->placeholder);
 
                 // push into params
                 array_push($this->setDataBatchParams, $value);
