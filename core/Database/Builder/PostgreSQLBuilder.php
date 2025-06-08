@@ -13,6 +13,7 @@ class PostgreSQLBuilder extends Builder
 {
     use BaseBuilderTrait;
 
+    protected string $placeholder = '%%$$$$%%';
     protected PostgreSQL|null $db = null;
     protected bool $allowTruncate = true;
     protected int $bulkLimit = 100;
@@ -29,6 +30,32 @@ class PostgreSQLBuilder extends Builder
     protected array $allowedOrder = [
         'ASC', 'DESC'
     ];
+
+    //=================================================================================================
+
+    protected function seedPlaceholder(): void
+    {
+        $n          = 1;
+        $len        = strlen($this->placeholder);
+        $finalQuery = $this->preparedQuery;
+
+        foreach ($this->preparedParams as $param):
+
+            $pos = strpos($finalQuery, $this->placeholder);
+
+            if ($pos === FALSE)
+            {
+                break;
+            }
+
+            $finalQuery = substr_replace($finalQuery, '$' . $n, $pos, $len);
+            $n++;
+
+        endforeach;
+
+        // set prepared query
+        $this->preparedQuery = $finalQuery;
+    }
 
     //=================================================================================================
 
@@ -331,23 +358,20 @@ class PostgreSQLBuilder extends Builder
         // execute before
         $data = $this->beforeWhere($column, $operator, $value, $raw);
 
-        // generate placeholder
-        $placeholder = '$' . (count($this->whereParams) + 1);
-
         // push into where collection
         if (empty($this->whereCollection))
         {
-            $this->pushCollection('where', "WHERE {$data['column']} {$operator} {$placeholder}", $value);
+            $this->pushCollection('where', "WHERE {$data['column']} {$operator} {$this->placeholder}", $value);
 
         } else {
 
             if ($this->useConjunction)
             {
-                $this->pushCollection('where', "AND {$data['column']} {$operator} {$placeholder}", $value);
+                $this->pushCollection('where', "AND {$data['column']} {$operator} {$this->placeholder}", $value);
 
             } else {
 
-                $this->pushCollection('where', "{$data['column']} {$operator} {$placeholder}", $value);
+                $this->pushCollection('where', "{$data['column']} {$operator} {$this->placeholder}", $value);
             }
         }
 
@@ -362,23 +386,20 @@ class PostgreSQLBuilder extends Builder
         // execute before
         $data = $this->beforeWhere($column, $operator, $value, $raw);
 
-        // generate placeholder
-        $placeholder = '$' . (count($this->whereParams) + 1);
-
         // push into where collection
         if (empty($this->whereCollection))
         {
-            $this->pushCollection('where', "WHERE NOT {$data['column']} {$operator} {$placeholder}", $value);
+            $this->pushCollection('where', "WHERE NOT {$data['column']} {$operator} {$this->placeholder}", $value);
 
         } else {
 
             if ($this->useConjunction)
             {
-                $this->pushCollection('where', "AND NOT {$data['column']} {$operator} {$placeholder}", $value);
+                $this->pushCollection('where', "AND NOT {$data['column']} {$operator} {$this->placeholder}", $value);
 
             } else {
 
-                $this->pushCollection('where', "NOT {$data['column']} {$operator} {$placeholder}", $value);
+                $this->pushCollection('where', "NOT {$data['column']} {$operator} {$this->placeholder}", $value);
             }
         }
 
@@ -396,8 +417,8 @@ class PostgreSQLBuilder extends Builder
         }
 
         // count values
-        $totalParams  = count($this->whereParams);
-        $placeholders = $this->generatePlaceholder(($totalParams + 1), ($totalParams + count($value)));
+        $totalParams  = count($value);
+        $placeholders = array_fill(1, $totalParams, $this->placeholder);
         $variables    = implode(', ', $placeholders);
 
         // push into where collection
@@ -431,8 +452,8 @@ class PostgreSQLBuilder extends Builder
         }
 
         // count values
-        $totalParams  = count($this->whereParams);
-        $placeholders = $this->generatePlaceholder(($totalParams + 1), ($totalParams + count($value)));
+        $totalParams  = count($value);
+        $placeholders = array_fill(1, $totalParams, $this->placeholder);
         $variables    = implode(', ', $placeholders);
 
         // push into where collection
@@ -523,17 +544,14 @@ class PostgreSQLBuilder extends Builder
         // execute before
         $data = $this->beforeWhere($column, $operator, $value, $raw);
 
-        // where
-        $placeholder = '$' . (count($this->whereParams) + 1);
-
         // push into where collection
         if ($this->useConjunction)
         {
-            $this->pushCollection('where', "OR {$data['column']} {$operator} {$placeholder}", $value);
+            $this->pushCollection('where', "OR {$data['column']} {$operator} {$this->placeholder}", $value);
 
         } else {
 
-            $this->pushCollection('where', "{$data['column']} {$operator} {$placeholder}", $value);
+            $this->pushCollection('where', "{$data['column']} {$operator} {$this->placeholder}", $value);
         }
 
         // return instance
@@ -547,17 +565,14 @@ class PostgreSQLBuilder extends Builder
         // execute before
         $data = $this->beforeWhere($column, $operator, $value, $raw);
 
-        // generate placeholder
-        $placeholder = '$' . (count($this->whereParams) + 1);
-
         // push into where collection
         if ($this->useConjunction)
         {
-            $this->pushCollection('where', "OR NOT {$data['column']} {$operator} {$placeholder}", $value);
+            $this->pushCollection('where', "OR NOT {$data['column']} {$operator} {$this->placeholder}", $value);
 
         } else {
 
-            $this->pushCollection('where', "NOT {$data['column']} {$operator} {$placeholder}", $value);
+            $this->pushCollection('where', "NOT {$data['column']} {$operator} {$this->placeholder}", $value);
         }
 
         // return instance
@@ -574,8 +589,8 @@ class PostgreSQLBuilder extends Builder
         }
 
         // count values
-        $totalParams  = count($this->whereParams);
-        $placeholders = $this->generatePlaceholder(($totalParams + 1), ($totalParams + count($value)));
+        $totalParams  = count($value);
+        $placeholders = array_fill(1, $totalParams, $this->placeholder);
         $variables    = implode(', ', $placeholders);
 
         // push into where collection
@@ -602,8 +617,8 @@ class PostgreSQLBuilder extends Builder
         }
 
         // count values
-        $totalParams  = count($this->whereParams);
-        $placeholders = $this->generatePlaceholder(($totalParams + 1), ($totalParams + count($value)));
+        $totalParams  = count($value);
+        $placeholders = array_fill(1, $totalParams, $this->placeholder);
         $variables    = implode(', ', $placeholders);
 
         // push into where collection
@@ -701,23 +716,20 @@ class PostgreSQLBuilder extends Builder
             $column = $this->sanitizeColumn($column);
         }
 
-        // generate placeholder
-        $placeholder = '$' . (count($this->whereParams) + 1);
-
         // push into where collection
         if (empty($this->whereCollection))
         {
-            $this->pushCollection('where', "WHERE {$column} LIKE {$placeholder}", $value);
+            $this->pushCollection('where', "WHERE {$column} LIKE {$this->placeholder}", $value);
 
         } else {
 
             if ($this->useConjunction)
             {
-                $this->pushCollection('where', "AND {$column} LIKE {$placeholder}", $value);
+                $this->pushCollection('where', "AND {$column} LIKE {$this->placeholder}", $value);
 
             } else {
 
-                $this->pushCollection('where', "{$column} LIKE {$placeholder}", $value);
+                $this->pushCollection('where', "{$column} LIKE {$this->placeholder}", $value);
             }
         }
 
@@ -737,23 +749,20 @@ class PostgreSQLBuilder extends Builder
             $column = $this->sanitizeColumn($column);
         }
 
-        // generate placeholder
-        $placeholder = '$' . (count($this->whereParams) + 1);
-
         // push into where collection
         if (empty($this->whereCollection))
         {
-            $this->pushCollection('where', "WHERE {$column} NOT LIKE {$placeholder}", $value);
+            $this->pushCollection('where', "WHERE {$column} NOT LIKE {$this->placeholder}", $value);
 
         } else {
 
             if ($this->useConjunction)
             {
-                $this->pushCollection('where', "AND {$column} NOT LIKE {$placeholder}", $value);
+                $this->pushCollection('where', "AND {$column} NOT LIKE {$this->placeholder}", $value);
 
             } else {
 
-                $this->pushCollection('where', "{$column} NOT LIKE {$placeholder}", $value);
+                $this->pushCollection('where', "{$column} NOT LIKE {$this->placeholder}", $value);
             }
         }
 
@@ -773,17 +782,14 @@ class PostgreSQLBuilder extends Builder
             $column = $this->sanitizeColumn($column);
         }
 
-        // generate placeholder
-        $placeholder = '$' . (count($this->whereParams) + 1);
-
         // push into where collection
         if ($this->useConjunction)
         {
-            $this->pushCollection('where', "OR {$column} LIKE {$placeholder}", $value);
+            $this->pushCollection('where', "OR {$column} LIKE {$this->placeholder}", $value);
 
         } else {
             
-            $this->pushCollection('where', "{$column} LIKE {$placeholder}", $value);
+            $this->pushCollection('where', "{$column} LIKE {$this->placeholder}", $value);
         }
 
         // return instance
@@ -802,17 +808,14 @@ class PostgreSQLBuilder extends Builder
             $column = $this->sanitizeColumn($column);
         }
 
-        // generate placeholder
-        $placeholder = '$' . (count($this->whereParams) + 1);
-
         // push into where collection
         if ($this->useConjunction)
         {
-            $this->pushCollection('where', "OR {$column} NOT LIKE {$placeholder}", $value);
+            $this->pushCollection('where', "OR {$column} NOT LIKE {$this->placeholder}", $value);
 
         } else {
             
-            $this->pushCollection('where', "{$column} NOT LIKE {$placeholder}", $value);
+            $this->pushCollection('where', "{$column} NOT LIKE {$this->placeholder}", $value);
         }
 
         // return instance
@@ -927,23 +930,20 @@ class PostgreSQLBuilder extends Builder
         // execute before
         $data = $this->beforeWhere($column, $operator, $value, $raw);
 
-        // generate placeholder
-        $placeholder = '$' . (count($this->havingParams) + 1);
-
         // push into having collection
         if (empty($this->havingCollection))
         {
-            $this->pushCollection('having', "HAVING {$data['column']} {$operator} {$placeholder}", $value);
+            $this->pushCollection('having', "HAVING {$data['column']} {$operator} {$this->placeholder}", $value);
 
         } else {
 
             if ($this->havingUseConjunction)
             {
-                $this->pushCollection('having', "AND {$data['column']} {$operator} {$placeholder}", $value);
+                $this->pushCollection('having', "AND {$data['column']} {$operator} {$this->placeholder}", $value);
 
             } else {
 
-                $this->pushCollection('having', "{$data['column']} {$operator} {$placeholder}", $value);
+                $this->pushCollection('having', "{$data['column']} {$operator} {$this->placeholder}", $value);
             }
         }
 
@@ -958,23 +958,20 @@ class PostgreSQLBuilder extends Builder
         // execute before
         $data = $this->beforeWhere($column, $operator, $value, $raw);
 
-        // generate placeholder
-        $placeholder = '$' . (count($this->havingParams) + 1);
-
         // push into having collection
         if (empty($this->havingCollection))
         {
-            $this->pushCollection('having', "HAVING NOT {$data['column']} {$operator} {$placeholder}", $value);
+            $this->pushCollection('having', "HAVING NOT {$data['column']} {$operator} {$this->placeholder}", $value);
 
         } else {
 
             if ($this->havingUseConjunction)
             {
-                $this->pushCollection('having', "AND NOT {$data['column']} {$operator} {$placeholder}", $value);
+                $this->pushCollection('having', "AND NOT {$data['column']} {$operator} {$this->placeholder}", $value);
 
             } else {
 
-                $this->pushCollection('having', "NOT {$data['column']} {$operator} {$placeholder}", $value);
+                $this->pushCollection('having', "NOT {$data['column']} {$operator} {$this->placeholder}", $value);
             }
         }
 
@@ -993,7 +990,7 @@ class PostgreSQLBuilder extends Builder
 
         // count values
         $totalParams  = count($this->havingParams);
-        $placeholders = $this->generatePlaceholder(($totalParams + 1), ($totalParams + count($value)));
+        $placeholders = array_fill(1, $totalParams, $this->placeholder);
         $variables    = implode(', ', $placeholders);
 
         // push into having collection
@@ -1028,7 +1025,7 @@ class PostgreSQLBuilder extends Builder
 
         // count values
         $totalParams  = count($this->havingParams);
-        $placeholders = $this->generatePlaceholder(($totalParams + 1), ($totalParams + count($value)));
+        $placeholders = array_fill(1, $totalParams, $this->placeholder);
         $variables    = implode(', ', $placeholders);
 
         // push into having collection
@@ -1119,17 +1116,14 @@ class PostgreSQLBuilder extends Builder
         // execute before
         $data = $this->beforeWhere($column, $operator, $value, $raw);
 
-        // generate placeholder
-        $placeholder = '$' . (count($this->havingParams) + 1);
-
         // push into having collection
         if ($this->havingUseConjunction)
         {
-            $this->pushCollection('having', "OR {$data['column']} {$operator} {$placeholder}", $value);
+            $this->pushCollection('having', "OR {$data['column']} {$operator} {$this->placeholder}", $value);
 
         } else {
 
-            $this->pushCollection('having', "{$data['column']} {$operator} {$placeholder}", $value);
+            $this->pushCollection('having', "{$data['column']} {$operator} {$this->placeholder}", $value);
         }
 
         // return instance
@@ -1143,17 +1137,14 @@ class PostgreSQLBuilder extends Builder
         // execute before
         $data = $this->beforeWhere($column, $operator, $value, $raw);
 
-        // generate placeholder
-        $placeholder = '$' . (count($this->havingParams) + 1);
-
         // push into having collection
         if ($this->havingUseConjunction)
         {
-            $this->pushCollection('having', "OR NOT {$data['column']} {$operator} {$placeholder}", $value);
+            $this->pushCollection('having', "OR NOT {$data['column']} {$operator} {$this->placeholder}", $value);
 
         } else {
 
-            $this->pushCollection('having', "NOT {$data['column']} {$operator} {$placeholder}", $value);
+            $this->pushCollection('having', "NOT {$data['column']} {$operator} {$this->placeholder}", $value);
         }
 
         // return instance
@@ -1171,7 +1162,7 @@ class PostgreSQLBuilder extends Builder
 
         // count values
         $totalParams  = count($this->havingParams);
-        $placeholders = $this->generatePlaceholder(($totalParams + 1), ($totalParams + count($value)));
+        $placeholders = array_fill(1, $totalParams, $this->placeholder);
         $variables    = implode(', ', $placeholders);
 
         // push into having collection
@@ -1199,7 +1190,7 @@ class PostgreSQLBuilder extends Builder
 
         // count values
         $totalParams  = count($this->havingParams);
-        $placeholders = $this->generatePlaceholder(($totalParams + 1), ($totalParams + count($value)));
+        $placeholders = array_fill(1, $totalParams, $this->placeholder);
         $variables    = implode(', ', $placeholders);
 
         // push into having collection
@@ -1274,23 +1265,20 @@ class PostgreSQLBuilder extends Builder
             $column = $this->sanitizeColumn($column);
         }
 
-        // generate placeholder
-        $placeholder = '$' . (count($this->havingParams) + 1);
-
         // push into having collection
         if (empty($this->havingCollection))
         {
-            $this->pushCollection('having', "HAVING {$column} LIKE {$placeholder}", $value);
+            $this->pushCollection('having', "HAVING {$column} LIKE {$this->placeholder}", $value);
 
         } else {
 
             if ($this->havingUseConjunction)
             {
-                $this->pushCollection('having', "AND {$column} LIKE {$placeholder}", $value);
+                $this->pushCollection('having', "AND {$column} LIKE {$this->placeholder}", $value);
 
             } else {
 
-                $this->pushCollection('having', "{$column} LIKE {$placeholder}", $value);
+                $this->pushCollection('having', "{$column} LIKE {$this->placeholder}", $value);
             }
         }
 
@@ -1310,23 +1298,20 @@ class PostgreSQLBuilder extends Builder
             $column = $this->sanitizeColumn($column);
         }
 
-        // generate placeholder
-        $placeholder = '$' . (count($this->havingParams) + 1);
-
         // push into having collection
         if (empty($this->havingCollection))
         {
-            $this->pushCollection('having', "HAVING {$column} NOT LIKE {$placeholder}", $value);
+            $this->pushCollection('having', "HAVING {$column} NOT LIKE {$this->placeholder}", $value);
 
         } else {
 
             if ($this->havingUseConjunction)
             {
-                $this->pushCollection('having', "AND {$column} NOT LIKE {$placeholder}", $value);
+                $this->pushCollection('having', "AND {$column} NOT LIKE {$this->placeholder}", $value);
 
             } else {
 
-                $this->pushCollection('having', "{$column} NOT LIKE {$placeholder}", $value);
+                $this->pushCollection('having', "{$column} NOT LIKE {$this->placeholder}", $value);
             }
         }
 
@@ -1346,17 +1331,14 @@ class PostgreSQLBuilder extends Builder
             $column = $this->sanitizeColumn($column);
         }
 
-        // generate placeholder
-        $placeholder = '$' . (count($this->havingParams) + 1);
-
         // push into having collection
         if ($this->havingUseConjunction)
         {
-            $this->pushCollection('having', "OR {$column} LIKE {$placeholder}", $value);
+            $this->pushCollection('having', "OR {$column} LIKE {$this->placeholder}", $value);
 
         } else {
             
-            $this->pushCollection('having', "{$column} LIKE {$placeholder}", $value);
+            $this->pushCollection('having', "{$column} LIKE {$this->placeholder}", $value);
         }
 
         // return instance
@@ -1375,17 +1357,14 @@ class PostgreSQLBuilder extends Builder
             $column = $this->sanitizeColumn($column);
         }
 
-        // generate placeholder
-        $placeholder = '$' . (count($this->havingParams) + 1);
-
         // push into having collection
         if ($this->havingUseConjunction)
         {
-            $this->pushCollection('having', "OR {$column} NOT LIKE {$placeholder}", $value);
+            $this->pushCollection('having', "OR {$column} NOT LIKE {$this->placeholder}", $value);
 
         } else {
             
-            $this->pushCollection('having', "{$column} NOT LIKE {$placeholder}", $value);
+            $this->pushCollection('having', "{$column} NOT LIKE {$this->placeholder}", $value);
         }
 
         // return instance
@@ -1734,6 +1713,9 @@ class PostgreSQLBuilder extends Builder
         // build params
         $this->buildGetParams();
 
+        // seed placeholder
+        $this->seedPlaceholder();
+
         // query
         $query  = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
         $result = $query->getRowArray();
@@ -1759,6 +1741,9 @@ class PostgreSQLBuilder extends Builder
         // build params
         $this->buildGetParams();
 
+        // seed placeholder
+        $this->seedPlaceholder();
+        
         // store variable
         $result = $this->db->preparedQuery($this->preparedQuery, $this->preparedParams);
 
@@ -1782,6 +1767,9 @@ class PostgreSQLBuilder extends Builder
 
         // build params
         $this->buildGetParams();
+
+        // seed placeholder
+        $this->seedPlaceholder();
 
         // return as string
         $result = $this->compilePreparedQuery();
@@ -2289,6 +2277,9 @@ class PostgreSQLBuilder extends Builder
         // build set params
         $this->buildSetParams('update');
 
+        // seed placeholder
+        $this->seedPlaceholder();
+
         // check if prepared params is not empty
         if (empty($this->preparedParams))
         {
@@ -2456,6 +2447,9 @@ class PostgreSQLBuilder extends Builder
         // build set params
         $this->buildSetParams('delete');
 
+        // seed placeholder
+        $this->seedPlaceholder();
+
         // check if prepared params is not empty
         if (empty($this->preparedParams))
         {
@@ -2495,6 +2489,9 @@ class PostgreSQLBuilder extends Builder
 
         // set params
         $this->buildSetParams('replace');
+
+        // seed placeholder
+        $this->seedPlaceholder();
 
         // check if prepared params is not empty
         if (empty($this->preparedParams))
