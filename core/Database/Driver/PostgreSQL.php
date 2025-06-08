@@ -120,9 +120,13 @@ class PostgreSQL implements DriverInterface
 
     //===========================================================================================
 
-    public function getResult(): PgSQLResult|bool
+    public function getResult(): array
     {
-        return $this->result;
+        return [
+            'insert_id'     => pg_last_oid($this->result),
+            'affected_rows' => pg_affected_rows($this->result),
+            'error'         => pg_result_error($this->result),
+        ];
     }
 
     //===========================================================================================
