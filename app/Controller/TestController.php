@@ -2,8 +2,9 @@
 
 use App\Controller\BaseController;
 use Aether\Interface\ResponseInterface;
-use Aether\Database;
 use Faker\Factory as FakerFactory;
+use App\Model\UserModel;
+use Aether\Database;
 
 /** 
  * Test Controller
@@ -25,53 +26,50 @@ class TestController extends BaseController
             ]
         ];
         
-        $db      = Database::connect('mariadb');
-        $builder = $db->table('post')
-                      ->select(['post.id', 'title', 'view', 'user_id', 'user.name', 'user.age'])
-                      ->whereIn('user_id', [2, 3])
-                      ->whereNotIn('user_id', [1, 12])
-                      ->join('user', 'user_id = user.id')
-                      ->orderBy('name', 'ASC')
-                      ->get()
-                      ->getResultArray();
+        $default = 'default';
+        $db      = Database::connect($default);
+        $faker   = FakerFactory::create('id_ID');
+        $model   = new UserModel($default);
 
-        //dd($builder);
-        //dd(Database::getAllQueries());
-
-        $status = ['aktif', 'nonaktif'];
-        $faker  = FakerFactory::create('id_ID');
-        $data   = [];
-
-        foreach(range(0, 5) as $i):
-
-            $data[$i] = [
-                'name'   => $faker->name(),
-                'age'    => $faker->numberBetween(1, 17),
-                'status' => $status[$faker->numberBetween(0, 1)],
-            ];
-
-        endforeach;
-
-        // update data
+        $insertData = [];
         $updateData = [];
 
-        foreach(range(0, 10) as $i):
+        // insert data
+        foreach (range(1, 20) as $key):
 
-            $updateData[$i] = [
-                'id'     => 5 + $i,
-                'name'   => $faker->name(),
-                'age'    => $faker->numberBetween(1, 17),
-                'status' => $status[$faker->numberBetween(0, 1)],
-            ];
+            array_push($insertData, [
+                'name' => $faker->name(),
+                'age'  => random_int(3, 18),
+                'status' => $faker->randomElement(['nonaktif', 'aktif']),
+            ]);
 
         endforeach;
 
-        // test performance
-        // $db->table('user')->insertBulk($data);
-        // $db->table('user')->upsertBulk($updateData, 'id');
+        // update bulk data
+        foreach (range(1, 20) as $key):
 
-        // debug
-        dd(Database::getAllQueries());
+            array_push($updateData, [
+                'id'   => 21 + $key,
+                'name' => $faker->name(),
+                'age'  => random_int(3, 18),
+            ]);
+
+        endforeach;
+
+        // get data
+        $getData = $model->select(['age', 'status'])
+                         ->selectCount('id', 'total')
+                         ->whereIn('age', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
+                         ->groupBy(['age', 'status'])
+                         ->having('status', '=', 'aktif')
+                         ->update([
+                            'status' => 'aktif'
+                         ]);
+
+        // insert data
+        $insertion = $model->update($updateData);
+
+        dd([$getData, $insertion, Database::getAllQueries()]);
 
         // home
         return view('HomeView', $data);
