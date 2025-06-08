@@ -223,6 +223,18 @@ class PostgreSQL implements DriverInterface
 
     //===========================================================================================
 
+    public function transStatus(): bool
+    {
+        // get transaction status
+        $status = pg_transaction_status($this->connection);
+
+        // set on true / false
+        // so we can conclude the transaction should be committed or rollback-ed
+        return ($status === PGSQL_TRANSACTION_INERROR || $status === PGSQL_TRANSACTION_UNKNOWN) ? false : true;
+    }
+
+    //===========================================================================================
+
     public function preparedQuery(string $query, array $params = []): PostgreSQL
     {
         if ($this->config['DBDebug'])

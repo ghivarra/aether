@@ -222,6 +222,15 @@ class MySQLi implements DriverInterface
 
     //===========================================================================================
 
+    public function transStatus(): bool
+    {
+        // set on true / false
+        // so we can conclude the transaction should be committed or rollback-ed
+        return ($this->connection->errno) ? false : true;
+    }
+
+    //===========================================================================================
+
     public function preparedQuery(string $query, array $params = []): MySQLi
     {
         if ($this->config['DBDebug'])
