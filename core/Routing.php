@@ -6,6 +6,7 @@ namespace Aether;
 
 use Config\Routes;
 use Aether\Exception\PageNotFoundException;
+use Aether\Exception\SystemException;
 use Aether\Interface\RoutingInterface;
 
 /** 
@@ -33,6 +34,19 @@ class Routing implements RoutingInterface
      * @var string $this->anyVariable
     **/
     protected string $anyVariable = '(:any)';
+
+    //==========================================================================================
+
+    /** 
+     * Group URI prefix
+     * 
+     * @var string $this->groupPrefix
+    **/
+    protected string $groupPrefix = '';
+
+    //==========================================================================================
+    
+    protected array $groupRoutes = [];
 
     //==========================================================================================
 
@@ -394,6 +408,151 @@ class Routing implements RoutingInterface
     //==========================================================================================
 
     /** 
+     * Grouping routes
+     * 
+     * @param string $prefix
+     * @param callable $callback
+     * @param array $middlewares ['before' => [], 'after' => []]
+     * 
+     * @return RoutingInterface $this
+     * 
+    **/
+    public function group(string $prefix, callable $callback, array $middlewares = ['before' => [], 'after' => []]): RoutingInterface
+    {
+        // check if there are any stashed route
+        // and store it
+        if (!empty($this->stashedMethods))
+        {
+            $this->save();
+        }
+
+        // add slash or not
+        $prefix = (empty($this->groupPrefix) || (substr($prefix, 0, 1) !== '/')) ? $prefix : "/{$prefix}";
+
+        // add prefix
+        $this->groupPrefix .= $prefix;
+
+        // see collection
+        $oldCollection = self::$routeCollection;
+        $httpMethods   = array_keys($oldCollection);
+
+        // call
+        $callback($this);
+
+        // save into collections
+        if (!empty($this->stashedMethods))
+        {
+            $this->save();
+        }
+
+        // new collection
+        $newCollection = self::$routeCollection;
+        $ruleKeys      = [];
+        $divider       = '##DIVIDER##';
+
+        // get the diff
+        foreach ($httpMethods as $method):
+
+            $oldTotal = count($oldCollection[$method]);
+            $newTotal = count($newCollection[$method]);
+
+            if ($newTotal > $oldTotal)
+            {
+                if ($method === 'name')
+                {
+                    // get the keys
+                    $oldKey = array_keys($oldCollection[$method]);
+                    $newKey = array_keys($newCollection[$method]);
+                    $diffs  = array_diff($newKey, $oldKey);
+                    
+                    foreach ($diffs as $key):
+
+                        array_push($ruleKeys, "{$method}{$divider}{$key}");
+
+                    endforeach;
+
+                } else {
+
+                    $startKey = $oldTotal;
+                    $endKey   = $newTotal - 1;
+
+                    foreach (range($startKey, $endKey) as $i)
+                    {
+                        array_push($ruleKeys, "{$method}{$divider}{$i}");
+                    }
+                }
+            }
+
+        endforeach;
+
+        // set error message
+        $message = (AETHER_ENV === 'development') ? "The supplied middlewares data type should be in array" : "Failed to fetch routes";
+
+        // register middleware before
+        if (isset($middlewares['before']) && !empty($middlewares['before']) && !empty($ruleKeys))
+        { 
+            if (!is_array($middlewares['before']))
+            {
+                throw new SystemException($message, 500);
+            }
+
+            foreach ($middlewares['before'] as $middleware):
+
+                if (!empty($middleware))
+                {
+                    foreach ($ruleKeys as $key)
+                    {
+                        $keyArray = explode($divider, $key);
+                        $method   = $keyArray[0];
+                        $i        = $keyArray[1];
+
+                        // push middleware
+                        array_push(self::$routeCollection[$method][$i]['middlewares']['before'], $middleware);
+                    }
+                }
+
+            endforeach;            
+        }
+
+        // register middleware after
+        if (isset($middlewares['after']) && !empty($middlewares['after']) && !empty($ruleKeys))
+        {      
+            if (!is_array($middlewares['after']))
+            {
+                throw new SystemException($message, 500);
+            }
+
+            foreach ($middlewares['after'] as $middleware):
+
+                if (!empty($middleware))
+                {
+                    foreach ($ruleKeys as $key)
+                    {
+                        $keyArray = explode($divider, $key);
+                        $method   = $keyArray[0];
+                        $i        = $keyArray[1];
+
+                        // push middleware
+                        array_push(self::$routeCollection[$method][$i]['middlewares']['after'], $middleware);
+                    }
+                }
+
+            endforeach;
+        }
+
+        // remove only supplied prefix
+        // so it support multiple nested group
+        $storedPrefixCount   = strlen($this->groupPrefix);
+        $suppliedPrefixCount = strlen($prefix);
+        $this->groupPrefix   = substr($this->groupPrefix, 0, ($storedPrefixCount - $suppliedPrefixCount));
+
+        // return
+        return $this;
+    }
+
+    //==========================================================================================
+
+    /** 
      * Save the inputted route into HEAD HTTP method
      * 
      * @param string $rule
@@ -423,6 +582,12 @@ class Routing implements RoutingInterface
     **/
     public function match(array|string $httpMethod, string $rule, string $controller, string $controllerMethod): RoutingInterface
     {
+        // mutate rule if group is not empty
+        if (!empty($this->groupPrefix))
+        {
+            $rule = (substr($rule, 0, 1) !== '/') ? "{$this->groupPrefix}/{$rule}" : $this->groupPrefix . $rule;
+        }
+
         // check if there are any stashed route
         // and store it
         if (!empty($this->stashedMethods))

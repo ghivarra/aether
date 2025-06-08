@@ -29,13 +29,16 @@ class Routes
     **/
     public function run(RoutingInterface $route): void
     {
-        $route->get('page/news/(:segment)/(:any)', TestController::class, 'index')
-              ->as('page.news')
-              ->middlewares(['isLoggedOut', 'isAdmin'], 'before')
-              ->middlewares(['isLoggedOut'], 'after');
+        $route->group('page/news', function($route) {
 
-        $route->get('page/news/(:segment)', TestController::class, 'index')
-              ->as('page.category');
+            $route->group('view', function($route) {
+                $route->get('(:segment)/(:any)', TestController::class, 'index')->as('page.category.news');
+                $route->get('(:segment)', TestController::class, 'index')->as('page.category');
+            }, ['after' => ['isLoggedOut']]);
+
+            $route->get('/', TestController::class, 'ggwp')->as('page');
+
+        }, ['before' => ['isAdmin']]);
 
         $route->match(['options', 'post', 'get'], '/', TestController::class, 'index')->as('home');
     }
