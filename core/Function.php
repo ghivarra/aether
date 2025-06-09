@@ -25,6 +25,65 @@ if (!function_exists('dd') && function_exists('d'))
     }
 }
 
+if (!function_exists('decrypt'))
+{
+    function decrypt(string $data, string $key, string $hashAlgo = 'sha256', string $encryptAlgo = 'AES-256-CBC'): string
+    {
+        // divide salt and crypted data
+        $data    = base64_decode($data);
+        $salt    = substr($data, 0, 16);
+        $crypted = substr($data, 16);
+
+        // set hashing config
+        $rounds   = 3;
+        $password = $key . $salt;
+        $hashData = [];
+
+        // start hashing
+        $hashData[0] = hash($hashAlgo, $password, true);
+        $result      = $hashData[0];
+
+        for ($i=1; $i < $rounds; $i++)
+        { 
+            $hashData[$i] = hash($hashAlgo, $hashData[$i - 1].$password, true);
+            $result      .= $hashData[$i];
+        }
+
+        $key = substr($result, 0, 32);
+        $iv  = substr($result, 32, 16);
+
+        // return data
+        return openssl_decrypt($crypted, $encryptAlgo, $key, 1, $iv);
+    }
+}
+
+if (!function_exists('encrypt'))
+{
+    function encrypt(string $data, string $key, string $hashAlgo = 'sha256', string $encryptAlgo = 'AES-256-CBC'): string
+    {
+        // generate salt
+        $salt   = random_bytes(16);
+        $salted = '';
+        $dx     = '';
+
+        // salt (16) the 256 bit key (32) into (48) char
+        while (strlen($salted) <= 48)
+        {
+            $dx      = hash($hashAlgo, $dx . $key . $salt, true);
+            $salted .= $dx;
+        }
+
+        $key = substr($salted, 0, 32);
+        $iv  = substr($salted, 32, 16);
+
+        // encrypt data
+        $encryptedData = openssl_encrypt($data, $encryptAlgo, $key, 1, $iv);
+
+        // return encrypted data with salt
+        return base64_encode($salt . $encryptedData);
+    }
+}
+
 if (!function_exists('esc'))
 {
     /** 
