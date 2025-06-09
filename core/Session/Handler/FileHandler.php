@@ -50,7 +50,7 @@ class FileHandler implements CustomHandlerInterface
 
     public function create_sid(): string
     {
-        return bin2hex(random_bytes(16)) . $this->divider . dechex(time());
+        return $this->config->cookieName . $this->divider . bin2hex(random_bytes(16)) . $this->divider . dechex(time());
     }
 
     //========================================================================================================
@@ -94,15 +94,13 @@ class FileHandler implements CustomHandlerInterface
 
     public function open(string $savePath = '', string $sessionName = ''): bool
     {
-        // set save path and create folder if it doesn't exist
-        if (empty($savePath) && strlen($savePath) < 1)
-        {
-            $this->savePath = $this->config->savePath;
+        // set save path
+        $this->savePath = $savePath;
 
-            if (!is_dir($this->savePath))
-            {
-                mkdir($this->savePath, 0700, true);
-            }
+        // set save path and create folder if it doesn't exist
+        if (!is_dir($this->savePath))
+        {
+            mkdir($this->savePath, 0700, true);
         }
 
         // return true
@@ -113,13 +111,8 @@ class FileHandler implements CustomHandlerInterface
 
     public function read(string $sessionID): string|false
     {
-        if (empty($this->savePath))
-        {
-            $this->open();
-        }
-
         // generate session file path and name
-        $this->sessionFile = "{$this->savePath}/{$this->config->cookieName}{$this->divider}{$sessionID}";
+        $this->sessionFile = "{$this->savePath}/{$sessionID}";
 
         // create new if it doesn't exist
         if (!file_exists($this->sessionFile))
