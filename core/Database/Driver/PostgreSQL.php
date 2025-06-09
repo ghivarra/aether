@@ -81,14 +81,14 @@ class PostgreSQL implements DriverInterface
 
     //===========================================================================================
 
-    public function escape(string|int|float|null $data, string $type = 'string'): string|int
+    public function escape(string|int|float|null $data, mixed $option = 'string'): string|int
     {
         if (is_int($data))
         {
             return $data;
         }
 
-        switch ($type) {
+        switch ($option) {
             case 'literal':
                 return pg_escape_literal($this->connection, strval($data));
                 break;

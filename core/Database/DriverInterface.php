@@ -22,7 +22,7 @@ interface DriverInterface
 
     //===========================================================================================
 
-    public function escape(string|int|float $data): string|int;
+    public function escape(string|int|float $data, mixed $option = null): string|int;
 
     //===========================================================================================
 

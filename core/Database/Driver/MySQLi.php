@@ -93,7 +93,7 @@ class MySQLi implements DriverInterface
 
     //===========================================================================================
 
-    public function escape(string|int|float $data): string|int
+    public function escape(string|int|float $data, mixed $option = null): string|int
     {
         if (is_int($data))
         {
