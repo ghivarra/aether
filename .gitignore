@@ -48,20 +48,17 @@ Vagrantfile
 #-------------------------
 # Temporary Files
 #-------------------------
-writable/cache/*
-!writable/cache/index.html
+storage/cache/*
+!storage/cache/index.html
 
-writable/logs/*
-!writable/logs/index.html
+storage/logs/*
+!storage/logs/index.html
 
-writable/session/*
-!writable/session/index.html
+storage/session/*
+!storage/session/index.html
 
-writable/uploads/*
-!writable/uploads/index.html
-
-writable/debugbar/*
-!writable/debugbar/.gitkeep
+storage/upload/*
+!storage/uploads/index.html
 
 php_errors.log
 
