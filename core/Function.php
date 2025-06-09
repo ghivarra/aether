@@ -6,6 +6,7 @@ declare(strict_types = 1);
 use Aether\Exception\SystemException;
 use Aether\View\Template;
 use Laminas\Escaper\Escaper;
+use Aether\Session;
 
 // functions
 if (!function_exists('dd') && function_exists('d'))
@@ -27,6 +28,17 @@ if (!function_exists('dd') && function_exists('d'))
 
 if (!function_exists('decrypt'))
 {
+    /** 
+     * Decrypt string data with supplied key and selected hash + encrypt algorithm
+     * 
+     * @param string $data
+     * @param string $key
+     * @param string $hashAlgo
+     * @param string $encryptAlgo
+     * 
+     * @return string
+     * 
+    **/
     function decrypt(string $data, string $key, string $hashAlgo = 'sha256', string $encryptAlgo = 'AES-256-CBC'): string
     {
         // divide salt and crypted data
@@ -59,6 +71,17 @@ if (!function_exists('decrypt'))
 
 if (!function_exists('encrypt'))
 {
+    /** 
+     * Encrypt string data with supplied key and selected hash + encrypt algorithm
+     * 
+     * @param string $data
+     * @param string $key
+     * @param string $hashAlgo
+     * @param string $encryptAlgo
+     * 
+     * @return string
+     * 
+    **/
     function encrypt(string $data, string $key, string $hashAlgo = 'sha256', string $encryptAlgo = 'AES-256-CBC'): string
     {
         // generate salt
@@ -267,6 +290,20 @@ if (!function_exists('sanitizeURI'))
 
         // return
         return $check;
+    }
+}
+
+if (!function_exists('session'))
+{
+    /** 
+     * start session
+     * 
+     * @return void
+     * 
+    **/
+    function session(): void
+    {
+        Session::start();
     }
 }
 
