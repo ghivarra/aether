@@ -58,7 +58,7 @@ storage/session/*
 !storage/session/index.html
 
 storage/upload/*
-!storage/uploads/index.html
+!storage/upload/index.html
 
 php_errors.log
 
