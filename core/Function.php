@@ -298,12 +298,16 @@ if (!function_exists('session'))
     /** 
      * start session
      * 
+     * On 'file' driver, there are no constructor options or variable.
+     * On 'database' driver, the options is the DB Connection that has been set on Config\Database.
+     * On 'redis' driver, the options is the Redis Configuration array that has been set on Config\Redis::$config.
+     * 
      * @return void
      * 
     **/
-    function session(): void
+    function session(array|string|null $options = null): void
     {
-        Session::start();
+        Session::start($options);
     }
 }
 

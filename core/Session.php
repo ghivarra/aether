@@ -25,7 +25,7 @@ class Session
 
     //=============================================================================================
 
-    public static function checkSessionStatus(): void
+    private static function checkSessionStatus(): void
     {
         // check status
         $status = session_status();
@@ -40,7 +40,7 @@ class Session
 
     //=============================================================================================
 
-    public static function clearPurgatory(): bool
+    private static function clearPurgatory(): bool
     {
         if (!isset($_SESSION[self::$purgatory]))
         {
@@ -72,7 +72,7 @@ class Session
 
     //=============================================================================================
 
-    public static function purge(string|array $keys): void
+    private static function purge(string|array $keys): void
     {
         if (!isset($_SESSION[self::$purgatory]))
         {
@@ -100,7 +100,83 @@ class Session
 
     //=============================================================================================
 
-    public static function start(): void
+    private static function checkRegenerate(SessionConfig $config): void
+    {
+        $sessCreatedTime = $_SESSION[self::$lastRegenParam];
+        $sessExpiredTime = $sessCreatedTime + $config->timeToUpdate;
+        $currentTime     = time();
+
+        if ($sessExpiredTime < $currentTime)
+        {
+            // regenerate id
+            session_regenerate_id();
+
+            // set session last regenerate to now
+            $_SESSION[self::$lastRegenParam] = time();
+        }
+    }
+
+    //=============================================================================================
+
+    private static function checkFlashData(): void
+    {
+        if (isset($_SESSION[self::$flashDataParam]))
+        {
+            $sessionKeys = $_SESSION[self::$flashDataParam];
+
+            if (is_array($sessionKeys))
+            {
+                // move all keys into purgatory
+                foreach ($sessionKeys as $key):
+
+                    self::purge($key);
+
+                endforeach;
+            }
+
+            // remove flash data key to remove
+            unset($_SESSION[self::$flashDataParam]);
+        }
+    }
+
+    //=============================================================================================
+
+    private static function checkTempData(): void
+    {
+        if (isset($_SESSION[self::$tempDataParam]))
+        {
+            $tempDataKey = $_SESSION[self::$tempDataParam];
+            $currentTime = time();
+
+            if (is_array($tempDataKey))
+            {
+                foreach ($tempDataKey as $i => $item):
+
+                    if ($item['expire_at'] < $currentTime)
+                    {
+                        unset($_SESSION[$item['key']]);
+                        unset($tempDataKey[$i]);
+                    }
+
+                endforeach;
+            }
+
+            if (empty($tempDataKey))
+            {
+                // remove temp data key if empty
+                unset($_SESSION[self::$tempDataParam]);
+
+            } else {
+
+                // reset sortable key
+                $_SESSION[self::$tempDataParam] = array_merge($tempDataKey);
+            }
+        }
+    }
+
+    //=============================================================================================
+
+    public static function start(array|string|null $options = null): void
     {
         $status = session_status();
 
@@ -108,8 +184,19 @@ class Session
         {
             $config = new SessionConfig();
             $cookie = new CookieConfig();
-    
+
             // set php.ini config about session
+            if (version_compare(PHP_VERSION, '8.4', '<'))
+            {
+                ini_set('session.sid_length', '256');
+            }
+            
+            if ($config->handler === 'file')
+            {
+                ini_set('session.save_path', realpath($config->savePath));
+            }
+
+            ini_set('session.name', $config->cookieName);
             ini_set('session.gc_maxlifetime', $config->gcLifetime);
             ini_set('session.gc_probability', $config->gcProbability);
             ini_set('session.gc_divisor', $config->gcDivisor);
@@ -125,7 +212,14 @@ class Session
             ]);
 
             // check handler
-            self::$sessionHandler = new $config->handlers[$config->handler]();
+            if ($config->handler !== 'file' && !is_null($options))
+            {
+                self::$sessionHandler = new $config->handlers[$config->handler]($options);
+
+            } else {
+
+                self::$sessionHandler = new $config->handlers[$config->handler]();
+            }
     
             // set session driver
             session_set_save_handler(self::$sessionHandler);
@@ -134,70 +228,16 @@ class Session
             session_start();
 
             // check if it is time to regenerate session
-            $sessCreatedTime = $_SESSION[self::$lastRegenParam];
-            $sessExpiredTime = $sessCreatedTime + $config->timeToUpdate;
-            $currentTime     = time();
-
-            if ($sessExpiredTime < $currentTime)
-            {
-                // regenerate id
-                session_regenerate_id();
-
-                // set session last regenerate to now
-                $_SESSION[self::$lastRegenParam] = time();
-            }
+            self::checkRegenerate($config);
 
             // clear purgatory
             self::clearPurgatory();
 
             // check and delete flashData
-            if (isset($_SESSION[self::$flashDataParam]))
-            {
-                $sessionKeys = $_SESSION[self::$flashDataParam];
-
-                if (is_array($sessionKeys))
-                {
-                    // move all keys into purgatory
-                    foreach ($sessionKeys as $key):
-
-                        self::purge($key);
-
-                    endforeach;
-                }
-
-                // remove flash data key to remove
-                unset($_SESSION[self::$flashDataParam]);
-            }
+            self::checkFlashData();
 
             // check and delete tempdata
-            if (isset($_SESSION[self::$tempDataParam]))
-            {
-                $tempDataKey = $_SESSION[self::$tempDataParam];
-
-                if (is_array($tempDataKey))
-                {
-                    foreach ($tempDataKey as $i => $item):
-
-                        if ($item['expire_at'] < $currentTime)
-                        {
-                            unset($_SESSION[$item['key']]);
-                            unset($tempDataKey[$i]);
-                        }
-
-                    endforeach;
-                }
-
-                if (empty($tempDataKey))
-                {
-                    // remove temp data key if empty
-                    unset($_SESSION[self::$tempDataParam]);
-
-                } else {
-
-                    // reset sortable key
-                    $_SESSION[self::$tempDataParam] = array_merge($tempDataKey);
-                }
-            }
+            self::checkTempData();
         }
     }
 
