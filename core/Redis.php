@@ -6,39 +6,58 @@ namespace Aether;
 
 use Config\Redis as RedisConfig;
 use Predis\Client as RedisClient;
+use Aether\Exception\SystemException;
+use Aether\Redis\CustomConnection;
 
 class Redis
 {
-    public static RedisClient|null $currentConnection = null;
+    private static RedisClient|null $currentConnection = null;
 
     //=============================================================================================
 
-    private static function unixConnect(RedisConfig $config): void
+    private static function unixConnect(RedisConfig $config): RedisClient
     {
-        self::$currentConnection = new RedisClient([
+        $connection = new RedisClient([
             'scheme' => $config->scheme,
             'path'   => $config->path,
+        ], [
             'prefix' => $config->prefix,
         ]);
+
+        // connect
+        $connection->connect();
+        
+        // return
+        return $connection;
     }
 
     //=============================================================================================
 
-    private static function tcpConnect(RedisConfig $config): void
+    private static function tcpConnect(RedisConfig $config): RedisClient
     {
-        self::$currentConnection = new RedisClient([
+        $connection = new RedisClient([
             'scheme' => $config->scheme,
             'path'   => $config->path,
             'port'   => $config->port,
-            'prefix' => $config->prefix,
+        ], [
+            'prefix'      => $config->prefix,
+            'connections' => [
+                'tcp' => CustomConnection::class
+            ]
         ]);
+
+        // connect
+        $connection->connect();
+        
+        // return
+        return $connection;
     }
 
     //=============================================================================================
 
-    private static function tlsConnect(RedisConfig $config): void
+    private static function tlsConnect(RedisConfig $config): RedisClient
     {
-        self::$currentConnection = new RedisClient([
+        $connection = new RedisClient([
             'scheme' => $config->scheme,
             'path'   => $config->path,
             'port'   => $config->port,
@@ -46,8 +65,23 @@ class Redis
             'ssl'    => [
                 'cafile'      => $config->certPath,
                 'verify_peer' => true,
-            ]
+            ],
+        ], [
+            'prefix' => $config->prefix,
         ]);
+
+        // connect
+        $connection->connect();
+        
+        // return
+        return $connection;
+    }
+
+    //=============================================================================================
+
+    public static function getCurrentConnection(): RedisClient|null
+    {
+        return self::$currentConnection;
     }
 
     //=============================================================================================
@@ -60,23 +94,48 @@ class Redis
 
             switch ($config->scheme) {
                 case 'tls':
-                    self::tlsConnect($config);
+                    self::$currentConnection = self::tlsConnect($config);
                     break;
 
                 case 'unix':
-                    self::unixConnect($config);
+                    self::$currentConnection = self::unixConnect($config);
                     break;
                 
                 default:
                     // the default scheme is tcp
-                    self::tcpConnect($config);
+                    self::$currentConnection = self::tcpConnect($config);
                     break;
+            }
+
+            if (!self::$currentConnection->isConnected())
+            {
+                throw new SystemException('Cannot connect to Redis.', 500);
             }
         }
 
         // return connection
         return self::$currentConnection;
     }
+
+    //=============================================================================================
+
+    public static function disconnect(): bool
+    {
+        if (is_null(self::$currentConnection))
+        {
+            return false;
+        }
+
+        if (!self::$currentConnection->isConnected())
+        {
+            return false;
+        }
+        
+        self::$currentConnection->disconnect();
+        self::$currentConnection = null;
+
+        return true;
+    }    
 
     //=============================================================================================
 }
