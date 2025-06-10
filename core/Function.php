@@ -7,6 +7,7 @@ use Aether\Exception\SystemException;
 use Aether\View\Template;
 use Laminas\Escaper\Escaper;
 use Aether\Session;
+use Predis\Client as RedisClient;
 
 // functions
 if (!function_exists('dd') && function_exists('d'))
@@ -305,7 +306,7 @@ if (!function_exists('session'))
      * @return void
      * 
     **/
-    function session(array|string|null $options = null): void
+    function session(RedisClient|string|null $options = null): void
     {
         Session::start($options);
     }

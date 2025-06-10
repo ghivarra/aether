@@ -8,6 +8,7 @@ use Aether\Session\CustomHandlerInterface;
 use Config\Session as SessionConfig;
 use Config\Cookie as CookieConfig;
 use Aether\Exception\SystemException;
+use Predis\Client as RedisClient;
 
 /** 
  * Session Class
@@ -176,7 +177,7 @@ class Session
 
     //=============================================================================================
 
-    public static function start(array|string|null $options = null): void
+    public static function start(RedisClient|string|null $options = null): void
     {
         $status = session_status();
 
@@ -194,6 +195,10 @@ class Session
             if ($config->handler === 'file')
             {
                 ini_set('session.save_path', realpath($config->savePath));
+
+            } else {
+
+                ini_set('session.save_path', null);
             }
 
             ini_set('session.name', $config->cookieName);

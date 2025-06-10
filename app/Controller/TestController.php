@@ -5,6 +5,8 @@ use Aether\Interface\ResponseInterface;
 use Faker\Factory as FakerFactory;
 use App\Model\UserModel;
 use Aether\Database;
+use Aether\Session;
+use Aether\Redis;
 
 /** 
  * Test Controller
@@ -25,54 +27,25 @@ class TestController extends BaseController
                 'footer' => 'This is footer',
             ]
         ];
-        
-        $default = 'default';
-        $db      = Database::connect($default);
-        $faker   = FakerFactory::create('id_ID');
-        $model   = new UserModel($default);
 
-        $insertData = [];
-        $updateData = [];
+        // connect and check redis
+        $redis = Redis::connect();
+        // $test1 = $redis->set('test', 1, 'EX', 10, 'NX');
+        // $test2 = $redis->set('test', 1, 'EX', 100, 'NX');
 
-        // insert data
-        foreach (range(1, 20) as $key):
+        // dd([$test1->getPayload(), $test2]);
 
-            array_push($insertData, [
-                'name' => $faker->name(),
-                'age'  => random_int(3, 18),
-                'status' => $faker->randomElement(['nonaktif', 'aktif']),
-            ]);
+        // $data  = $redis->set('check', 'test', 'EX', 150, 'GET');
+        // dd($data);
+        // $redis->set('check2', 'test2', 'EX', 10, 'NX');
 
-        endforeach;
+        // start session
+        session();
 
-        // update bulk data
-        foreach (range(1, 20) as $key):
+        // set flash data
+        // Session::tempData('flasher', 'hehehe', 5);
 
-            array_push($updateData, [
-                'id'   => 21 + $key,
-                'name' => $faker->name(),
-                'age'  => random_int(3, 18),
-            ]);
-
-        endforeach;
-
-        // get data
-        $getData = $model->select(['age', 'status'])
-                         ->selectCount('id', 'total')
-                         ->whereIn('age', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
-                         ->groupBy(['age', 'status'])
-                         ->having('status', '=', 'aktif')
-                         ->update([
-                            'status' => 'aktif'
-                         ]);
-
-        // insert data
-        $insertion = $model->update($updateData);
-
-        dd([$getData, $insertion, Database::getAllQueries()]);
-
-        // home
-        return view('HomeView', $data);
+        dd($_SESSION);
 
         // return
         return $this->response->setJSON($data);

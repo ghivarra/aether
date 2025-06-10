@@ -86,6 +86,8 @@ class Session extends BaseSession
      *
      * For the 'database' driver, it's a table name.
      * Please read up the manual for the format with other session drivers.
+     * 
+     * For the 'redis' driver, it's a session prefix before the session name
      *
      * IMPORTANT: You are REQUIRED to set a valid save path!
      */
@@ -117,4 +119,16 @@ class Session extends BaseSession
      * 256-bit key for encryption. (usually 32 characters count)
      */
     public string $encryptionKey = '';
+
+    /**
+     * --------------------------------------------------------------------------
+     * Redis Lock Timeout
+     * --------------------------------------------------------------------------
+     *
+     * How many seconds to wait while the incoming request wanted to handle the session, 
+     * this is useful if a script end abruptly or throwing error and failed to clear the lock
+     * the next incoming request will always retries to set the sesion lock for every 100ms 
+     * even while the lock still persist
+     */
+    public int $redisLockTimeout = 60;
 }

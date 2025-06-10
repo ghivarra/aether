@@ -36,6 +36,7 @@ class BaseSession implements SessionInterface
     public int $timeToUpdate = 0;
     public bool $useEncryption = false;
     public string $encryptionKey = '';
+    public int $redisLockTimeout = 10;
 
     //==================================================================================
 
@@ -52,6 +53,7 @@ class BaseSession implements SessionInterface
         $this->timeToUpdate = getDotEnv('Session.timeToUpdate', 'int', $this->timeToUpdate);
         $this->useEncryption = getDotEnv('Session.useEncryption', 'bool', $this->useEncryption);
         $this->encryptionKey = getDotEnv('Session.encryptionKey', 'string', $this->encryptionKey);
+        $this->redisLockTimeout = getDotEnv('Session.redisLockTimeout', 'int', $this->redisLockTimeout);
     }
 
     //==================================================================================
