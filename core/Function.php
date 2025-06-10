@@ -8,6 +8,7 @@ use Aether\View\Template;
 use Laminas\Escaper\Escaper;
 use Aether\Session;
 use Predis\Client as RedisClient;
+use Config\Cookie;
 
 // functions
 if (!function_exists('dd') && function_exists('d'))
@@ -301,7 +302,7 @@ if (!function_exists('session'))
      * 
      * On 'file' driver, there are no constructor options or variable.
      * On 'database' driver, the options is the DB Connection that has been set on Config\Database.
-     * On 'redis' driver, the options is the Redis Configuration array that has been set on Config\Redis::$config.
+     * On 'redis' driver, the options is the RedisClient connection.
      * 
      * @return void
      * 
@@ -309,6 +310,54 @@ if (!function_exists('session'))
     function session(RedisClient|string|null $options = null): void
     {
         Session::start($options);
+    }
+}
+
+if (!function_exists('set_cookie'))
+{
+    /** 
+     * Send Cookie based on the Config\Cookie configurations
+     * 
+     * @return void
+     * 
+    **/
+    function set_cookie(string|array $name, string $value = '', int|null $expires = null, string|null $path = null, string|null $domain = null, bool|null $secure = null, bool|null $httponly = null): void
+    {
+        $config = new Cookie();
+
+        if (is_array($name))
+        {
+            $options = $name;
+
+            // set cookie options
+            if (!isset($options['name'], $options['value']))
+            {
+                $message = (AETHER_ENV === 'development') ? "Name and value should be set on set_cookie function." : "Failed to send response.";
+                throw new SystemException($message, 500);
+            }
+
+            $name     = $options['name'];
+            $value    = $options['value'];
+            $expires  = isset($options['expires']) ? $options['expires'] : $expires;
+            $path     = isset($options['path']) ? $options['path'] : $path;
+            $domain   = isset($options['domain']) ? $options['domain'] : $domain;
+            $secure   = isset($options['secure']) ? $options['secure'] : $secure;
+            $httponly = isset($options['httponly']) ? $options['httponly'] : $httponly;
+        }
+
+        // use config if null
+        $expires  = is_null($expires) ? $config->expires : $expires;
+        $path     = is_null($path) ? $config->path : $path;
+        $domain   = is_null($domain) ? $config->domain : $domain;
+        $secure   = is_null($secure) ? $config->secure : $secure;
+        $httponly = is_null($httponly) ? $config->httponly : $httponly;
+
+        // mutate name using config prefix
+        $name    = $config->prefix . $name;
+        $expires = time() + $expires;
+
+        // set cookie
+        setcookie($name, $value, $expires, $path, $domain, $secure, $httponly);
     }
 }
 
