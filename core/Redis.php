@@ -86,12 +86,13 @@ class Redis
 
     //=============================================================================================
 
-    public static function connect()
+    public static function connect(RedisConfig|null $config = null)
     {
+        $config = is_null($config) ? new RedisConfig() : $config;
+
+        // check if connection does not exist
         if (is_null(self::$currentConnection))
         {
-            $config = new RedisConfig();
-
             switch ($config->scheme) {
                 case 'tls':
                     self::$currentConnection = self::tlsConnect($config);
