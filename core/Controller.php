@@ -7,8 +7,7 @@ namespace Aether;
 use Aether\Interface\ControllerInterface;
 use Aether\Interface\RequestInterface;
 use Aether\Interface\ResponseInterface;
-use Aether\Request;
-use Aether\Response;
+use Config\Services;
 
 /** 
  * The very base of the Controller
@@ -50,8 +49,8 @@ class Controller implements ControllerInterface
     **/
     public function __loadController(): void
     {
-        $this->request  = new Request();
-        $this->response = new Response();
+        $this->request  = Services::request();
+        $this->response = Services::response();
     }
 
     //====================================================================================================

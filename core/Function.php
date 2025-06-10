@@ -9,8 +9,29 @@ use Laminas\Escaper\Escaper;
 use Aether\Session;
 use Predis\Client as RedisClient;
 use Config\Cookie;
+use Config\Security;
 
 // functions
+if (!function_exists('csrfToken'))
+{
+    /** 
+     * Get csrf token name
+     * 
+     * @return string
+     * 
+    **/
+    function csrfToken(): string
+    {
+        // create csrf
+        
+
+        // set into cookie
+        setco
+
+        return '';
+    }
+}
+
 if (!function_exists('dd') && function_exists('d'))
 {
     /** 

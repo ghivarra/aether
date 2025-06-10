@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Aether;
 
 use Aether\Interface\ResponseInterface;
-use Aether\Routing;
+use Config\Services;
 
 /** 
  * Response
@@ -141,7 +141,7 @@ class Response implements ResponseInterface
     public function route(string $routeName, array $params = []): ResponseInterface
     {
         // initiate routing
-        $routing = new Routing();
+        $routing = Services::routing();
 
         // set redirect
         $route = $routing->findByAlias($routeName, $params);

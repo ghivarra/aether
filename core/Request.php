@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Aether;
 
 use Aether\Interface\RequestInterface;
+use Config\Cookie;
 
 /** 
  * Request
@@ -17,6 +18,27 @@ use Aether\Interface\RequestInterface;
 
 class Request implements RequestInterface
 {
+    /** 
+     * Retrieve data from cookie
+     * 
+     * @param string $key
+     * @param mixed $default
+     * 
+     * @return mixed
+     * 
+    **/
+    public function cookie(string $key, mixed $default = null): mixed
+    {
+        // mutate key based on config
+        $config = new Cookie();
+        $key    = $config->prefix . $key;
+        
+        // return
+        return isset($_COOKIE[$key]) ? $_COOKIE[$key] : $default;
+    }
+
+    //===========================================================================================
+
     /** 
      * Retrieve singular data from $_FILES
      * 

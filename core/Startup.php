@@ -6,12 +6,10 @@ namespace Aether;
 
 use Config\App;
 use Config\Middlewares;
+use Config\Services;
 use Dotenv\Dotenv;
 use Aether\CleanUp;
 use Aether\Error;
-use Aether\Request;
-use Aether\Response;
-use Aether\Routing;
 use Aether\Exception\PageNotFoundException;
 use Aether\Interface\ResponseInterface;
 use \Throwable;
@@ -60,7 +58,7 @@ class Startup
             }
 
             // route request
-            $routing = new Routing();
+            $routing = Services::routing();
             $route   = $routing->find($_SERVER['REQUEST_URI']);
 
             // mutate middlewares
@@ -152,7 +150,7 @@ class Startup
 
         // if not then initiate response
         // and set view data using the correct $response type
-        $newResponse = new Response();
+        $newResponse = Services::response();
 
         if (is_string($response))
         {
@@ -179,7 +177,7 @@ class Startup
     {
         // load middlewares config & request
         $middleware = new Middlewares();
-        $request    = new Request();
+        $request    = Services::request();
 
         // classes collection
         $middlewareClasses = [];

@@ -2,6 +2,7 @@
 
 interface RequestInterface
 {
+    public function cookie(string $key, mixed $default = null): mixed;
     public function file(string $key, mixed $default = null): mixed;
     public function files(string $key, mixed $default = null): mixed;
     public function get(string $key, mixed $default = null): mixed;
