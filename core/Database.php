@@ -40,6 +40,23 @@ class Database
     
     //==================================================================================================
 
+    public static function getCurrentConnection(string|null $defaultConnection = null): DriverInterface|array|null
+    {
+        // if null then return all
+        if (is_null($defaultConnection))
+        {
+            return self::$currentConnection;
+        }
+
+        // default
+        $conn = $defaultConnection;
+
+        // return
+        return isset(self::$currentConnection[$conn]) ? self::$currentConnection[$conn] : null;
+    }
+
+    //==================================================================================================
+
     public static function connect(string $defaultConnection = ''): DriverInterface
     {
         // initiate config
