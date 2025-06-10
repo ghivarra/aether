@@ -7,6 +7,7 @@ namespace Aether;
 use Config\App;
 use Config\Middlewares;
 use Dotenv\Dotenv;
+use Aether\CleanUp;
 use Aether\Error;
 use Aether\Request;
 use Aether\Response;
@@ -74,6 +75,9 @@ class Startup
 
             // run after controller middleware
             $this->runMiddleware('after', $routeAfterMiddleware, $response);
+
+            // clean up all instance before running response
+            CleanUp::trigger();
 
             // if there are no return response from the middleware 
             // then run response
