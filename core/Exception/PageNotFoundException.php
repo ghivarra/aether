@@ -5,8 +5,9 @@ declare(strict_types = 1);
 namespace Aether\Exception;
 
 use \Exception;
+use Aether\Exception\BaseException;
 
-class PageNotFoundException
+class PageNotFoundException extends BaseException
 {
     public function __construct(string $message)
     {
