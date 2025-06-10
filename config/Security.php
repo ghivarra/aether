@@ -1,0 +1,66 @@
+<?php
+
+namespace Config;
+
+use Aether\Config\BaseSecurity;
+
+class Security extends BaseSecurity
+{
+    /**
+     * --------------------------------------------------------------------------
+     * CSRF Token Name
+     * --------------------------------------------------------------------------
+     *
+     * Token name for Cross Site Request Forgery protection.
+     */
+    public string $tokenName = 'X_CSRF_COOKIE';
+
+    /**
+     * --------------------------------------------------------------------------
+     * CSRF Header Name
+     * --------------------------------------------------------------------------
+     *
+     * Header name for Cross Site Request Forgery protection.
+     */
+    public string $headerName = 'X-CSRF-TOKEN';
+
+    /**
+     * --------------------------------------------------------------------------
+     * CSRF Cookie Name
+     * --------------------------------------------------------------------------
+     *
+     * Cookie name for Cross Site Request Forgery protection.
+     */
+    public string $cookieName = 'X_CSRF_TOKEN';
+
+    /**
+     * --------------------------------------------------------------------------
+     * CSRF Expires
+     * --------------------------------------------------------------------------
+     *
+     * Expiration time for Cross Site Request Forgery protection cookie.
+     *
+     * Defaults to two hours (in seconds).
+     */
+    public int $expires = 7200;
+
+    /**
+     * --------------------------------------------------------------------------
+     * CSRF Regenerate
+     * --------------------------------------------------------------------------
+     *
+     * Regenerate CSRF Token on every submission.
+     */
+    public bool $regenerate = true;
+
+    /**
+     * --------------------------------------------------------------------------
+     * CSRF Redirect
+     * --------------------------------------------------------------------------
+     *
+     * Redirect to previous page with error on failure.
+     *
+     * @see https://codeigniter4.github.io/userguide/libraries/security.html#redirection-on-failure
+     */
+    public bool $redirect = (AETHER_ENV === 'production');
+}
