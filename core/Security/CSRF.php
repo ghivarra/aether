@@ -5,6 +5,8 @@ declare(strict_types = 1);
 namespace Aether\Security;
 
 use Config\Security as SecurityConfig;
+use Config\Cookie as CookieConfig;
+use Config\Services;
 
 /** 
  * CSRF Library
@@ -14,37 +16,53 @@ use Config\Security as SecurityConfig;
 
 class CSRF
 {
-    public static string $csrfHash = '';
+    private static string $csrfHash = '';
+
+    //======================================================================================================
+
+    public static function getHash(): string
+    {
+        return self::$csrfHash;
+    }
 
     //======================================================================================================
 
     public static function generate(): string
     {
         // generate csrf hash
-        $randomBytes    = random_bytes(4);
-        self::$csrfHash =  bin2hex($randomBytes);
+        $randomBytes = random_bytes(4);
 
         // return
-        return self::$csrfHash;
+        return bin2hex($randomBytes);
     }
 
     //======================================================================================================
 
     public static function set(): void
     {
-        $config = new SecurityConfig();
+        $config  = new SecurityConfig();
+        $cookie  = new CookieConfig();
+        $request = Services::request();
 
-        // get hash and create if empty
+        // check if always regenerate new hash
         if (empty(self::$csrfHash))
         {
-            self::generate();
+            if ($config->regenerate)
+            {
+                self::$csrfHash = self::generate();
+
+            } else {
+
+                // get old hash and set new hash if empty
+                self::$csrfHash = $request->cookie($config->cookieName, self::generate());
+            }
         }
 
-        // set cookie
+        // set expiration
         $expiration = time() + $config->expires;
 
-        // new
-        setcookie($config->cookieName, self::$csrfHash, );
+        // set cookie
+        setcookie($config->cookieName, self::$csrfHash, $expiration, $cookie->path, $cookie->domain, $cookie->secure, true);
     }
 
     //======================================================================================================

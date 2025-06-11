@@ -19,7 +19,7 @@ class BaseService
         // check if stored in class and call
         if (!isset($sharedInstances[$service]))
         {
-            self::$sharedInstances[$service] = self::$service();
+            self::$sharedInstances[$service] = self::$service(false);
         }
 
         // return

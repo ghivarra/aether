@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 // used library
 use Aether\Exception\SystemException;
+use Aether\Security\CSRF;
 use Aether\View\Template;
 use Laminas\Escaper\Escaper;
 use Aether\Session;
@@ -22,13 +23,45 @@ if (!function_exists('csrfToken'))
     **/
     function csrfToken(): string
     {
-        // create csrf
-        
+        $security = new Security();
 
-        // set into cookie
-        setco
+        // return
+        return $security->tokenName;
+    }
+}
 
-        return '';
+if (!function_exists('csrfHeader'))
+{
+    /** 
+     * Get csrf header name
+     * 
+     * @return string
+     * 
+    **/
+    function csrfHeader(): string
+    {
+        $security = new Security();
+
+        // return
+        return $security->headerName;
+    }
+}
+
+if (!function_exists('csrfHash'))
+{
+    /** 
+     * Get csrf hash
+     * 
+     * @return string
+     * 
+    **/
+    function csrfHash(): string
+    {
+        // set csrf
+        CSRF::set();
+
+        // return
+        return CSRF::getHash();
     }
 }
 
