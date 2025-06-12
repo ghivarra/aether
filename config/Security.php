@@ -13,7 +13,7 @@ class Security extends BaseSecurity
      *
      * Token name for Cross Site Request Forgery protection.
      */
-    public string $tokenName = 'X_CSRF_COOKIE';
+    public string $tokenName = 'X_CSRF_TOKEN';
 
     /**
      * --------------------------------------------------------------------------
@@ -31,7 +31,7 @@ class Security extends BaseSecurity
      *
      * Cookie name for Cross Site Request Forgery protection.
      */
-    public string $cookieName = 'X_CSRF_TOKEN';
+    public string $cookieName = 'X_CSRF_COOKIE';
 
     /**
      * --------------------------------------------------------------------------

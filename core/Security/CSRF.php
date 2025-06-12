@@ -85,7 +85,7 @@ class CSRF
         $method = strtoupper($method);
 
         // get cookie first and if null get headers
-        $csrfHash = $request->cookie($config->cookieName, 'no-csrf-found');
+        $csrfHash = $request->cookie($config->cookieName, 'no-csrf-found', false);
 
         // now switch case on method on how to get input hash
         switch ($method) {

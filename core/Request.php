@@ -72,11 +72,15 @@ class Request implements RequestInterface
      * @return mixed
      * 
     **/
-    public function cookie(string $key, mixed $default = null): mixed
+    public function cookie(string $key, mixed $default = null, bool $usePrefix = true): mixed
     {
         // mutate key based on config
         $config = new Cookie();
-        $key    = $config->prefix . $key;
+
+        if ($usePrefix)
+        {
+            $key = $config->prefix . $key;
+        }
         
         // return
         return isset($_COOKIE[$key]) ? $_COOKIE[$key] : $default;
