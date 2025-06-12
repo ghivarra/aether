@@ -29,7 +29,7 @@ class Error
         $type    = $request->requestType();
         $accept  = $request->header('ACCEPT');
 
-        if ($type === 'ajax' || $accept === 'application/json')
+        if ($type !== 'web')
         {
             $sendData = [
                 'status'  => 'error',
@@ -41,12 +41,23 @@ class Error
             {
                 $sendData['line']  = $error->getLine();
                 $sendData['file']  = $error->getFile();
-                $sendData['trace'] = $error->getTrace();
             }
 
-            // echo
-            echo json_encode($sendData);
-            exit(1);
+            if ($type === 'ajax' || $accept === 'application/json' || is_string($accept) && str_contains($accept, 'application/json'))
+            {
+                // add trace
+                $sendData['trace'] = $error->getTrace();
+                
+                // send response
+                header('Content-Type: application/json');
+                echo json_encode($sendData);
+                exit;
+
+            } else {
+
+                // CLI
+                dd($sendData);
+            }
 
         } else {
 

@@ -65,6 +65,16 @@ if (!function_exists('csrfHash'))
     }
 }
 
+if (!function_exists('console_log'))
+{
+    function console_log(string $message): void
+    {
+        $STDERR = fopen("php://stderr", "w");
+        fwrite($STDERR, "\n".$message."\n\n");
+        fclose($STDERR);
+    }
+}
+
 if (!function_exists('dd') && function_exists('d'))
 {
     /** 
