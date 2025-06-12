@@ -40,7 +40,7 @@ class Routes
 
         }, ['before' => ['isAdmin']]);
 
-        $route->match(['options', 'post', 'get'], '/', TestController::class, 'index')->as('home');
+        $route->all('/', TestController::class, 'index')->as('home');
     }
 
     //==========================================================================================

@@ -45,7 +45,7 @@ class TestController extends BaseController
         // set flash data
         // Session::tempData('flasher', 'hehehe', 5);
 
-        dd($_SESSION);
+        dd([$_SESSION, memory_get_peak_usage()]);
 
         // return
         return $this->response->setJSON($data);

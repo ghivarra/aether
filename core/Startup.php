@@ -10,6 +10,7 @@ use Config\Services;
 use Dotenv\Dotenv;
 use Aether\CleanUp;
 use Aether\Error;
+use Aether\Response;
 use Aether\Exception\PageNotFoundException;
 use Aether\Interface\ResponseInterface;
 use \Throwable;
@@ -59,7 +60,8 @@ class Startup
 
             // route request
             $routing = Services::routing();
-            $route   = $routing->find($_SERVER['REQUEST_URI']);
+            $request = Services::request();
+            $route   = $routing->find($request->server('REQUEST_URI'));
 
             // mutate middlewares
             $routeBeforeMiddleware = $route['data']['middlewares']['before'];
@@ -79,7 +81,7 @@ class Startup
 
             // if there are no return response from the middleware 
             // then run response
-            $this->runResponse($response);
+            $this->runResponse();
 
         } catch(\Throwable $e) {
 
@@ -212,7 +214,7 @@ class Startup
                 // early response mode activated
                 if ($instance instanceof ResponseInterface)
                 {
-                    return $this->runResponse($instance);
+                    return $this->runResponse();
                     break;
                 }
 
@@ -225,7 +227,7 @@ class Startup
                 // early response mode activated
                 if ($instance instanceof ResponseInterface)
                 {
-                    return $this->runResponse($instance);
+                    return $this->runResponse();
                     break;
                 }
             }
@@ -235,30 +237,30 @@ class Startup
 
     //====================================================================================
 
-    public function runResponse(ResponseInterface $response): void
+    public function runResponse(): void
     {
         // check redirect
-        if ($response->redirected)
+        if (Response::$redirected)
         {
             // early return
-            redirect($response->redirectURL);
+            redirect(Response::$redirectURL);
         }
 
         // set status code
-        http_response_code($response->statusCode);
+        http_response_code(Response::$statusCode);
 
         // set content type & charset
-        header("Content-Type: {$response->contentType}; charset={$response->charset}");
+        header('Content-Type: '. Response::$contentType .'; charset=' . Response::$charset);
 
         // set another headers
-        foreach ($response->headers as $header):
+        foreach (Response::$headers as $header):
 
             header("{$header['key']}: {$header['value']}");
 
         endforeach;
 
         // echo view data
-        echo $response->viewData;
+        echo Response::$viewData;
 
         // end running script
         exit(0);

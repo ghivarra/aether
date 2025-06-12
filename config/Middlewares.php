@@ -1,6 +1,7 @@
 <?php namespace Config;
 
 use Aether\Interface\Config\MiddlewareInterface;
+use Aether\Middleware\CSRFMiddleware;
 use App\Middleware\GlobalMiddleware;
 use App\Middleware\IsLoggedOutMiddleware;
 use App\Middleware\IsAdminMiddleware;
@@ -28,6 +29,7 @@ class Middlewares implements MiddlewareInterface
         'global'      => GlobalMiddleware::class,
         'isAdmin'     => IsAdminMiddleware::class,
         'isLoggedOut' => IsLoggedOutMiddleware::class,
+        'csrf'        => CSRFMiddleware::class,
     ];
 
     /** 
@@ -40,6 +42,7 @@ class Middlewares implements MiddlewareInterface
     **/
     public array $global = [
         'before' => [
+            'csrf',
             'global'
         ],
         'after' => [
