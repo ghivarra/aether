@@ -1,0 +1,15 @@
+<?php
+
+declare(strict_types = 1);
+
+// check if CLI
+if (is_null($argv))
+{
+    console_log('You should run this script only in CLI interface');
+}
+
+// run the index
+require_once __DIR__ . '/public/index.php';
+
+// always end with double new line
+echo "\n\n";

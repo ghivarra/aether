@@ -69,9 +69,7 @@ if (!function_exists('console_log'))
 {
     function console_log(string $message): void
     {
-        $STDERR = fopen("php://stderr", "w");
-        fwrite($STDERR, "\n".$message."\n\n");
-        fclose($STDERR);
+        echo "\n{$message}\n\n";
     }
 }
 
