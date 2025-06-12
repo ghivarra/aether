@@ -44,6 +44,32 @@ class App
 
     //=====================================================================================================
 
+    private function printManual(): void
+    {
+        echo "\n\n";
+
+        echo $this->styleText("Cache", 'yellow') . "\n";
+        echo "  " . $this->styleText("cache:clear", 'green') . "\t\tClear the current stored caches." . "\n\n";
+
+        echo $this->styleText("Database", 'yellow') . "\n";
+        echo "  " . $this->styleText("db:seed", 'green') . "\t\tRun the specified seeder to populate the database." . "\n";
+        echo "  " . $this->styleText("migrate:start", 'green') . "\t\tRun the migration." . "\n";
+        echo "  " . $this->styleText("migrate:rollback", 'green') . "\tRollback the current migration." . "\n";
+        echo "  " . $this->styleText("migrate:refresh", 'green') . "\tDoes a rollback then run the migration." . "\n\n";
+
+        echo $this->styleText("Encryption", 'yellow') . "\n";
+        echo "  " . $this->styleText("key:generate", 'green') . "\t\tGenerate a new encryption key and store it in .env file." . "\n\n";
+
+        echo $this->styleText("Generators", 'yellow') . "\n";
+        echo "  " . $this->styleText("make:controller", 'green') . "\tGenerate a new controller file." . "\n";
+        echo "  " . $this->styleText("make:middleware", 'green') . "\tGenerate a new middleware file." . "\n";
+        echo "  " . $this->styleText("make:migration", 'green') . "\tGenerate a new migration file." . "\n";
+        echo "  " . $this->styleText("make:model", 'green') . "\t\tGenerate a new model file." . "\n";
+        echo "  " . $this->styleText("make:seeder", 'green') . "\t\tGenerate a new seeder file." . "\n";
+    }
+
+    //=====================================================================================================
+
     public function run(array $argv): void
     {
         // store the parameters into static
@@ -58,34 +84,18 @@ class App
         // echo Command Line Tool interface
         echo $this->styleText("Aether Framework v{$version} Command Line Tool", 'green', true);
 
-        // check if second parameter is empty
+        // check if second parameter is empty or help
         // show manual
-        if (!isset($argv[1]))
+        if (!isset($argv[1]) || strtolower($argv[1]) === 'help')
         {
-            echo "\n\n";
-
-            echo $this->styleText("Cache", 'yellow') . "\n";
-            echo "  " . $this->styleText("cache:clear", 'green') . "\t\tClear the current stored caches." . "\n\n";
-
-            echo $this->styleText("Database", 'yellow') . "\n";
-            echo "  " . $this->styleText("db:seed", 'green') . "\t\tRun the specified seeder to populate the database." . "\n";
-            echo "  " . $this->styleText("migrate:start", 'green') . "\t\tRun the migration." . "\n";
-            echo "  " . $this->styleText("migrate:rollback", 'green') . "\tRollback the current migration." . "\n";
-            echo "  " . $this->styleText("migrate:refresh", 'green') . "\tDoes a rollback then run the migration." . "\n\n";
-
-            echo $this->styleText("Encryption", 'yellow') . "\n";
-            echo "  " . $this->styleText("key:generate", 'green') . "\t\tGenerate a new encryption key and store it in .env file." . "\n\n";
-
-            echo $this->styleText("Generators", 'yellow') . "\n";
-            echo "  " . $this->styleText("make:controller", 'green') . "\tGenerate a new controller file." . "\n";
-            echo "  " . $this->styleText("make:middleware", 'green') . "\tGenerate a new middleware file." . "\n";
-            echo "  " . $this->styleText("make:migration", 'green') . "\tGenerate a new migration file." . "\n";
-            echo "  " . $this->styleText("make:model", 'green') . "\t\tGenerate a new model file." . "\n";
-            echo "  " . $this->styleText("make:seeder", 'green') . "\t\tGenerate a new seeder file." . "\n";
+            $this->printManual();
 
             // return and done
             return;
         }
+
+        // set as commands
+        $command = $argv[1];
 
         // echo "\n";
     }
