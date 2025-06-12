@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Aether;
 
 use \Throwable;
+use Config\Services;
 
 /** 
  * Error Class
@@ -24,17 +25,43 @@ class Error
             http_response_code($statusCode);
         }
 
-        // send view
-        if ($statusCode === 404) {
+        $request = Services::request();
+        $type    = $request->requestType();
+        $accept  = $request->header('ACCEPT');
 
-            $filePath = file_exists(VIEWPATH . 'Error/PageNotFoundView.php') ? VIEWPATH . 'Error/PageNotFoundView.php' : SYSTEMPATH . 'View/Error/PageNotFoundView.php';
+        if ($type === 'ajax' || $accept === 'application/json')
+        {
+            $sendData = [
+                'status'  => 'error',
+                'code'    => $statusCode,
+                'message' => $error->getMessage(),
+            ];
+
+            if (AETHER_ENV === 'development')
+            {
+                $sendData['line']  = $error->getLine();
+                $sendData['file']  = $error->getFile();
+                $sendData['trace'] = $error->getTrace();
+            }
+
+            // echo
+            echo json_encode($sendData);
+            exit(1);
 
         } else {
 
-            $filePath = file_exists(VIEWPATH . 'Error/ErrorView.php') ? VIEWPATH . 'Error/ErrorView.php' : SYSTEMPATH . 'View/Error/ErrorView.php';
+            // send view
+            if ($statusCode === 404) {
+    
+                $filePath = file_exists(VIEWPATH . 'Error/PageNotFoundView.php') ? VIEWPATH . 'Error/PageNotFoundView.php' : SYSTEMPATH . 'View/Error/PageNotFoundView.php';
+    
+            } else {
+    
+                $filePath = file_exists(VIEWPATH . 'Error/ErrorView.php') ? VIEWPATH . 'Error/ErrorView.php' : SYSTEMPATH . 'View/Error/ErrorView.php';
+            }
+    
+            require $filePath;
+            exit(1);
         }
-
-        require $filePath;
-        exit(1);
     }
 }

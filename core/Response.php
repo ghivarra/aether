@@ -20,77 +20,77 @@ class Response implements ResponseInterface
     /** 
      * Content-Type to be set on the response headers
      * 
-     * @var string $this->contentType
+     * @var string self::$contentType
     **/
-    public string $contentType = 'text/html';
+    public static string $contentType = 'text/html';
 
     /** 
      * Charset to be set inside the Content-Type response headers
      * 
-     * @var string $this->charset
+     * @var string self::$charset
     **/
-    public string $charset = 'UTF-8';
+    public static string $charset = 'UTF-8';
 
     /** 
      * Headers to be set on the response headers
      * 
-     * @var array $this->headers
+     * @var array self::$headers
     **/
-    public array $headers = [
+    public static array $headers = [
         ['key' => 'Cache-Control', 'value' => 'no-store, max-age=0, no-cache'],
     ];
 
     /** 
      * Data to be echoed on the response
      * 
-     * @var string $this->viewData
+     * @var string self::$viewData
     **/
-    public string $viewData = '';
+    public static string $viewData = '';
 
     /** 
      * HTTP Response Status Code
      * 
-     * @var int $this->statusCode
+     * @var int self::$statusCode
     **/
-    public int $statusCode = 200;
+    public static int $statusCode = 200;
 
     /** 
      * Check if the response is resulted in redirection
      * 
-     * @var bool $this->redirected
+     * @var bool self::$redirected
     **/
-    public bool $redirected = false;
+    public static bool $redirected = false;
 
     /** 
      * Redirect parameter based on the route alias/name
      * 
-     * @var string $this->redirectParameter
+     * @var string self::$redirectParameter
     **/
-    public string $redirectParameter = '';
+    public static string $redirectParameter = '';
 
     /** 
      * Redirect parameter based on the URL if 
      * a valid URL or baseURL(parameter) if is not a valid URL
      * 
-     * @var string $this->redirectURL
+     * @var string self::$redirectURL
     **/
-    public string $redirectURL = '/';
+    public static string $redirectURL = '/';
 
     /** 
      * If input data is sent to the redirected view
      * or not. MUST ENABLE COOKIE OR SESSION!
      * 
-     * @var bool $this->withInputData
+     * @var bool self::$withInputData
     **/
-    public bool $withInputData = false;
+    public static bool $withInputData = false;
 
     /** 
      * Flash data to be sent into redirected view
      * MUST ENABLE COOKIE OR SESSION!
      * 
-     * @var string $this->flashData
+     * @var string self::$flashData
     **/
-    public array $flashData = [];
+    public static array $flashData = [];
 
     //==================================================================================================
 
@@ -104,8 +104,8 @@ class Response implements ResponseInterface
     public function json(mixed $data): ResponseInterface
     {
         // input as data as json
-        $this->contentType = 'application/json';
-        $this->viewData = json_encode($data);
+        self::$contentType = 'application/json';
+        self::$viewData = json_encode($data);
 
         // return
         return $this;
@@ -122,8 +122,8 @@ class Response implements ResponseInterface
     {
         // set redirect as true
         // and set default redirect URL
-        $this->redirected = true;
-        $this->redirectURL = base_url();
+        self::$redirected = true;
+        self::$redirectURL = base_url();
 
         // return
         return $this;
@@ -147,7 +147,7 @@ class Response implements ResponseInterface
         $route = $routing->findByAlias($routeName, $params);
 
         // set url
-        $this->redirectURL = base_url($route['uri']);
+        self::$redirectURL = base_url($route['uri']);
 
         // return
         return $this;
@@ -165,7 +165,7 @@ class Response implements ResponseInterface
     public function setCharset(string $charset): ResponseInterface
     {
         // set charset
-        $this->charset = $charset;
+        self::$charset = $charset;
 
         // return
         return $this;
@@ -183,7 +183,7 @@ class Response implements ResponseInterface
     public function setContentType(string $contentType): ResponseInterface
     {
         // set content type
-        $this->contentType = $contentType;
+        self::$contentType = $contentType;
 
         // return
         return $this;
@@ -202,7 +202,7 @@ class Response implements ResponseInterface
     public function setHeader(string $key, int|string $value): ResponseInterface
     {
         // check if header exist
-        $headerKeys = array_column($this->headers, 'key');
+        $headerKeys = array_column(self::$headers, 'key');
 
         // check if found in array
         if (in_array($key, $headerKeys))
@@ -211,7 +211,7 @@ class Response implements ResponseInterface
             $i = array_search($key, $headerKeys);
 
             // replace
-            $this->headers[$i] = [
+            self::$headers[$i] = [
                 'key'   => $key,
                 'value' => $value,
             ];
@@ -219,7 +219,7 @@ class Response implements ResponseInterface
         } else {
 
             // push header
-            array_push($this->headers, [
+            array_push(self::$headers, [
                 'key'   => $key,
                 'value' => $value,
             ]);
@@ -255,7 +255,7 @@ class Response implements ResponseInterface
     public function setStatusCode(int $code): ResponseInterface
     {
         // set status code
-        $this->statusCode = $code;
+        self::$statusCode = $code;
 
         // return
         return $this;
@@ -273,7 +273,7 @@ class Response implements ResponseInterface
     public function setViewData(string $data): ResponseInterface
     {
         // set view data
-        $this->viewData = $data;
+        self::$viewData = $data;
 
         // return
         return $this;
@@ -298,7 +298,7 @@ class Response implements ResponseInterface
         }
 
         // set redirected url
-        $this->redirectURL = $url;
+        self::$redirectURL = $url;
 
         // return
         return $this;

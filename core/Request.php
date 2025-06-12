@@ -18,6 +18,51 @@ use Config\Cookie;
 
 class Request implements RequestInterface
 {
+    private static string $requestType = ''; // between cli, ajax, and web
+    private static array $incomingHeaders = [];
+    private static array $serverData = [];
+
+    //===========================================================================================
+
+    public function __construct()
+    {
+        static::$serverData = $_SERVER;
+
+        foreach (static::$serverData as $key => $data):
+
+            $prefix = substr($key, 0, 5);
+
+            if ($prefix === 'HTTP_')
+            {
+                // create new key witout HTTP_
+                $newKey = substr($key, 5);
+
+                // store on static
+                static::$incomingHeaders[$newKey] = $data;
+            }
+
+        endforeach;
+
+        // set request type
+        if (strtoupper(php_sapi_name()) === 'CLI')
+        {
+            self::$requestType = 'cli';
+
+        } else {
+
+            if (isset(self::$serverData['HTTP_X_REQUESTED_WITH']) && strtolower(self::$serverData['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            {
+                self::$requestType = 'ajax';
+
+            } else {
+
+                self::$requestType = 'web';
+            }
+        }
+    }
+
+    //===========================================================================================
+
     /** 
      * Retrieve data from cookie
      * 
@@ -110,7 +155,25 @@ class Request implements RequestInterface
 
     //===========================================================================================
 
-    public function input(string $key, mixed $default = null): mixed
+    public function header(string $key, string|null $default = null): string|null
+    {
+        // mutate key
+        $key = str_replace('-', '_', $key);
+
+        // return as string|null
+        return isset(self::$incomingHeaders[$key]) ? self::$incomingHeaders[$key] : $default;
+    }
+
+    //===========================================================================================
+
+    public function headers(): array
+    {
+        return self::$incomingHeaders;
+    }
+
+    //===========================================================================================
+
+    public function input(mixed $default = null): mixed
     {
         // get input data
         $input = file_get_contents('php://input');
@@ -135,6 +198,20 @@ class Request implements RequestInterface
     public function post(string $key, mixed $default = null): mixed
     {
         return isset($_POST[$key]) ? $_POST[$key] : $default;
+    }
+
+    //===========================================================================================
+
+    public function requestType(): string
+    {
+        return self::$requestType;
+    }
+
+    //===========================================================================================
+
+    public function server(string $key, mixed $default = null): mixed
+    {
+        return isset(self::$serverData[$key]) ? self::$serverData[$key] : $default;
     }
 
     //===========================================================================================
