@@ -248,7 +248,56 @@ class Session
 
     //=============================================================================================
 
-    public static function flashData(string|array $data, string $value = ''): void
+    public static function get(string|array|int $keys, mixed $default = null): mixed
+    {
+        // run before
+        self::checkSessionStatus();
+
+        // set
+        if (is_array($keys))
+        {
+            $result = [];
+
+            foreach ($keys as $key):
+
+                $result[$key] = isset($_SESSION[$key]) ? $_SESSION[$key] : $default;
+
+            endforeach;
+
+        } else {
+
+            $result = isset($_SESSION[$keys]) ? $_SESSION[$keys] : $default;
+        }
+
+        // return
+        return $result;
+    }
+
+    //=============================================================================================
+
+    public static function set(string|array|int $data, mixed $value = null): void
+    {
+        // run before
+        self::checkSessionStatus();
+
+        // set
+        if (is_array($data))
+        {
+            foreach ($data as $key => $value):
+
+                $_SESSION[$key] = $value;
+
+            endforeach;
+
+        } else {
+
+            $_SESSION[$data] = $value;
+        }
+    }
+
+    //=============================================================================================
+
+    public static function flashData(string|array|int $data, mixed $value = null): void
     {
         // run before
         self::checkSessionStatus();
@@ -283,7 +332,7 @@ class Session
 
     //=============================================================================================
 
-    public static function tempData(string|array $data, string $value = '', int $time = 0): void
+    public static function tempData(string|array|int $data, mixed $value = null, int $time = 0): void
     {
         // run before
         self::checkSessionStatus();

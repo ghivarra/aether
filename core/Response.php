@@ -6,6 +6,7 @@ namespace Aether;
 
 use Aether\Interface\ResponseInterface;
 use Config\Services;
+use Aether\Session;
 
 /** 
  * Response
@@ -315,6 +316,10 @@ class Response implements ResponseInterface
     **/
     public function view(string $filepath): ResponseInterface
     {
+        // require view path
+        require VIEWPATH . $filePath;
+
+        // return instance
         return $this;
     }
 
@@ -332,6 +337,20 @@ class Response implements ResponseInterface
     **/
     public function with(string|array $key, string|null $value): ResponseInterface
     {
+        $status = session_status();
+
+        if ($status === PHP_SESSION_NONE)
+        {
+            // set on cookie
+            set_cookie($key, $value);
+            
+        } elseif ($status === PHP_SESSION_ACTIVE) {
+
+            // set on session
+            Session::flashData($key, $value);
+        }
+
+        // return instance
         return $this;
     }
 
@@ -347,6 +366,23 @@ class Response implements ResponseInterface
     **/
     public function withInput(): ResponseInterface
     {
+        if (!empty($_POST))
+        {
+            $status = session_status();
+
+            if ($status === PHP_SESSION_NONE)
+            {
+                // set post data on cookie
+                set_cookie('__old', json_encode($_POST));
+                
+            } elseif ($status === PHP_SESSION_ACTIVE) {
+
+                // set on session
+                Session::flashData('__old', $_POST);
+            }
+        }
+
+        // return instances
         return $this;
     }
 
