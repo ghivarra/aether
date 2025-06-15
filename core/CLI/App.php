@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Aether\CLI;
 
+use Aether\CLI\Command\Generators;
+
 /** 
  * The App class to run the CLI in Aether Framework
  * 
@@ -13,6 +15,19 @@ namespace Aether\CLI;
 class App
 {
     public static array $CLIParams = [];
+    private array $commandList = [
+        'cache:clear',
+        'db:seed',
+        'migrate:start',
+        'migrate:rollback',
+        'migrate:refresh',
+        'key:generate',
+        'make:controller',
+        'make:middleware',
+        'make:migration',
+        'make:model',
+        'make:seeder',
+    ];
 
     //=====================================================================================================
 
@@ -70,8 +85,73 @@ class App
 
     //=====================================================================================================
 
+    public function generator(string $generatedFile, string $path): void
+    {
+        $generators = new Generators;
+        $path       = str_replace('\\', '/', $path);
+        $path       = (substr($path, 0, 1) === '/') ? substr($path, 1) : $path;
+
+        // check path
+        if (str_contains($path, '/'))
+        {
+            $pathArray = explode('/', $path);
+            $fileName  = array_pop($pathArray);
+            $baseDir   = implode('/', $pathArray);
+
+        } else {
+
+            $fileName  = $path;
+            $baseDir   = '';
+        }
+
+        switch ($generatedFile) {
+            case 'controller':
+                $command = $generators->makeController($baseDir, $fileName);
+                break;
+
+            case 'middleware':
+                $command = $generators->makeMiddleware($baseDir, $fileName);
+                break;
+
+            case 'model':
+                $command = $generators->makeModel($baseDir, $fileName);
+                break;
+
+            case 'migration':
+                $command = $generators->makeMigration($baseDir, $fileName);
+                break;
+
+            case 'seeder':
+                $command = $generators->makeSeeder($baseDir, $fileName);
+                break;
+            
+            default:
+                $command = false;
+                break;
+        }
+
+        echo "\n\n";
+
+        if (!$command)
+        {
+            echo $this->styleText("Operation failed! Fail to generate {$generatedFile} module: {$path}", 'red', false);
+
+        } else {
+
+            $generatedFile = ucfirst($generatedFile);
+            echo $this->styleText("{$generatedFile} {$path} module has been generated!", 'green', true);
+        }
+    }
+
+    //=====================================================================================================
+
     public function run(array $argv): void
     {
+        // turn on all of error reporting
+        error_reporting(E_ALL);
+        ini_set('display_errors', 'on');
+        ini_set('display_startup_errors', '1');
+
         // store the parameters into static
         self::$CLIParams = $argv;
 
@@ -94,8 +174,41 @@ class App
             return;
         }
 
+        // check if commnand is valid
+
+
         // set as commands
         $command = $argv[1];
+
+        // check command and throw if command not found
+        if (!in_array($command, $this->commandList))
+        {
+            echo "\n\n";
+            echo $this->styleText("Wrong Command! You can only use commands below: ", 'red');
+            $this->printManual();
+
+            // return
+            return;
+        }
+
+        $commands = explode(':', $command);
+
+        if ($commands[0] === 'make')
+        {
+            if (!isset($argv[2]))
+            {
+                echo "\n\n";
+                echo $this->styleText("There is no generate parameters", 'red');
+
+                // return
+                return;
+            }
+
+            $this->generator($commands[1], $argv[2]);
+
+            // return
+            return;
+        }
 
         // echo "\n";
     }
