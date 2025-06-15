@@ -83,4 +83,13 @@ class App extends BaseApp
      *      supported by PHP.
      */
     public string $timezone = 'UTC';
+
+    /**
+     * --------------------------------------------------------------------------
+     * Encryption Key
+     * --------------------------------------------------------------------------
+     *
+     * Your default 256 bit encryption key when using encryption library
+     */
+    public string $encryptionKey = '';
 }

@@ -318,6 +318,47 @@ if (!function_exists('helper'))
     }
 }
 
+if (!function_exists('random_string'))
+{
+    /**
+     * Generates a random alphanumeric string.
+     *
+     * @param string $type The type of string to generate: 'alpha', 'numeric', or 'alphanumeric'.
+     * @param int $length The desired length of the generated string.
+     * @return string The randomly generated string.
+     */
+    function random_string(string $type, int $length): string
+    {
+        $characters = '';
+        switch ($type) {
+            case 'alpha':
+                $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                break;
+            case 'numeric':
+                $characters = '0123456789';
+                break;
+            case 'alphanumeric':
+                $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                break;
+            default:
+                // Default to alphanumeric if an invalid type is provided
+                $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                break;
+        }
+
+        $randomString = '';
+        $max          = strlen($characters) - 1;
+
+        for ($i = 0; $i < $length; $i++)
+        {
+            $randomString .= $characters[random_int(0, $max)];
+        }
+
+        // return
+        return $randomString;
+    }
+}
+
 if (!function_exists('redirect'))
 {
     /** 

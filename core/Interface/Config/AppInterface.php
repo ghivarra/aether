@@ -13,4 +13,5 @@ interface AppInterface
     public string $permittedURIChars { get; set; }
     public string $defaultLocale { get; set; }
     public string $timezone { get; set; }
+    public string $encryptionKey { get; set; }
 }

@@ -23,6 +23,7 @@ class BaseApp implements AppInterface
         $this->permittedURIChars = getDotEnv('App.permittedURIChars', 'string', $this->permittedURIChars);
         $this->defaultLocale = getDotEnv('App.defaultLocale', 'string', $this->defaultLocale);
         $this->timezone = getDotEnv('App.timezone', 'string', $this->timezone);
+        $this->encryptionKey = getDotEnv('App.encryptionKey', 'string', $this->encryptionKey);
     }
 
     //==================================================================
@@ -32,6 +33,7 @@ class BaseApp implements AppInterface
     public string $permittedURIChars = '';
     public string $defaultLocale = '';
     public string $timezone = '';
+    public string $encryptionKey = '';
 
     //==================================================================
 }

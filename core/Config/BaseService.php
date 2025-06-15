@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Aether\Config;
 
 use Aether\Cache;
+use Aether\Encryption;
 use Aether\Response;
 use Aether\Request;
 use Aether\Routing;
@@ -38,6 +39,19 @@ class BaseService
 
         // return
         return new Cache();
+    }
+
+    //===========================================================================================
+
+    public static function encryption(bool $getShared = true): Encryption
+    {
+        if ($getShared)
+        {
+            return self::getSharedInstance('encryption');
+        }
+
+        // return
+        return new Encryption();
     }
 
     //===========================================================================================
