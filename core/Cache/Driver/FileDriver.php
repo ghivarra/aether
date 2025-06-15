@@ -6,6 +6,7 @@ namespace Aether\Cache\Driver;
 
 use Aether\Cache\CacheDriverInterface;
 use Config\Cache as CacheConfig;
+use \Throwable;
 
 /** 
  * File Driver for Cache Library
@@ -186,13 +187,58 @@ class FileDriver implements CacheDriverInterface
             $value = file_get_contents($path);
         }
 
+        // decode value
+        try {
+            
+            $value = json_decode($value, true);
+
+        } catch (Throwable $e) {
+
+            // delete file & lock
+            // if failed to decode
+            if (file_exists($path))
+            {
+                unlink($path);
+            }
+
+            if (file_exists($lockPath))
+            {
+                unlink($lockPath);
+            }
+
+            // return
+            return false;
+        }
+        
+        // check TTL
+        // delete if already expired
+        if (isset($value['expired_at']))
+        {
+            if ($value['expired_at'] < time())
+            {
+                // delete file & lock
+                if (file_exists($path))
+                {
+                    unlink($path);
+                }
+
+                if (file_exists($lockPath))
+                {
+                    unlink($lockPath);
+                }
+
+                // return
+                return false;
+            }
+        }
+
         // return
-        return is_string($value) ? json_decode($value, true) : $value;
+        return $value['data'];
     }
 
     //=========================================================================================
 
-    public function set(string $key, mixed $value): bool
+    public function set(string $key, mixed $value, int $ttl = 0): bool
     {
         // check if disabled in config
         if (!$this->config->useCache)
@@ -214,10 +260,18 @@ class FileDriver implements CacheDriverInterface
         }
 
         // check value
-        if (!is_string($value) && !is_null($value) && !is_int($value) && !is_float($value) && !is_double($value))
+        $value = [
+            'created_at' => time(),
+            'data'       => $value,
+        ];
+
+        if ($ttl > 0)
         {
-            $value = json_encode($value);
+            $value['expired_at'] = time() + $ttl;
         }
+
+        // encode value
+        $value = json_encode($value);
 
         // check if file already exist and create lock
         if (file_exists($path))

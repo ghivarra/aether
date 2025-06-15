@@ -175,7 +175,7 @@ class RedisDriver implements CacheDriverInterface
 
     //=========================================================================================
 
-    public function set(string $key, mixed $value): bool
+    public function set(string $key, mixed $value, int $ttl = 0): bool
     {
         // check if disabled in config
         if (!$this->config->useCache)
@@ -208,7 +208,14 @@ class RedisDriver implements CacheDriverInterface
             $this->redis->set($lockPath, $oldData, 'EX', $this->config->lockTTL, 'NX');
 
             // modify data
-            $this->redis->set($path, $value);
+            if ($ttl > 0)
+            {
+                $this->redis->set($path, $value, 'EX', $ttl, 'NX');
+
+            } else {
+
+                $this->redis->set($path, $value);
+            }
 
             // remove lock
             $this->redis->del($lockPath);
@@ -216,7 +223,14 @@ class RedisDriver implements CacheDriverInterface
         } else {
 
             // modify data
-            $this->redis->set($path, $value);
+            if ($ttl > 0)
+            {
+                $this->redis->set($path, $value, 'EX', $ttl, 'XX');
+
+            } else {
+
+                $this->redis->set($path, $value);
+            }
         }
 
         // return

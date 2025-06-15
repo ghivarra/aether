@@ -7,5 +7,5 @@ interface CacheDriverInterface
     public function clear(): void;
     public function delete(string $pattern): void;
     public function get(string $key): mixed;
-    public function set(string $key, mixed $value): bool;
+    public function set(string $key, mixed $value, int $ttl = 0): bool;
 }

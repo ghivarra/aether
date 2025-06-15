@@ -75,11 +75,11 @@ class Cache implements CacheDriverInterface
 
     //=================================================================================
 
-    public function set(string $key, mixed $value): bool
+    public function set(string $key, mixed $value, int $ttl = 0): bool
     {
         $key = url_title($key, '-', false);
         
-        return self::$instance->set($key, $value);
+        return self::$instance->set($key, $value, $ttl);
     }
 
     //=================================================================================
