@@ -139,4 +139,26 @@ class Redis
     }    
 
     //=============================================================================================
+
+    public static function buildKey(string $originalKey): string
+    {
+        $config = new RedisConfig();
+
+        // return
+        return $config->prefix . $originalKey;
+    }
+
+    //=============================================================================================
+
+    public static function removePrefix(string $builtKey): string
+    {
+        $config   = new RedisConfig();
+        $preLen   = strlen($config->prefix);
+        $preBuilt = substr($builtKey, 0, $preLen);
+
+        // return
+        return ($config->prefix === $preBuilt) ? substr($builtKey, $preLen) : $builtKey;
+    }
+
+    //=============================================================================================
 }
