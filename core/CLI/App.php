@@ -4,7 +4,10 @@ declare(strict_types = 1);
 
 namespace Aether\CLI;
 
+use Aether\CLI\Command\Cache;
 use Aether\CLI\Command\Generators;
+use Dotenv\Dotenv;
+use Config\App as AppConfig;
 
 /** 
  * The App class to run the CLI in Aether Framework
@@ -152,6 +155,24 @@ class App
         ini_set('display_errors', 'on');
         ini_set('display_startup_errors', '1');
 
+        // load dotenv
+        $env = Dotenv::createImmutable(ROOTPATH);
+        $env->load();
+
+        // load config
+        $appConfig = new AppConfig();
+
+        // load helper
+        helper('URL');
+
+        /** 
+        * Define Environment from configurations
+        * It should be usually between production or development
+        * 
+        * @var string AETHER_ENV
+        **/
+        define('AETHER_ENV', $appConfig->env);
+
         // store the parameters into static
         self::$CLIParams = $argv;
 
@@ -173,9 +194,6 @@ class App
             // return and done
             return;
         }
-
-        // check if commnand is valid
-
 
         // set as commands
         $command = $argv[1];
@@ -205,6 +223,18 @@ class App
             }
 
             $this->generator($commands[1], $argv[2]);
+
+            // return
+            return;
+        }
+
+        if ($commands[0] === 'cache' && $commands[1] === 'clear')
+        {
+            $cache = new Cache();
+            $cache->clear();
+
+            echo "\n\n";
+            echo $this->styleText("Cache has been cleared", 'green');
 
             // return
             return;
