@@ -7,6 +7,7 @@ use App\Model\UserModel;
 use Aether\Database;
 use Aether\Session;
 use Aether\Redis;
+use Config\Services;
 
 /** 
  * Test Controller
@@ -28,24 +29,13 @@ class TestController extends BaseController
             ]
         ];
 
-        // connect and check redis
-        $redis = Redis::connect();
-        // $test1 = $redis->set('test', 1, 'EX', 10, 'NX');
-        // $test2 = $redis->set('test', 1, 'EX', 100, 'NX');
-
-        // dd([$test1->getPayload(), $test2]);
-
-        // $data  = $redis->set('check', 'test', 'EX', 150, 'GET');
-        // dd($data);
-        // $redis->set('check2', 'test2', 'EX', 10, 'NX');
-
-        // start session
-        session();
-
-        // set flash data
-        // Session::tempData('flasher', 'hehehe', 5);
-
-        dd([$_SESSION, memory_get_peak_usage()]);
+        // store cache
+        $cache      = Services::cache();
+        $encryption = Services::encryption();
+        // dd($cache->get('home3', $data));
+        $cache->set('home3', $encryption->encrypt(json_encode($data)));
+        // $cache->delete('home*');
+        // $cache->clear();
 
         // return
         return $this->response->setJSON($data);

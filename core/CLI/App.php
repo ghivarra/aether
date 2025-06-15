@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Aether\CLI;
 
 use Aether\CLI\Command\Cache;
+use Aether\CLI\Command\Encryption;
 use Aether\CLI\Command\Generators;
 use Dotenv\Dotenv;
 use Config\App as AppConfig;
@@ -211,6 +212,7 @@ class App
 
         $commands = explode(':', $command);
 
+        // GENERATOR
         if ($commands[0] === 'make')
         {
             if (!isset($argv[2]))
@@ -228,13 +230,27 @@ class App
             return;
         }
 
-        if ($commands[0] === 'cache' && $commands[1] === 'clear')
+        // CACHE
+        if ($command === 'cache:clear')
         {
             $cache = new Cache();
             $cache->clear();
 
             echo "\n\n";
             echo $this->styleText("Cache has been cleared", 'green');
+
+            // return
+            return;
+        }
+
+        // ENCRYPTION
+        if ($command === 'key:generate')
+        {
+            $encryption = new Encryption();
+            $encryption->generateKey();
+
+            echo "\n\n";
+            echo $this->styleText("App and Session Encryption Key has been generated!", 'green');
 
             // return
             return;

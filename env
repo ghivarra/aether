@@ -1,0 +1,76 @@
+#########
+## APP ##
+#########
+
+# App.env = 'development'
+# App.baseURL = 'https://aether.test/'
+# App.permittedURIChars = 'a-z 0-9~%.:_\-'
+# App.defaultLocale = 'en'
+# App.timezone = 'Asia/Jakarta'
+# App.encryptionKey = ''
+
+##############
+## DATABASE ##
+##############
+
+# Database.defaultDB = 'default'
+
+# Database.default.hostname = 'localhost'
+# Database.default.port = 5432
+# Database.default.username = 'marko'
+# Database.default.password = 'Englandwin!95'
+# Database.default.database = 'aether'
+# Database.default.DBDriver = 'PostgreSQL'
+# Database.default.DBPrefix = 'wkwk_'
+# Database.default.DBDebug = false
+# Database.default.charset = 'utf8'
+# Database.default.DBCollat = 'utf8'
+
+#############
+## SESSION ##
+#############
+
+# Session.handler = 'redis'
+# Session.cookieName = 'ae_session'
+# Session.expiration = 7200
+# Session.savePath = '/home/ghivarra/www-auto/aether.test/storage/session'
+# Session.gcLifetime = 420
+# Session.gcProbability = 100
+# Session.gcDivisor = 100
+# Session.timeToUpdate = 300
+# Session.useEncryption = false
+# Session.encryptionKey = ''
+# Session.redisLockTimeout = 10
+
+############
+## COOKIE ##
+############
+
+# Cookie.prefix = 'ae_'
+# Cookie.expires = 7200
+# Cookie.path = '/'
+# Cookie.domain = '.aether.test'
+# Cookie.secure = true
+# Cookie.httponly = true
+# Cookie.samesite = 'Strict'
+
+###########
+## REDIS ##
+###########
+
+# Redis.scheme = 'tcp'
+# Redis.path = '127.0.0.1'
+# Redis.port = 6379
+# Redis.certPath = ''
+# Redis.prefix = 'aether:'
+
+###########
+## CACHE ##
+###########
+
+# Cache.useCache = true
+# Cache.driver = 'redis'
+# Cache.prefix = 'ae_cache'
+# Cache.savePath = '/home/ghivarra/www-auto/aether.test/storage/cache'
+# Cache.savePath = 'mycache'
+# Cache.lockTTL = 150
