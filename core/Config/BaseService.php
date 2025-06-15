@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Aether\Config;
 
+use Aether\Cache;
 use Aether\Response;
 use Aether\Request;
 use Aether\Routing;
@@ -24,6 +25,19 @@ class BaseService
 
         // return
         return self::$sharedInstances[$service];
+    }
+
+    //===========================================================================================
+
+    public static function cache(bool $getShared = true): Cache
+    {
+        if ($getShared)
+        {
+            return self::getSharedInstance('cache');
+        }
+
+        // return
+        return new Cache();
     }
 
     //===========================================================================================
