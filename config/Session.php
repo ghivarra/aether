@@ -6,7 +6,6 @@ namespace Config;
 
 use Aether\Config\BaseSession;
 
-
 class Session extends BaseSession
 {
     /**
