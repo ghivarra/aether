@@ -24,7 +24,10 @@ class FileDriver implements CacheDriverInterface
 
     public function __construct(CacheConfig $config)
     {
-        $this->config = $config;
+        $this->config  = $config;
+        
+        $savePath      = url_title($this->config->savePath, '-', true);
+        $this->nocache = $this->config->savePath . "/{$savePath}{$this->divider}{$this->nocache}";
     }
 
     //=========================================================================================
@@ -54,21 +57,20 @@ class FileDriver implements CacheDriverInterface
 
     protected function checkLockTTL(string $key): void
     {
-        $setLockKey  = $this->config->savePath . "/" . $this->buildKey($this->nocache);
         $getLockKey  = $this->config->savePath . "/lock_" . $this->buildKey($key);
         $currentTime = time();
 
         // check if exist and get filemtime of 
         // set lock key
-        if (file_exists($setLockKey))
+        if (file_exists($this->nocache))
         {
-            $createdTime = filemtime($setLockKey);
+            $createdTime = filemtime($this->nocache);
             $expiredTime = $createdTime + $this->config->lockTTL;
             
             if ($expiredTime < $currentTime)
             {
                 // delete
-                unlink($setLockKey);
+                unlink($this->nocache);
             }
         }
 
@@ -98,10 +100,8 @@ class FileDriver implements CacheDriverInterface
 
     public function check(): bool
     {
-        $noCachePath = $this->config->savePath . "/" . $this->buildKey($this->nocache);
-
         // check if cache on
-        if (!$this->config->useCache || file_exists($noCachePath))
+        if (!$this->config->useCache || file_exists($this->nocache))
         {
             // return
             return false;
@@ -115,10 +115,8 @@ class FileDriver implements CacheDriverInterface
 
     public function clear(): void
     {
-        $noCachePath = $this->config->savePath . '/' . $this->buildKey($this->nocache);
-
         // set nocache
-        file_put_contents($noCachePath, 1);
+        file_put_contents($this->nocache, 1);
 
         // glob and clear
         $pathPattern = $this->config->savePath . '/' . $this->buildKey('*');
@@ -127,7 +125,7 @@ class FileDriver implements CacheDriverInterface
         $this->removeOnPattern($pathPattern);
 
         // remove no cache
-        unlink($noCachePath);
+        unlink($this->nocache);
     }
 
     //=========================================================================================
@@ -164,10 +162,9 @@ class FileDriver implements CacheDriverInterface
         // build full path
         $path        = $this->config->savePath . "/" . $this->buildKey($key);
         $lockPath    = $this->config->savePath . "/" . $this->buildKey('lock_' . $key);
-        $noCachePath = $this->config->savePath . "/" . $this->buildKey($this->nocache);
 
         // cannot get any cache if no cache exist
-        if (file_exists($noCachePath))
+        if (file_exists($this->nocache))
         {
             return false;
         }
@@ -209,10 +206,9 @@ class FileDriver implements CacheDriverInterface
         // build full path
         $path        = $this->config->savePath . "/" . $this->buildKey($key);
         $lockPath    = $this->config->savePath . "/" . $this->buildKey('lock_' . $key);
-        $noCachePath = $this->config->savePath . "/" . $this->buildKey($this->nocache);
 
         // Cannot set any cache if the nocache file exist
-        if (file_exists($noCachePath))
+        if (file_exists($this->nocache))
         {
             return false;
         }
