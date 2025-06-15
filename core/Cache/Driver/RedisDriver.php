@@ -210,7 +210,7 @@ class RedisDriver implements CacheDriverInterface
             // modify data
             if ($ttl > 0)
             {
-                $this->redis->set($path, $value, 'EX', $ttl, 'NX');
+                $this->redis->set($path, $value, 'EX', $ttl, 'XX');
 
             } else {
 
@@ -225,7 +225,7 @@ class RedisDriver implements CacheDriverInterface
             // modify data
             if ($ttl > 0)
             {
-                $this->redis->set($path, $value, 'EX', $ttl, 'XX');
+                $this->redis->set($path, $value, 'EX', $ttl, 'NX');
 
             } else {
 
