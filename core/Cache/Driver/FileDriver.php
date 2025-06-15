@@ -115,16 +115,19 @@ class FileDriver implements CacheDriverInterface
 
     public function clear(): void
     {
-        $setLockPath = $this->config->savePath . '/' . $this->buildKey($this->nocache);
+        $noCachePath = $this->config->savePath . '/' . $this->buildKey($this->nocache);
 
         // set nocache
-        file_put_contents($setLockPath, 1);
+        file_put_contents($noCachePath, 1);
 
         // glob and clear
         $pathPattern = $this->config->savePath . '/' . $this->buildKey('*');
 
         // unlink if not empty
         $this->removeOnPattern($pathPattern);
+
+        // remove no cache
+        unlink($noCachePath);
     }
 
     //=========================================================================================
