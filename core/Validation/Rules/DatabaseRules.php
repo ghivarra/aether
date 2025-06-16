@@ -35,8 +35,11 @@ class DatabaseRules extends BaseRules
 
     //===============================================================================================
 
-    public function is_unique(string|float|int|null $str = null, string $table, string $column): bool
+    public function is_unique(string|float|int|null $str = null, string $value = ''): bool
     {
+        $values  = explode('.', $value);
+        $table   = $values[0];
+        $column  = $values[1];
         $builder = $this->db->table($table);
         $builder = is_null($str) ? $builder->whereNull($column) : $builder->where($column, '=', $str);
         $count   = $builder->countAllResults();
@@ -46,8 +49,11 @@ class DatabaseRules extends BaseRules
 
     //===============================================================================================
 
-    public function is_not_unique(string|float|int|null $str = null, string $table, string $column): bool
+    public function is_not_unique(string|float|int|null $str = null, string $value = ''): bool
     {
+        $values  = explode('.', $value);
+        $table   = $values[0];
+        $column  = $values[1];
         $builder = $this->db->table($table);
         $builder = is_null($str) ? $builder->whereNull($column) : $builder->where($column, '=', $str);
         $count   = $builder->countAllResults();
