@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Aether\Validation;
+namespace Aether\Validation\Rules;
 
 class BaseRules
 {

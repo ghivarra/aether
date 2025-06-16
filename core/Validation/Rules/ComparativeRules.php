@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Aether\Validation;
+namespace Aether\Validation\Rules;
 
-use Aether\Validation\BaseRules;
+use Aether\Validation\Rules\BaseRules;
 
 /**
  * This file is heavily inspired or straight up copy paste from
