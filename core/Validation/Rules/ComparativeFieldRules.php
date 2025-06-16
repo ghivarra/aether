@@ -22,21 +22,21 @@ use Aether\Validation\Rules\BaseRules;
 
 class ComparativeFieldRules extends BaseRules
 {
-    public function differ(string|float|int|null $str = null, string|int $field, array $data): bool
+    public function differ(string|float|int|null $str = null, string|int $field = 0, array $data = []): bool
     {
         return isset($data[$field]) && $this->toString($str) !== $this->toString($data[$field]);
     }
 
     //============================================================================================
 
-    public function match(string|float|int|null $str = null, string|int $field, array $data): bool
+    public function match(string|float|int|null $str = null, string|int $field = 0, array $data = []): bool
     {
         return isset($data[$field]) && $this->toString($str) === $this->toString($data[$field]);
     }
 
     //============================================================================================
 
-    public function exact_length_with(string|float|int|null $str = null, string|int $field, array $data): bool
+    public function exact_length_with(string|float|int|null $str = null, string|int $field = 0, array $data = []): bool
     {
         if (!isset($data[$field]))
         {
@@ -54,7 +54,7 @@ class ComparativeFieldRules extends BaseRules
 
     //============================================================================================
 
-    public function not_exact_length_with(string|float|int|null $str = null, string|int $field, array $data): bool
+    public function not_exact_length_with(string|float|int|null $str = null, string|int $field = 0, array $data = []): bool
     {
         if (!isset($data[$field]))
         {
@@ -72,7 +72,7 @@ class ComparativeFieldRules extends BaseRules
 
     //============================================================================================
 
-    public function greater_than_field(string|float|int|null $str = null, string|int $field, array $data): bool
+    public function greater_than_field(string|float|int|null $str = null, string|int $field = 0, array $data = []): bool
     {
         if (is_null($str) || !isset($data[$field]))
         {
@@ -84,7 +84,7 @@ class ComparativeFieldRules extends BaseRules
 
     //============================================================================================
 
-    public function greater_than_or_equal_to_field(string|float|int|null $str = null, string|int $field, array $data): bool
+    public function greater_than_or_equal_to_field(string|float|int|null $str = null, string|int $field = 0, array $data = []): bool
     {
         if (is_null($str) || !isset($data[$field]))
         {
@@ -96,7 +96,7 @@ class ComparativeFieldRules extends BaseRules
 
     //============================================================================================
 
-    public function less_than_field(string|float|int|null $str = null, string|int $field, array $data): bool
+    public function less_than_field(string|float|int|null $str = null, string|int $field = 0, array $data = []): bool
     {
         if (is_null($str) || !isset($data[$field]))
         {
@@ -108,7 +108,7 @@ class ComparativeFieldRules extends BaseRules
 
     //============================================================================================
 
-    public function less_than_or_equal_to_field(string|float|int|null $str = null, string|int $field, array $data): bool
+    public function less_than_or_equal_to_field(string|float|int|null $str = null, string|int $field = 0, array $data = []): bool
     {
         if (is_null($str) || !isset($data[$field]))
         {

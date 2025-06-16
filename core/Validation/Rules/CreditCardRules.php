@@ -210,12 +210,14 @@ class CreditCardRules extends BaseRules
 
     //============================================================================================
 
-    public function valid_cc_number(string|null $ccNumber = null, string $type): bool
+    public function valid_cc_number(string|int|null $ccNumber = null, string $type = 'visa'): bool
     {
         if (empty($ccNumber) || is_null($ccNumber))
         {
             return false;
         }
+
+        $ccNumber = $this->toString($ccNumber);
 
         $type = strtolower($type);
         $info = null;

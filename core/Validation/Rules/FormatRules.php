@@ -120,7 +120,7 @@ class FormatRules extends BaseRules
 
     //============================================================================================
 
-    public function is_natural_number_no_zero(string|int|float|null $str = null): bool
+    public function is_natural_number_not_zero(string|int|float|null $str = null): bool
     {
         $str = $this->toString($str);
 
@@ -138,7 +138,7 @@ class FormatRules extends BaseRules
 
     //============================================================================================
 
-    public function regex_match(string|int|float|null $str = null, string $pattern): bool
+    public function regex_match(string|int|float|null $str = null, string $pattern = ''): bool
     {
         $str = $this->toString($str);
 
@@ -160,7 +160,12 @@ class FormatRules extends BaseRules
     {
         $str = $this->toString($str);
 
-        return base64_encode(base64_decode($str, true)) === $str;
+        if (base64_decode($str, true) === false)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     //============================================================================================
@@ -190,8 +195,10 @@ class FormatRules extends BaseRules
 
     //============================================================================================
 
-    public function valid_emails(array|null $str = null): bool
+    public function valid_emails(string|null $str = null): bool
     {
+        $str = explode(',', $str);
+
         foreach ($str as $email):
 
             $email = $this->toString($email);

@@ -24,6 +24,7 @@ class ComparativeRules extends BaseRules
 {
     public function required(string|float|int|null $str = null): bool
     {
+        $str = $this->toString($str);
         $len = function_exists('mb_strlen') ? mb_strlen($str) : strlen($str);
 
         if ($len < 1 || is_null($str))
@@ -38,6 +39,7 @@ class ComparativeRules extends BaseRules
 
     public function empty(string|float|int|null $str = null): bool
     {
+        $str = $this->toString($str);
         $len = function_exists('mb_strlen') ? mb_strlen($str) : strlen($str);
 
         if ($len < 1 || is_null($str))
@@ -50,7 +52,7 @@ class ComparativeRules extends BaseRules
 
     //============================================================================================
     
-    public function exact_length(string|float|int|null $str = null, string|int $value): bool
+    public function exact_length(string|float|int|null $str = null, string|int $value = 0): bool
     {
         $str = $this->toString($str);
         $len = function_exists('mb_strlen') ? mb_strlen($str) : strlen($str);
@@ -60,7 +62,7 @@ class ComparativeRules extends BaseRules
 
     //============================================================================================
 
-    public function not_exact_length(string|float|int|null $str = null, string|int $value): bool
+    public function not_exact_length(string|float|int|null $str = null, string|int $value = 0): bool
     {
         $str = $this->toString($str);
         $len = function_exists('mb_strlen') ? mb_strlen($str) : strlen($str);
@@ -70,7 +72,7 @@ class ComparativeRules extends BaseRules
 
     //============================================================================================
 
-    public function exact_length_in(string|float|int|null $str = null, string $value): bool
+    public function exact_length_in(string|float|int|null $str = null, string $value = ''): bool
     {
         $str = $this->toString($str);
         $len = function_exists('mb_strlen') ? mb_strlen($str) : strlen($str);
@@ -93,7 +95,7 @@ class ComparativeRules extends BaseRules
 
     //============================================================================================
 
-    public function not_exact_length_in(string|float|int|null $str = null, string $value): bool
+    public function not_exact_length_in(string|float|int|null $str = null, string $value = ''): bool
     {
         $str = $this->toString($str);
         $len = function_exists('mb_strlen') ? mb_strlen($str) : strlen($str);
@@ -116,7 +118,7 @@ class ComparativeRules extends BaseRules
 
     //============================================================================================
 
-    public function max_length(string|float|int|null $str = null, string|int $value): bool
+    public function max_length(string|float|int|null $str = null, string|int $value = 0): bool
     {
         $str = $this->toString($str);
         $len = function_exists('mb_strlen') ? mb_strlen($str) : strlen($str);
@@ -126,7 +128,7 @@ class ComparativeRules extends BaseRules
 
     //============================================================================================
 
-    public function min_length(string|float|int|null $str = null, string|int $value): bool
+    public function min_length(string|float|int|null $str = null, string|int $value = 0): bool
     {
         $str = $this->toString($str);
         $len = function_exists('mb_strlen') ? mb_strlen($str) : strlen($str);
@@ -136,21 +138,21 @@ class ComparativeRules extends BaseRules
 
     //============================================================================================
 
-    public function equal(string|float|int|null $str = null, string|int $value): bool
+    public function equal(string|float|int|null $str = null, string|int $value = 0): bool
     {
         return $this->toString($str) === $this->toString($value);
     }
 
     //============================================================================================
 
-    public function not_equal(string|float|int|null $str = null, string|int $value): bool
+    public function not_equal(string|float|int|null $str = null, string|int $value = 0): bool
     {
         return $this->toString($str) !== $this->toString($value);
     }
     
     //============================================================================================
 
-    public function in_list(string|float|int|null $str = null, string $value): bool
+    public function in_list(string|float|int|null $str = null, string $value = ''): bool
     {
         if (is_null($str))
         {
@@ -174,7 +176,7 @@ class ComparativeRules extends BaseRules
 
     //============================================================================================
 
-    public function not_in_list(string|float|int|null $str = null, string $value): bool
+    public function not_in_list(string|float|int|null $str = null, string $value = ''): bool
     {
         if (is_null($str))
         {
@@ -198,7 +200,7 @@ class ComparativeRules extends BaseRules
 
     //============================================================================================
 
-    public function greater_than(string|float|int|null $str = null, string|int $value): bool
+    public function greater_than(string|float|int|null $str = null, string|int $value = 0): bool
     {
         if (is_null($str))
         {
@@ -210,7 +212,7 @@ class ComparativeRules extends BaseRules
 
     //============================================================================================
 
-    public function greater_than_or_equal_to(string|float|int|null $str = null, string|int $value): bool
+    public function greater_than_or_equal_to(string|float|int|null $str = null, string|int $value = 0): bool
     {
         if (is_null($str))
         {
@@ -222,7 +224,7 @@ class ComparativeRules extends BaseRules
 
     //============================================================================================
 
-    public function less_than(string|float|int|null $str = null, string|int $value): bool
+    public function less_than(string|float|int|null $str = null, string|int $value = 0): bool
     {
         if (is_null($str))
         {
@@ -234,7 +236,7 @@ class ComparativeRules extends BaseRules
 
     //============================================================================================
 
-    public function less_than_or_equal_to(string|float|int|null $str = null, string|int $value): bool
+    public function less_than_or_equal_to(string|float|int|null $str = null, string|int $value = 0): bool
     {
         if (is_null($str))
         {
