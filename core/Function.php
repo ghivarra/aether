@@ -468,7 +468,14 @@ if (!function_exists('str_contains'))
 {
     function str_contains(string $haystack, string $needle)
     {
-        return $needle !== '' && mb_strpos($haystack, $needle) !== false;
+        if (function_exists('mb_strpos'))
+        {
+            return $needle !== '' && mb_strpos($haystack, $needle) !== false;
+
+        } else {
+
+            return $needle !== '' && strpos($haystack, $needle) !== false;
+        }        
     }
 }
 
