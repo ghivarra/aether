@@ -5,6 +5,8 @@ declare(strict_types = 1);
 namespace Aether\Validation;
 
 use Aether\Validation\BaseRules;
+use Aether\Database;
+use Aether\Database\DriverInterface;
 
 /**
  * This file is heavily inspired or straight up copy paste from
@@ -22,5 +24,36 @@ use Aether\Validation\BaseRules;
 
 class DatabaseRules extends BaseRules
 {
-    
+    protected DriverInterface $db;
+
+    //===============================================================================================
+
+    public function __construct()
+    {
+        $this->db = Database::connect();
+    }
+
+    //===============================================================================================
+
+    public function is_unique(string|float|int|null $str = null, string $table, string $column): bool
+    {
+        $builder = $this->db->table($table);
+        $builder = is_null($str) ? $builder->whereNull($column) : $builder->where($column, '=', $str);
+        $count   = $builder->countAllResults();
+
+        return $count < 1;
+    }
+
+    //===============================================================================================
+
+    public function is_not_unique(string|float|int|null $str = null, string $table, string $column): bool
+    {
+        $builder = $this->db->table($table);
+        $builder = is_null($str) ? $builder->whereNull($column) : $builder->where($column, '=', $str);
+        $count   = $builder->countAllResults();
+
+        return $count > 0;
+    }
+
+    //===============================================================================================
 }
