@@ -66,4 +66,13 @@ return [
     'valid_url'                  => '{label} bukan alamat URL yang valid.',
     'valid_url_strict'           => '{label} bukan alamat URL yang valid.',
     'valid_date'                 => '{label} bukan tanggal yang valid.',
+
+    // file error message
+    'uploaded' => '{label} gagal diunggah',
+    'max_size' => 'Ukuran {label} tidak boleh melebihi {param} KB',
+    'is_image' => '{label} harus diisi oleh gambar',
+    'mime_in'  => 'Jenis file {label} harus salah satu dari: {param}',
+    'ext_in'   => 'Ekstensi file {label} harus salah satu dari: {param}',
+    'max_dims' => 'Dimensi ukuran {label} harus lebih kecil dari {param}',
+    'min_dims' => 'Dimensi ukuran {label} harus lebih besar dari {param}',
 ];

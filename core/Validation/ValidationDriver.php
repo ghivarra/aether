@@ -9,6 +9,7 @@ use Aether\Validation\Rules\ComparativeFieldRules;
 use Aether\Validation\Rules\CreditCardRules;
 use Aether\Validation\Rules\DatabaseRules;
 use Aether\Validation\Rules\FormatRules;
+use Aether\Validation\Rules\FileRules;
 use Aether\Exception\SystemException;
 use Config\App as AppConfig;
 use Aether\Language;
@@ -91,6 +92,18 @@ class ValidationDriver
                 'valid_date',
             ]
         ],
+        'file' => [
+            'class' => FileRules::class,
+            'rules' => [
+                'uploaded',
+                'max_size',
+                'is_image',
+                'mime_in',
+                'ext_in',
+                'max_dims',
+                'min_dims',
+            ]
+        ]
     ];
 
     //==============================================================================================
@@ -101,6 +114,10 @@ class ValidationDriver
         'exact_length_in',
         'not_exact_length_in',
         'valid_emails',
+        'max_dims',
+        'min_dims',
+        'mime_in',
+        'ext_in',
     ];
 
     //==============================================================================================
@@ -114,6 +131,7 @@ class ValidationDriver
     protected CreditCardRules|null $creditCard = null;
     protected DatabaseRules|null $database = null;
     protected FormatRules|null $format = null;
+    protected FileRules|null $file = null;
     protected AppConfig $config;
 
     //==============================================================================================
@@ -231,12 +249,16 @@ class ValidationDriver
                 {
                     $errorLabel = $label;
                     $errorMsg   = isset($rules[$key]['error'][$rule]) ? $rules[$key]['error'][$rule] : $messages[$rule];
-                    $errorParam = isset($try['param'][1]) ? $try['param'][1] : '';
+                    $errorParam = isset($try['param'][1]) ? str_replace(',', ', ', $try['param'][1]) : '';
                     
                     if ($try['ruleKey'] === 'comparativeField')
                     {
                         $fieldName  = isset($try['param'][1]) ? $try['param'][1] : '';
                         $errorParam = isset($rules[$fieldName]['label']) ? $rules[$fieldName]['label'] : $fieldName;
+
+                    } elseif (in_array($try['rule'], ['max_dims', 'min_dims'])) {
+
+                        $errorParam = isset($try['param'][1]) ? str_replace(',', 'x', $try['param'][1]) : '';
                     }
     
                     // parse

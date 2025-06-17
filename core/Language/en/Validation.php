@@ -66,4 +66,13 @@ return [
     'valid_url'                  => '{label} is not a valid URL.',
     'valid_url_strict'           => '{label} is not a valid URL.',
     'valid_date'                 => '{label} is not a valid date.',
+
+    // file error message
+    'uploaded' => '{label} upload is failed',
+    'max_size' => '{label} max size must not exceed {param} KB',
+    'is_image' => '{label} is not an image',
+    'mime_in'  => '{label} file type must be one of: {param}',
+    'ext_in'   => '{label} file extension must be one of: {param}',
+    'max_dims' => '{label} size dimension must be smaller than {param}',
+    'min_dims' => '{label} size dimension must be larger than {param}',
 ];
