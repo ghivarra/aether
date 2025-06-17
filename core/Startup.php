@@ -161,7 +161,11 @@ class Startup
         {
             foreach ($middleware->global[$executedTime] as $alias):
 
-                array_push($middlewareClasses, '\\' . $middleware->aliases[$alias]);
+                // check if alias exist
+                if (isset($middleware->aliases[$alias]))
+                {
+                    array_push($middlewareClasses, '\\' . $middleware->aliases[$alias]);
+                }
 
             endforeach; 
         }
@@ -170,11 +174,19 @@ class Startup
         // routes
         foreach ($suppliedMiddlewares as $alias):
 
-            array_push($middlewareClasses, '\\' . $middleware->aliases[$alias]);
+            if (isset($middleware->aliases[$alias]))
+            {
+                array_push($middlewareClasses, '\\' . $middleware->aliases[$alias]);
+            }
 
         endforeach; 
 
         // execute all
+        if (empty($middlewareClasses))
+        {
+            return;
+        }
+
         foreach ($middlewareClasses as $class):
 
             if ($executedTime === 'before')

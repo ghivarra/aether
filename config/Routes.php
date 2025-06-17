@@ -34,11 +34,11 @@ class Routes
             $route->group('view', function($route) {
                 $route->get('(:segment)/(:any)', TestController::class, 'index')->as('page.category.news');
                 $route->get('(:segment)', TestController::class, 'index')->as('page.category');
-            }, ['after' => ['isLoggedOut']]);
+            });
 
             $route->match(['get', 'post', 'options', 'head'], '/', TestController::class, 'page')->as('page');
 
-        }, ['before' => ['isAdmin']]);
+        });
 
         $route->all('/', TestController::class, 'index')->as('home');
     }

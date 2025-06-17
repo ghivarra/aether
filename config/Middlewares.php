@@ -23,7 +23,7 @@ class Middlewares implements MiddlewareInterface
      * 
     **/
     public array $aliases = [
-        'csrf'        => CSRFMiddleware::class,
+        'csrf' => CSRFMiddleware::class,
     ];
 
     /** 
@@ -39,7 +39,7 @@ class Middlewares implements MiddlewareInterface
             // 'csrf',
         ],
         'after' => [
-            
+
         ]
     ];
 }
