@@ -6,6 +6,7 @@ namespace Aether;
 
 use Aether\Interface\RequestInterface;
 use Config\Cookie;
+use Aether\FileUpload;
 
 /** 
  * Request
@@ -97,9 +98,14 @@ class Request implements RequestInterface
      * @return mixed
      * 
     **/
-    public function file(string $key, mixed $default = null): mixed
+    public function file(string $key, array|null $default = null): array|null|FileUpload
     {
-        return isset($_FILES[$key]) ? $_FILES[$key] : $default;
+        if (!isset($_FILES[$key], $_FILES[$key]['tmp_name']))
+        {
+            return $default;
+        }
+
+        return new FileUpload($_FILES[$key]);
     }
 
     //===========================================================================================
@@ -113,7 +119,7 @@ class Request implements RequestInterface
      * @return mixed
      * 
     **/
-    public function files(string $key, mixed $default = null): mixed
+    public function files(string $key, array|null $default = null): array|null
     {
         if (!isset($_FILES[$key]))
         {
@@ -122,18 +128,21 @@ class Request implements RequestInterface
 
         // iterate files to make it easier
         // to process
-        $files = $_FILES[$key];
-        $keys  = array_keys($files['tmp_name']);
-        $data  = [];
+        $files    = $_FILES[$key];
+        $keys     = array_keys($files['tmp_name']);
+        $data     = [];
+        $uploaded = [];
 
         // iteration
         foreach ($keys as $n):
 
             foreach ($files as $key => $file):
 
-                $data[$n][$key] = $file[$n];
+                $uploaded[$n][$key] = $file[$n];
 
             endforeach;
+
+            $data[$n] = new FileUpload($uploaded[$n]);
 
         endforeach;
 

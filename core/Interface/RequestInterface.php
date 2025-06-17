@@ -1,10 +1,12 @@
 <?php namespace Aether\Interface;
 
+use Aether\FileUpload;
+
 interface RequestInterface
 {
     public function cookie(string $key, mixed $default = null, bool $usePrefix = true): mixed;
-    public function file(string $key, mixed $default = null): mixed;
-    public function files(string $key, mixed $default = null): mixed;
+    public function file(string $key, array|null $default = null): array|null|FileUpload;
+    public function files(string $key, array|null $default = null): array|null;
     public function get(string $key, mixed $default = null): mixed;
     public function header(string $key, string|null $default = null): string|null;
     public function headers(): array;
