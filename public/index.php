@@ -38,6 +38,12 @@ if (version_compare(PHP_VERSION, $minPhpVersion, '<'))
 **/
 define('START_TIME', hrtime(true));
 
+/** 
+ * Create constant for Framework Version
+ * @var string AETHER_VERSION
+**/
+define('AETHER_VERSION', '0.0.1-beta');
+
 // load path config constant file
 require_once __DIR__ . '/../config/Path.php';
 

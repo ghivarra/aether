@@ -233,6 +233,7 @@ class Startup
 
         // echo view data
         echo Response::$viewData;
+        echo round(memory_get_peak_usage() / 1000000, 2);
 
         // end running script
         exit(0);

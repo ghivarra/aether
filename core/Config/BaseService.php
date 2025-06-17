@@ -9,6 +9,7 @@ use Aether\Encryption;
 use Aether\Response;
 use Aether\Request;
 use Aether\Routing;
+use Aether\Validation;
 
 class BaseService
 {
@@ -91,6 +92,19 @@ class BaseService
 
         // return
         return new Routing();
+    }
+
+    //===========================================================================================
+
+    public static function validation(bool $getShared = true): Validation
+    {
+        if ($getShared)
+        {
+            return self::getSharedInstance('validation');
+        }
+
+        // return
+        return new Validation();
     }
 
     //===========================================================================================

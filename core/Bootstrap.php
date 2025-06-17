@@ -2,19 +2,17 @@
 
 declare(strict_types = 1);
 
-// hardcode the version
-define('AETHER_VERSION', file_get_contents(SYSTEMPATH . 'VERSION.txt'));
-
 // load vendor autoload.php
 require_once ROOTPATH . 'vendor/autoload.php';
 
 // load function
 require_once SYSTEMPATH . 'Function.php';
 
-// run startup
-require_once SYSTEMPATH . 'Startup.php';
+// start parsing dotenv
+require_once SYSTEMPATH . 'Dotenv.php';
 
-use Dotenv\Dotenv;
+// use ilb
+use Aether\Startup;
 use Config\App;
 
 // check if CLI
@@ -64,10 +62,6 @@ if (isset($argv[0]) && $argv[0] === 'aether')
         }
     }
 
-    // load dotenv
-    $env = Dotenv::createImmutable(ROOTPATH);
-    $env->load();
-
     // load config
     $configApp = new App();
 
@@ -94,7 +88,7 @@ if (isset($argv[0]) && $argv[0] === 'aether')
     if(isset($_SERVER['REQUEST_METHOD']))
     {
         // run the Web App
-        $startup = new Aether\Startup();
+        $startup = new Startup();
         $startup->run();
     }
 }
