@@ -3,7 +3,7 @@
 declare(strict_types = 1);
 
 // hardcode the version
-define('AETHER_VERSION', file_get_contents(__DIR__ . '/VERSION.txt'));
+define('AETHER_VERSION', file_get_contents(SYSTEMPATH . 'VERSION.txt'));
 
 // load vendor autoload.php
 require_once ROOTPATH . 'vendor/autoload.php';
@@ -14,9 +14,12 @@ require_once SYSTEMPATH . 'Function.php';
 // run startup
 require_once SYSTEMPATH . 'Startup.php';
 
+use Dotenv\Dotenv;
+use Config\App;
+
 // check if CLI
 // if not null then must be CLI
-if (!is_null($argv) && $argv[0] === 'aether')
+if (isset($argv[0]) && $argv[0] === 'aether')
 {
     // run the CLI App
     $app = new Aether\CLI\App();
@@ -61,8 +64,38 @@ if (!is_null($argv) && $argv[0] === 'aether')
         }
     }
 
-    // run the Web App
-    $startup = new Aether\Startup();
-    $startup->run();
+    // load dotenv
+    $env = Dotenv::createImmutable(ROOTPATH);
+    $env->load();
+
+    // load config
+    $configApp = new App();
+
+    // load helper
+    helper('URL');
+
+    /** 
+    * Define Environment from configurations
+    * It should be usually between production or development
+    * 
+    * @var string AETHER_ENV
+    **/
+    define('AETHER_ENV', $configApp->env);
+
+    if (AETHER_ENV ===  'development')
+    {
+        error_reporting(E_ALL);
+        ini_set('display_errors', 'on');
+        ini_set('display_startup_errors', '1');
+    }
+
+    // only run startup if the request
+    // has HTTP Method
+    if(isset($_SERVER['REQUEST_METHOD']))
+    {
+        // run the Web App
+        $startup = new Aether\Startup();
+        $startup->run();
+    }
 }
 

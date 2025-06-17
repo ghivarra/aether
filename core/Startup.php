@@ -4,10 +4,8 @@ declare(strict_types = 1);
 
 namespace Aether;
 
-use Config\App;
 use Config\Middlewares;
 use Config\Services;
-use Dotenv\Dotenv;
 use Aether\CleanUp;
 use Aether\Error;
 use Aether\Response;
@@ -32,32 +30,6 @@ class Startup
     {
         // run all inside a huge block of try/catch
         try {
-
-            // load dotenv
-            $env = Dotenv::createImmutable(ROOTPATH);
-            $env->load();
-
-            // load config
-            $configApp = new App();
-
-            // load helper
-            helper('URL');
-
-            /** 
-            * Define Environment from configurations
-            * It should be usually between production or development
-            * 
-            * @var string AETHER_ENV
-            **/
-            define('AETHER_ENV', $configApp->env);
-
-            if (AETHER_ENV ===  'development')
-            {
-                error_reporting(E_ALL);
-                ini_set('display_errors', 'on');
-                ini_set('display_startup_errors', '1');
-            }
-
             // route request
             $routing = Services::routing();
             $request = Services::request();

@@ -7,7 +7,8 @@
         "psr-4": {
             "Aether\\": "core/",
             "App\\": "app/",
-            "Config\\": "config/"
+            "Config\\": "config/",
+            "Test\\": "test/"
         }
     },
     "authors": [
@@ -18,12 +19,16 @@
     ],
     "minimum-stability": "dev",
     "require-dev": {
-        "fakerphp/faker": "2.0.x-dev"
+        "fakerphp/faker": "2.0.x-dev",
+        "phpunit/phpunit": "^12.3@dev"
     },
     "require": {
         "vlucas/phpdotenv": "^5.6@dev",
         "kint-php/kint": "dev-master",
         "laminas/laminas-escaper": "2.18.x-dev",
         "predis/predis": "dev-main"
+    },
+    "scripts": {
+        "test": "phpunit"
     }
 }
