@@ -29,7 +29,7 @@ class Error
         $type    = $request->requestType();
         $accept  = $request->header('ACCEPT');
 
-        if ($type !== 'web')
+        if ($type !== 'web' || $accept === 'application/json' || str_contains($accept, 'application/json'))
         {
             $sendData = [
                 'status'  => 'error',
