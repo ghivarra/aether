@@ -314,10 +314,10 @@ class Response implements ResponseInterface
      * 
      * @return ResponseInterface
     **/
-    public function view(string $filepath): ResponseInterface
+    public function view(string $filePath, array $data = []): ResponseInterface
     {
         // require view path
-        require VIEWPATH . $filePath;
+        view($filePath, $data);
 
         // return instance
         return $this;
