@@ -63,7 +63,7 @@
                 </div>
 
                 <div>
-                    <?php d($error->getTrace()) ?>
+                    <?php debug($error->getTrace()) ?>
                 </div>
 
             <?php endif; ?>
