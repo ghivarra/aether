@@ -73,7 +73,7 @@ if (!function_exists('console_log'))
     }
 }
 
-if (!function_exists('dd') && function_exists('d'))
+if (!function_exists('dd'))
 {
     /** 
      * Debug all kind of data using Kint
@@ -85,8 +85,38 @@ if (!function_exists('dd') && function_exists('d'))
     **/
     function dd(mixed $data): void
     {
+        if (!function_exists('d'))
+        {
+            require_once __DIR__ . '/kint.phar';
+
+        } 
+        
+        /** @disregard P1010 Undefined function */
         d($data);
         exit(0);
+    }
+}
+
+if (!function_exists('debug'))
+{
+    /** 
+     * Debug all kind of data using Kint but not using die
+     * 
+     * @param mixed $data
+     * 
+     * @return void
+     * 
+    **/
+    function debug(mixed $data): void
+    {
+        if (!function_exists('d'))
+        {
+            require_once __DIR__ . '/kint.phar';
+
+        } 
+        
+        /** @disregard P1010 Undefined function */
+        d($data);
     }
 }
 
