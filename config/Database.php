@@ -34,19 +34,6 @@ class Database extends BaseDatabase
         'DBCollat' => 'utf8mb4_general_ci',
     ];
 
-    public array $mariadb = [
-        'hostname' => 'localhost',
-        'port'     => 3306,
-        'username' => 'ghivarra',
-        'password' => '',
-        'database' => 'aether',
-        'DBDriver' => 'MySQLi',
-        'DBPrefix' => '',
-        'DBDebug'  => (AETHER_ENV === 'development'),
-        'charset'  => 'utf8mb4',
-        'DBCollat' => 'utf8mb4_general_ci',
-    ];
-
 //    public array $secondary = [
 //        'hostname' => 'localhost',
 //        'port'     => 5432,

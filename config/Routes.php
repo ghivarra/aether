@@ -29,17 +29,6 @@ class Routes
     **/
     public function run(RoutingInterface $route): void
     {
-        $route->group('page/news', function($route) {
-
-            $route->group('view', function($route) {
-                $route->get('(:segment)/(:any)', TestController::class, 'index')->as('page.category.news');
-                $route->get('(:segment)', TestController::class, 'index')->as('page.category');
-            });
-
-            $route->match(['get', 'post', 'options', 'head'], '/', TestController::class, 'page')->as('page');
-
-        });
-
         $route->all('/', TestController::class, 'index')->as('home');
     }
 
