@@ -10,6 +10,7 @@ use Aether\Response;
 use Aether\Request;
 use Aether\Routing;
 use Aether\Validation;
+use Aether\Debugger;
 
 class BaseService
 {
@@ -40,6 +41,19 @@ class BaseService
 
         // return
         return new Cache();
+    }
+
+    //===========================================================================================
+
+    public static function debugger(bool $getShared = true): Debugger
+    {
+        if ($getShared)
+        {
+            return self::getSharedInstance('debugger');
+        }
+
+        // return
+        return new Debugger();
     }
 
     //===========================================================================================
