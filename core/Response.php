@@ -317,7 +317,7 @@ class Response implements ResponseInterface
     public function view(string $filePath, array $data = []): ResponseInterface
     {
         // require view path
-        view($filePath, $data);
+        self::$viewData = view($filePath, $data);
 
         // return instance
         return $this;
