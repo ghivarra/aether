@@ -244,8 +244,8 @@ class Startup
         endforeach;
 
         // echo view data
-        echo Response::$viewData;
-        echo round(memory_get_peak_usage() / 1000000, 2);
+        $debugger = Services::debugger();
+        echo $debugger->parse(Response::$viewData);
 
         // end running script
         exit(0);
