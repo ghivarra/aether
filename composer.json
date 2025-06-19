@@ -14,7 +14,7 @@
             "email": "gsenandika@gmail.com"
         }
     ],
-    "minimum-stability": "dev",
+    "minimum-stability": "dev-main",
     "require-dev": {
         "fakerphp/faker": "2.0.x-dev",
         "phpunit/phpunit": "^12.3@dev"
