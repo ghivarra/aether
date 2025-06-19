@@ -6,8 +6,9 @@ namespace Aether\Session\Handler;
 
 use Aether\Session\CustomHandlerInterface;
 use Aether\Session\Handler\SessionHandlerTrait;
-use Config\Session as SessionConfig;
+use Config\Services;
 use Config\Cookie as CookieConfig;
+use Config\Session as SessionConfig;
 
 class FileHandler implements CustomHandlerInterface
 {
@@ -26,8 +27,8 @@ class FileHandler implements CustomHandlerInterface
 
     public function __construct()
     {
-        $this->config = new SessionConfig();
-        $this->cookieConfig = new CookieConfig();
+        $this->config = Services::sessionConfig();
+        $this->cookieConfig = Services::cookieConfig();
     }
 
     //========================================================================================================

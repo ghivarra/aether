@@ -8,9 +8,8 @@ use Aether\Security\CSRF;
 use Aether\View\Template;
 use Laminas\Escaper\Escaper;
 use Aether\Session;
+use Config\Services;
 use Predis\Client as RedisClient;
-use Config\Cookie;
-use Config\Security;
 
 // functions
 if (!function_exists('csrfToken'))
@@ -23,7 +22,7 @@ if (!function_exists('csrfToken'))
     **/
     function csrfToken(): string
     {
-        $security = new Security();
+        $security = Services::securityConfig();
 
         // return
         return $security->tokenName;
@@ -40,7 +39,7 @@ if (!function_exists('csrfHeader'))
     **/
     function csrfHeader(): string
     {
-        $security = new Security();
+        $security = Services::securityConfig();
 
         // return
         return $security->headerName;
@@ -456,7 +455,7 @@ if (!function_exists('set_cookie'))
     **/
     function set_cookie(string|array $name, string $value = '', int|null $expires = null, string|null $path = null, string|null $domain = null, bool|null $secure = null, bool|null $httponly = null): void
     {
-        $config = new Cookie();
+        $config = Services::cookieConfig();
 
         if (is_array($name))
         {

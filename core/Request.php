@@ -7,6 +7,7 @@ namespace Aether;
 use Aether\Interface\RequestInterface;
 use Config\Cookie;
 use Aether\FileUpload;
+use Config\Services;
 
 /** 
  * Request
@@ -82,7 +83,7 @@ class Request implements RequestInterface
     public function cookie(string $key, mixed $default = null, bool $usePrefix = true): mixed
     {
         // mutate key based on config
-        $config = is_null($this->cookie) ? new Cookie() : $this->cookie;
+        $config = is_null($this->cookie) ? Services::cookieConfig() : $this->cookie;
 
         if ($usePrefix)
         {

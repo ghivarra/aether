@@ -13,6 +13,7 @@ use Config\Cookie as CookieConfig;
 use Config\Database as DBConfig;
 use \Throwable;
 use Aether\Exception\SystemException;
+use Config\Services;
 
 class DatabaseHandler implements CustomHandlerInterface
 {
@@ -58,9 +59,9 @@ class DatabaseHandler implements CustomHandlerInterface
 
     public function __construct(string|null $defaultConnection = null)
     {
-        $this->config = new SessionConfig();
-        $this->cookieConfig = new CookieConfig();
-        $this->DBConfig = new DBConfig();
+        $this->config = Services::sessionConfig();
+        $this->cookieConfig = Services::cookieConfig();
+        $this->DBConfig = Services::databaseConfig();
 
         // set default connection
         $this->defaultConnection = is_null($defaultConnection) ? $this->DBConfig->defaultDB : $defaultConnection;

@@ -6,6 +6,7 @@ namespace Aether;
 
 use Aether\Validation\ValidationDriver;
 use Config\App as AppConfig;
+use Config\Services;
 
 /** 
  * Validation Class
@@ -23,7 +24,7 @@ class Validation
 
     public function __construct(AppConfig|null $config = null)
     {
-        $this->config = is_null($config) ? new AppConfig() : $config;
+        $this->config = is_null($config) ? Services::appConfig() : $config;
         $this->driver = new ValidationDriver($this->config);
     }
 

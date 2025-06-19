@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Aether;
 
 use Config\App as AppConfig;
+use Config\Services;
 
 class Encryption
 {
@@ -14,7 +15,7 @@ class Encryption
 
     public function __construct(AppConfig|null $config = null)
     {
-        $config    = is_null($config) ? new AppConfig() : $config;
+        $config    = is_null($config) ? Services::appConfig() : $config;
         $this->key = $config->encryptionKey;
     }
 

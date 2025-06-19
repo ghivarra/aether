@@ -4,10 +4,11 @@ declare(strict_types = 1);
 
 namespace Aether;
 
-use Config\Cache as CacheConfig;
 use Aether\Cache\Driver\FileDriver;
 use Aether\Cache\Driver\RedisDriver;
 use Aether\Cache\CacheDriverInterface;
+use Config\Cache as CacheConfig;
+use Config\Services;
 
 /** 
  * The cache class
@@ -30,7 +31,7 @@ class Cache implements CacheDriverInterface
 
     public function __construct(CacheConfig|null $config = null)
     {
-        $config = is_null($config) ? new CacheConfig : $config;
+        $config = is_null($config) ? Services::cacheConfig() : $config;
 
         // run cache driver based on config
         self::$instance = new $this->driverList[$config->driver]($config);

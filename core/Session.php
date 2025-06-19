@@ -6,8 +6,8 @@ namespace Aether;
 
 use Aether\Session\CustomHandlerInterface;
 use Config\Session as SessionConfig;
-use Config\Cookie as CookieConfig;
 use Aether\Exception\SystemException;
+use Config\Services;
 use Predis\Client as RedisClient;
 
 /** 
@@ -183,8 +183,8 @@ class Session
 
         if ($status === PHP_SESSION_NONE)
         {
-            $config = new SessionConfig();
-            $cookie = new CookieConfig();
+            $config = Services::sessionConfig();
+            $cookie = Services::cookieConfig();
 
             // set php.ini config about session
             if (version_compare(PHP_VERSION, '8.4', '<'))

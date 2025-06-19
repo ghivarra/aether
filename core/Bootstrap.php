@@ -13,10 +13,10 @@ require_once SYSTEMPATH . 'Dotenv.php';
 
 // use ilb
 use Aether\Startup;
-use Config\App;
+use Config\Services;
 
 // load config
-$configApp = new App();
+$configApp = Services::appConfig();
 
 // always load URL helper
 helper('URL');

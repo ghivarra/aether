@@ -9,6 +9,7 @@ use Aether\Database\Driver\MySQLi;
 use Aether\Database\Driver\PostgreSQL;
 use Aether\Exception\SystemException;
 use Aether\Database\DriverInterface;
+use Config\Services;
 
 /** 
  * Aether Database
@@ -57,10 +58,10 @@ class Database
 
     //==================================================================================================
 
-    public static function connect(string $defaultConnection = ''): DriverInterface
+    public static function connect(string $defaultConnection = '', DatabaseConfig|null $config = null): DriverInterface
     {
         // initiate config
-        $config = new DatabaseConfig();
+        $config = is_null($config) ? Services::databaseConfig() : $config;
 
         // set based on config
         $defaultConnection = ($defaultConnection === '') ? $config->defaultDB : $defaultConnection;

@@ -8,6 +8,7 @@ use Config\Redis as RedisConfig;
 use Predis\Client as RedisClient;
 use Aether\Exception\SystemException;
 use Aether\Redis\CustomConnection;
+use Config\Services;
 
 class Redis
 {
@@ -88,7 +89,7 @@ class Redis
 
     public static function connect(RedisConfig|null $config = null)
     {
-        $config = is_null($config) ? new RedisConfig() : $config;
+        $config = is_null($config) ? Services::redisConfig() : $config;
 
         // check if connection does not exist
         if (is_null(self::$currentConnection))
@@ -142,7 +143,7 @@ class Redis
 
     public static function buildKey(string $originalKey): string
     {
-        $config = new RedisConfig();
+        $config = Services::redisConfig();
 
         // return
         return $config->prefix . $originalKey;
@@ -152,7 +153,7 @@ class Redis
 
     public static function removePrefix(string $builtKey): string
     {
-        $config   = new RedisConfig();
+        $config   = Services::redisConfig();
         $preLen   = strlen($config->prefix);
         $preBuilt = substr($builtKey, 0, $preLen);
 

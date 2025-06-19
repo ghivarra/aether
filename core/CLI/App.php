@@ -4,9 +4,9 @@ declare(strict_types = 1);
 
 namespace Aether\CLI;
 
-use Aether\CLI\Command\Cache;
-use Aether\CLI\Command\Encryption;
-use Aether\CLI\Command\Generators;
+use Aether\CLI\Command\Cache as CLICache;
+use Aether\CLI\Command\Encryption as CLIEncryption;
+use Aether\CLI\Command\Generators as CLIGenerators;
 
 /** 
  * The App class to run the CLI in Aether Framework
@@ -89,7 +89,7 @@ class App
 
     public function generator(string $generatedFile, string $path): void
     {
-        $generators = new Generators;
+        $generators = new CLIGenerators;
         $path       = str_replace('\\', '/', $path);
         $path       = (substr($path, 0, 1) === '/') ? substr($path, 1) : $path;
 
@@ -208,7 +208,7 @@ class App
         // CACHE
         if ($command === 'cache:clear')
         {
-            $cache = new Cache();
+            $cache = new CLICache();
             $cache->clear();
 
             echo "\n\n";
@@ -221,7 +221,7 @@ class App
         // ENCRYPTION
         if ($command === 'key:generate')
         {
-            $encryption = new Encryption();
+            $encryption = new CLIEncryption();
             $encryption->generateKey();
 
             echo "\n\n";

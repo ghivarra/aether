@@ -4,8 +4,6 @@ declare(strict_types = 1);
 
 namespace Aether\Security;
 
-use Config\Security as SecurityConfig;
-use Config\Cookie as CookieConfig;
 use Config\Services;
 use Aether\Interface\RequestInterface;
 
@@ -41,8 +39,8 @@ class CSRF
 
     public static function set(): void
     {
-        $config  = new SecurityConfig();
-        $cookie  = new CookieConfig();
+        $config  = Services::securityConfig();
+        $cookie  = Services::cookieConfig();
         $request = Services::request();
 
         // check if always regenerate new hash
@@ -70,7 +68,7 @@ class CSRF
 
     public function validate(RequestInterface|null $request = null): bool
     {
-        $config  = new SecurityConfig();
+        $config  = Services::securityConfig();
         $request = is_null($request) ? Services::request() : $request;
         $method  = $request->server('REQUEST_METHOD');
 

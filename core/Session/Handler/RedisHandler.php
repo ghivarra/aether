@@ -10,6 +10,7 @@ use Aether\Redis;
 use Config\Session as SessionConfig;
 use Predis\Client as RedisClient;
 use Aether\Exception\SystemException;
+use Config\Services;
 
 class RedisHandler implements CustomHandlerInterface
 {
@@ -30,7 +31,7 @@ class RedisHandler implements CustomHandlerInterface
     public function __construct(RedisClient|null $client = null)
     {
         $this->redis  = is_null($client) ? Redis::connect() : $client;
-        $this->config = new SessionConfig();
+        $this->config = Services::sessionConfig();
     }
 
     //========================================================================================================

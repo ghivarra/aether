@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-use Config\App;
+use Config\Services;
 
 if (!function_exists('base_url'))
 {
@@ -17,7 +17,7 @@ if (!function_exists('base_url'))
     function base_url(string $uri = ''): string
     {
         // load config
-        $appConfig = new App();
+        $appConfig = Services::appConfig();
 
         // return
         return $appConfig->baseURL . $uri;
