@@ -16,7 +16,7 @@ use Aether\Session\Handler\RedisHandler;
  * 
 **/
 
-class BaseSession implements SessionInterface
+class BaseSession extends BaseConfig implements SessionInterface
 {
     public array $handlers = [
         'database' => DatabaseHandler::class,
@@ -40,7 +40,7 @@ class BaseSession implements SessionInterface
 
     //==================================================================================
 
-    public function __construct()
+    public function __construct(array|null $config = null)
     {
         // set handler
         $this->handler = getDotEnv('Session.handler', 'string', $this->handler);
@@ -54,6 +54,11 @@ class BaseSession implements SessionInterface
         $this->useEncryption = getDotEnv('Session.useEncryption', 'bool', $this->useEncryption);
         $this->encryptionKey = getDotEnv('Session.encryptionKey', 'string', $this->encryptionKey);
         $this->redisLockTimeout = getDotEnv('Session.redisLockTimeout', 'int', $this->redisLockTimeout);
+
+        if (!is_null($config))
+        {
+            $this->rewriteConfig($config);
+        }
     }
 
     //==================================================================================

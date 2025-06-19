@@ -13,7 +13,7 @@ use Aether\Interface\Config\RedisInterface;
  * 
 **/
 
-class BaseRedis implements RedisInterface
+class BaseRedis extends BaseConfig implements RedisInterface
 {
     public string $scheme = '';
     public string $path = '';
@@ -23,13 +23,18 @@ class BaseRedis implements RedisInterface
 
     //==================================================================================
 
-    public function __construct()
+    public function __construct(array|null $config = null)
     {
         $this->scheme = getDotEnv('Redis.scheme', 'string', $this->scheme);
         $this->path = getDotEnv('Redis.path', 'string', $this->path);
         $this->port = getDotEnv('Redis.port', 'int', $this->port);
         $this->certPath = getDotEnv('Redis.certPath', 'string', $this->certPath);
         $this->prefix = getDotEnv('Redis.prefix', 'string', $this->prefix);
+
+        if (!is_null($config))
+        {
+            $this->rewriteConfig($config);
+        }
     }
 
     //==================================================================================

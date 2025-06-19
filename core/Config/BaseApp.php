@@ -13,9 +13,18 @@ use Aether\Interface\Config\AppInterface;
  * 
 **/
 
-class BaseApp implements AppInterface
+class BaseApp extends BaseConfig implements AppInterface
 {
-    public function __construct()
+    public string $env = '';
+    public string $baseURL = '';
+    public string $permittedURIChars = '';
+    public string $defaultLocale = '';
+    public string $timezone = '';
+    public string $encryptionKey = '';
+
+    //==================================================================
+
+    public function __construct(array|null $config = null)
     {
         // set default
         $this->env = getDotEnv('App.env', 'string', $this->env);
@@ -24,16 +33,12 @@ class BaseApp implements AppInterface
         $this->defaultLocale = getDotEnv('App.defaultLocale', 'string', $this->defaultLocale);
         $this->timezone = getDotEnv('App.timezone', 'string', $this->timezone);
         $this->encryptionKey = getDotEnv('App.encryptionKey', 'string', $this->encryptionKey);
+
+        if (!is_null($config))
+        {
+            $this->rewriteConfig($config);
+        }
     }
-
-    //==================================================================
-
-    public string $env = '';
-    public string $baseURL = '';
-    public string $permittedURIChars = '';
-    public string $defaultLocale = '';
-    public string $timezone = '';
-    public string $encryptionKey = '';
 
     //==================================================================
 }

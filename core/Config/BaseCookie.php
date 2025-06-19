@@ -13,7 +13,7 @@ use Aether\Interface\Config\CookieInterface;
  * 
 **/
 
-class BaseCookie implements CookieInterface
+class BaseCookie extends BaseConfig implements CookieInterface
 {
     public string $prefix = 'file';
     public int $expires = 0;
@@ -25,7 +25,7 @@ class BaseCookie implements CookieInterface
 
     //==================================================================================
 
-    public function __construct()
+    public function __construct(array|null $config = null)
     {
         $this->prefix = getDotEnv('Cookie.prefix', 'string', $this->prefix);
         $this->expires = getDotEnv('Cookie.expires', 'int', $this->expires);
@@ -34,6 +34,11 @@ class BaseCookie implements CookieInterface
         $this->secure = getDotEnv('Cookie.secure', 'bool', $this->secure);
         $this->httponly = getDotEnv('Cookie.httponly', 'bool', $this->httponly);
         $this->samesite = getDotEnv('Cookie.samesite', 'string', $this->samesite);
+
+        if (!is_null($config))
+        {
+            $this->rewriteConfig($config);
+        }
     }
 
     //==================================================================================

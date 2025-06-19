@@ -11,6 +11,13 @@ use Aether\Request;
 use Aether\Routing;
 use Aether\Validation;
 use Aether\Debugger;
+use Config\App as AppConfig;
+use Config\Cache as CacheConfig;
+use Config\Cookie as CookieConfig;
+use Config\Database as DatabaseConfig;
+use Config\Redis as RedisConfig;
+use Config\Security as SecurityConfig;
+use Config\Session as SessionConfig;
 
 class BaseService
 {
@@ -18,12 +25,12 @@ class BaseService
 
     //===========================================================================================
 
-    public static function getSharedInstance(string $service = '')
+    public static function getSharedInstance(string $service = '', bool $useConfig = false)
     {
         // check if stored in class and call
         if (!isset($sharedInstances[$service]))
         {
-            self::$sharedInstances[$service] = self::$service(false);
+            self::$sharedInstances[$service] = ($useConfig) ? self::$service(null, false) : self::$service(false);
         }
 
         // return
@@ -32,11 +39,15 @@ class BaseService
 
     //===========================================================================================
 
-    public static function cache(bool $getShared = true): Cache
+    public static function cache(CacheConfig|null $config = null, bool $getShared = true): Cache
     {
-        if ($getShared)
+        if (!is_null($config))
         {
-            return self::getSharedInstance('cache');
+            return new Cache($config);
+
+        } elseif ($getShared) {
+
+            return self::getSharedInstance('cache', true);
         }
 
         // return
@@ -58,11 +69,15 @@ class BaseService
 
     //===========================================================================================
 
-    public static function encryption(bool $getShared = true): Encryption
+    public static function encryption(AppConfig|null $config = null, bool $getShared = true): Encryption
     {
-        if ($getShared)
+        if (!is_null($config))
         {
-            return self::getSharedInstance('encryption');
+            return new Encryption($config);
+
+        } elseif ($getShared) {
+            
+            return self::getSharedInstance('encryption', true);
         }
 
         // return
@@ -84,11 +99,15 @@ class BaseService
 
     //===========================================================================================
 
-    public static function request(bool $getShared = true): Request
+    public static function request(CookieConfig|null $config = null, bool $getShared = true): Request
     {
-        if ($getShared)
+        if (!is_null($config))
         {
-            return self::getSharedInstance('request');
+            return new Request($config);
+
+        } elseif ($getShared) {
+            
+            return self::getSharedInstance('request', true);
         }
 
         // return
@@ -110,15 +129,187 @@ class BaseService
 
     //===========================================================================================
 
-    public static function validation(bool $getShared = true): Validation
+    public static function validation(AppConfig|null $config = null, bool $getShared = true): Validation
     {
-        if ($getShared)
+        if (!is_null($config))
         {
-            return self::getSharedInstance('validation');
+            return new Validation($config);
+
+        } elseif ($getShared) {
+            
+            return self::getSharedInstance('validation', true);
         }
 
         // return
         return new Validation();
+    }
+
+    //===========================================================================================
+
+    public static function appConfig(array|null $config = null, bool $getShared = true): AppConfig
+    {
+        $service = 'appConfig';
+
+        if (!is_null($config))
+        {
+            // rewrite static
+            self::$sharedInstances[$service] = new AppConfig($config);
+            
+            // return the shared instances
+            return self::$sharedInstances[$service];
+        }
+
+        if ($getShared)
+        {
+            return self::getSharedInstance($service, true);
+        }
+
+        // return
+        return new AppConfig();
+    }
+
+    //===========================================================================================
+
+    public static function cacheConfig(array|null $config = null, bool $getShared = true): CacheConfig
+    {
+        $service = 'cacheConfig';
+
+        if (!is_null($config))
+        {
+            // rewrite static
+            self::$sharedInstances[$service] = new CacheConfig($config);
+            
+            // return the shared instances
+            return self::$sharedInstances[$service];
+        }
+
+        if ($getShared)
+        {
+            return self::getSharedInstance($service, true);
+        }
+
+        // return
+        return new CacheConfig();
+    }
+
+    //===========================================================================================
+
+    public static function cookieConfig(array|null $config = null, bool $getShared = true): CookieConfig
+    {
+        $service = 'cookieConfig';
+
+        if (!is_null($config))
+        {
+            // rewrite static
+            self::$sharedInstances[$service] = new CookieConfig($config);
+            
+            // return the shared instances
+            return self::$sharedInstances[$service];
+        }
+
+        if ($getShared)
+        {
+            return self::getSharedInstance($service, true);
+        }
+
+        // return
+        return new CookieConfig();
+    }
+
+    //===========================================================================================
+
+    public static function databaseConfig(array|null $config = null, bool $getShared = true): DatabaseConfig
+    {
+        $service = 'databaseConfig';
+
+        if (!is_null($config))
+        {
+            // rewrite static
+            self::$sharedInstances[$service] = new DatabaseConfig($config);
+            
+            // return the shared instances
+            return self::$sharedInstances[$service];
+        }
+
+        if ($getShared)
+        {
+            return self::getSharedInstance($service, true);
+        }
+
+        // return
+        return new DatabaseConfig();
+    }
+
+    //===========================================================================================
+
+    public static function redisConfig(array|null $config = null, bool $getShared = true): RedisConfig
+    {
+        $service = 'redisConfig';
+
+        if (!is_null($config))
+        {
+            // rewrite static
+            self::$sharedInstances[$service] = new RedisConfig($config);
+            
+            // return the shared instances
+            return self::$sharedInstances[$service];
+        }
+
+        if ($getShared)
+        {
+            return self::getSharedInstance($service, true);
+        }
+
+        // return
+        return new RedisConfig();
+    }
+
+    //===========================================================================================
+
+    public static function securityConfig(array|null $config = null, bool $getShared = true): SecurityConfig
+    {
+        $service = 'securityConfig';
+
+        if (!is_null($config))
+        {
+            // rewrite static
+            self::$sharedInstances[$service] = new SecurityConfig($config);
+            
+            // return the shared instances
+            return self::$sharedInstances[$service];
+        }
+
+        if ($getShared)
+        {
+            return self::getSharedInstance($service, true);
+        }
+
+        // return
+        return new SecurityConfig();
+    }
+
+    //===========================================================================================
+
+    public static function sessionConfig(array|null $config = null, bool $getShared = true): SessionConfig
+    {
+        $service = 'sessionConfig';
+
+        if (!is_null($config))
+        {
+            // rewrite static
+            self::$sharedInstances[$service] = new SessionConfig($config);
+            
+            // return the shared instances
+            return self::$sharedInstances[$service];
+        }
+
+        if ($getShared)
+        {
+            return self::getSharedInstance($service, true);
+        }
+
+        // return
+        return new SessionConfig();
     }
 
     //===========================================================================================

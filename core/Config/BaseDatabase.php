@@ -13,9 +13,28 @@ use Aether\Interface\Config\DatabaseInterface;
  * 
 **/
 
-class BaseDatabase implements DatabaseInterface
+class BaseDatabase extends BaseConfig implements DatabaseInterface
 {
-    public function __construct()
+    public string $defaultDB = '';
+
+    //==================================================================================
+
+    public array $default = [
+        'hostname' => '',
+        'port'     => 3306,
+        'username' => '',
+        'password' => '',
+        'database' => '',
+        'DBDriver' => '',
+        'DBPrefix' => '',
+        'DBDebug'  => false,
+        'charset'  => '',
+        'DBCollat' => '',
+    ];
+
+    //==================================================================================
+
+    public function __construct(array|null $config = null)
     {
         // set default DB option
         $this->defaultDB = getDotEnv('Database.defaultDB', 'string', $this->defaultDB);
@@ -38,26 +57,12 @@ class BaseDatabase implements DatabaseInterface
             }
 
         endforeach;
+
+        if (!is_null($config))
+        {
+            $this->rewriteConfig($config);
+        }
     }
-
-    //==================================================================================
-
-    public string $defaultDB = '';
-
-    //==================================================================================
-
-    public array $default = [
-        'hostname' => '',
-        'port'     => 3306,
-        'username' => '',
-        'password' => '',
-        'database' => '',
-        'DBDriver' => '',
-        'DBPrefix' => '',
-        'DBDebug'  => false,
-        'charset'  => '',
-        'DBCollat' => '',
-    ];
 
     //==================================================================================
 }
