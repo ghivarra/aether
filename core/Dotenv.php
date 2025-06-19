@@ -1,6 +1,7 @@
 <?php
 
 $filePath = ROOTPATH . '.env';
+$origPath = ROOTPATH . 'env';
 
 // Check if the file exists and is readable
 if (!file_exists($filePath) || !is_readable($filePath))
@@ -26,7 +27,8 @@ foreach ($lines as $line)
     $line = trim($line);
 
     // Ignore comments (lines starting with #) and empty lines (already handled by file() flags, but good for robustness)
-    if (empty($line) || str_starts_with($line, '#')) {
+    if (empty($line) || str_starts_with($line, '#'))
+    {
         continue;
     }
 
@@ -34,25 +36,29 @@ foreach ($lines as $line)
     $equalsPos = strpos($line, '=');
 
     // If no equals sign or it's at the very beginning (e.g., "=VALUE"), skip
-    if ($equalsPos === false || $equalsPos === 0) {
+    if ($equalsPos === false || $equalsPos === 0)
+    {
         continue;
     }
 
     // Extract the key and value
-    $key = substr($line, 0, $equalsPos);
+    $key   = substr($line, 0, $equalsPos);
     $value = substr($line, $equalsPos + 1);
 
     // Trim whitespace from the key and the value AFTER splitting
-    $key = trim($key);
+    $key   = trim($key);
     $value = trim($value); // <-- FIX: Trim whitespace from the value here
 
     // Remove quotes from value if present
     // Handles 'value', "value", and 'value with spaces' or "value with spaces"
-    if (str_starts_with($value, '"') && str_ends_with($value, '"')) {
+    if (str_starts_with($value, '"') && str_ends_with($value, '"'))
+    {
         $value = substr($value, 1, -1);
         // Handle escaped double quotes inside double-quoted strings
         $value = str_replace('\"', '"', $value);
+
     } elseif (str_starts_with($value, "'") && str_ends_with($value, "'")) {
+
         $value = substr($value, 1, -1);
         // Handle escaped single quotes inside single-quoted strings
         $value = str_replace("\'", "'", $value);

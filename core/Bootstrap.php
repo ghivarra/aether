@@ -15,6 +15,20 @@ require_once SYSTEMPATH . 'Dotenv.php';
 use Aether\Startup;
 use Config\App;
 
+// load config
+$configApp = new App();
+
+// always load URL helper
+helper('URL');
+
+/** 
+* Define Environment from configurations
+* It should be usually between production or development
+* 
+* @var string AETHER_ENV
+**/
+define('AETHER_ENV', $configApp->env);
+
 // check if CLI
 // if not null then must be CLI
 if (isset($argv[0]) && $argv[0] === 'aether')
@@ -24,6 +38,13 @@ if (isset($argv[0]) && $argv[0] === 'aether')
     $app->run($argv);
 
 } else {
+
+    if (AETHER_ENV ===  'development')
+    {
+        error_reporting(E_ALL);
+        ini_set('display_errors', 'on');
+        ini_set('display_startup_errors', '1');
+    }
 
     if (isset($argv[1]))
     {
@@ -60,27 +81,6 @@ if (isset($argv[0]) && $argv[0] === 'aether')
                 parse_str($formData, $_POST);
             }
         }
-    }
-
-    // load config
-    $configApp = new App();
-
-    // load helper
-    helper('URL');
-
-    /** 
-    * Define Environment from configurations
-    * It should be usually between production or development
-    * 
-    * @var string AETHER_ENV
-    **/
-    define('AETHER_ENV', $configApp->env);
-
-    if (AETHER_ENV ===  'development')
-    {
-        error_reporting(E_ALL);
-        ini_set('display_errors', 'on');
-        ini_set('display_startup_errors', '1');
     }
 
     // only run startup if the request

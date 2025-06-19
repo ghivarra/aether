@@ -7,8 +7,6 @@ namespace Aether\CLI;
 use Aether\CLI\Command\Cache;
 use Aether\CLI\Command\Encryption;
 use Aether\CLI\Command\Generators;
-use Dotenv\Dotenv;
-use Config\App as AppConfig;
 
 /** 
  * The App class to run the CLI in Aether Framework
@@ -151,29 +149,6 @@ class App
 
     public function run(array $argv): void
     {
-        // turn on all of error reporting
-        error_reporting(E_ALL);
-        ini_set('display_errors', 'on');
-        ini_set('display_startup_errors', '1');
-
-        // load dotenv
-        $env = Dotenv::createImmutable(ROOTPATH);
-        $env->load();
-
-        // load config
-        $appConfig = new AppConfig();
-
-        // load helper
-        helper('URL');
-
-        /** 
-        * Define Environment from configurations
-        * It should be usually between production or development
-        * 
-        * @var string AETHER_ENV
-        **/
-        define('AETHER_ENV', $appConfig->env);
-
         // store the parameters into static
         self::$CLIParams = $argv;
 
