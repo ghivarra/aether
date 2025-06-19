@@ -1,14 +1,11 @@
 {
     "name": "ghivarra/aether",
     "description": "Aether PHP Framework",
-    "type": "library",
+    "type": "project",
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Aether\\": "core/",
-            "App\\": "app/",
-            "Config\\": "config/",
-            "Test\\": "test/"
+            "Aether\\": "core/"
         }
     },
     "authors": [
@@ -25,14 +22,5 @@
     "require": {
         "laminas/laminas-escaper": "2.18.x-dev",
         "predis/predis": "dev-main"
-    },
-    "config": {
-        "optimize-autoloader": true,
-        "apcu-autoloader": true,
-        "preferred-install": "dist",
-        "sort-packages": true
-    },
-    "scripts": {
-        "test": "phpunit"
     }
 }
