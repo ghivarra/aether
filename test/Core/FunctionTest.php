@@ -5,21 +5,22 @@ declare(strict_types = 1);
 namespace Test\Core;
 
 use PHPUnit\Framework\TestCase;
-use Config\App as AppConfig;
-use Config\Security as SecurityConfig;
+use Config\App;
+use Config\Security;
+use Config\Services;
 
 final class FunctionTest extends TestCase
 {
-    protected AppConfig $appConfig;
-    protected SecurityConfig $securityConfig;
+    protected App $appConfig;
+    protected Security $securityConfig;
 
     //==============================================================================
 
     private function startup(): void
     {
         // set config
-        $this->appConfig = new AppConfig();
-        $this->securityConfig = new SecurityConfig();
+        $this->appConfig      = Services::appConfig();
+        $this->securityConfig = Services::securityConfig();
     }
 
     //==============================================================================
