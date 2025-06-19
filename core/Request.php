@@ -22,11 +22,17 @@ class Request implements RequestInterface
     private static string $requestType = ''; // between cli, ajax, and web
     private static array $incomingHeaders = [];
     private static array $serverData = [];
+    private Cookie|null $cookie = null;
 
     //===========================================================================================
 
-    public function __construct()
+    public function __construct(Cookie|null $cookieConfig = null)
     {
+        if (!is_null($cookieConfig))
+        {
+            $this->cookie = $cookieConfig;
+        }
+
         static::$serverData = $_SERVER;
 
         foreach (static::$serverData as $key => $data):
@@ -76,7 +82,7 @@ class Request implements RequestInterface
     public function cookie(string $key, mixed $default = null, bool $usePrefix = true): mixed
     {
         // mutate key based on config
-        $config = new Cookie();
+        $config = is_null($this->cookie) ? new Cookie() : $this->cookie;
 
         if ($usePrefix)
         {
