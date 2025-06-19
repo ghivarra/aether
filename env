@@ -54,6 +54,18 @@
 # Cookie.httponly = true
 # Cookie.samesite = 'Strict'
 
+##############
+## SECURITY ##
+##############
+
+# Cookie.prefix = 'ae_'
+# Cookie.expires = 7200
+# Cookie.path = '/'
+# Cookie.domain = '.aether.test'
+# Cookie.secure = true
+# Cookie.httponly = true
+# Cookie.samesite = 'Strict'
+
 ###########
 ## REDIS ##
 ###########
